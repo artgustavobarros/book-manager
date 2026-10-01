@@ -56,7 +56,7 @@
 - [x] 6.1 Root layout com o cookie de tema (`data-theme` no SSR) e o cookie de fuso; layout `(app)` validando a sessão, carregando livros, meta e configurações e hidratando o TanStack Query
 - [ ] 6.2 Restilizar os componentes shadcn para o Design System (Button com 4 variantes + desabilitado/inválido, ToggleGroup como segmentado, Input/Textarea/Label/Form com os estados padrão, foco e erro) e criar os customizados (IconButton, Chip, StatusSelect nativo, Card, Kpi, EmptyState, BrandMark), conferidos contra o Design System
 - [x] 6.3 `Modal` sobre o `Dialog` do shadcn (véu `acv-fade`, painel `acv-rise`, Esc, clique fora, focus trap, retorno de foco), `ConfirmDialog` sobre o `AlertDialog`, e o toast próprio (`acv-toast`, um por vez, 2,4 s; o Sonner foi descartado por fidelidade)
-- [ ] 6.4 `BookCover` / `MiniCover` (capa gerada + imagem por cima, badge de status, ♥, sombra de livro) e `useCarousel`/`Carousel` portando snap, drag de mouse, dots e animação de 520 ms abaixo de 640px
+- [x] 6.4 `BookCover` / `MiniCover` (capa gerada + imagem por cima, badge de status, ♥, sombra de livro) e `useCarousel`/`Carousel` portando snap, drag de mouse, dots e animação de 520 ms abaixo de 640px
 - [x] 6.5 Header (marca, busca → `/estante?q=`, abas como rotas, Me surpreenda com estado desabilitado, + Registrar livro, tema, avatar) e rodapé (nova assinatura + 4 ações)
 - [x] 6.6 `AppProvider` com o estado dos modais globais e hooks de dados (`useBooks`, mutações otimistas com rollback e toast de erro)
 
@@ -75,11 +75,11 @@
 
 ## 9. Estante
 
-- [ ] 9.1 Estado da Estante em search params (q, status, faceta, ordem, vista), com chips, pílula de faceta e menu "Ordenar" (abre e fecha, Esc, clique fora, seta)
-- [ ] 9.2 Vista "Capas" (grid, ações no hover, seletor de status, selo de empréstimo, metadados) e vista "Lista" (tabela de 1120px, editar e excluir)
-- [ ] 9.3 Carregamento incremental de 18 em 18 (sentinela, "Carregando mais livros", "Fim da estante · N livros")
-- [ ] 9.4 Estados vazios: estante vazia (Registrar, Sincronizar, Restaurar backup) e nada encontrado (Limpar filtros)
-- [ ] 9.5 `useAutoCovers` (fila com IntersectionObserver, 2 simultâneas, buffer com flush em lote, `keepalive` no `pagehide`)
+- [x] 9.1 Estado da Estante em search params (q, status, faceta, ordem, vista), com chips, pílula de faceta e menu "Ordenar" (abre e fecha, Esc, clique fora, seta)
+- [x] 9.2 Vista "Capas" (grid, ações no hover, seletor de status, selo de empréstimo, metadados) e vista "Lista" (tabela de 1120px, editar e excluir)
+- [x] 9.3 Carregamento incremental de 18 em 18 (sentinela, "Carregando mais livros", "Fim da estante · N livros")
+- [x] 9.4 Estados vazios: estante vazia (Registrar, Sincronizar, Restaurar backup) e nada encontrado (Limpar filtros)
+- [x] 9.5 `useAutoCovers` (fila com IntersectionObserver, 2 simultâneas, buffer com flush em lote, `keepalive` no `pagehide`)
 
 ## 10. Dados do acervo
 
