@@ -57,7 +57,11 @@ export function loadStandalone(opts: { books?: Dict[]; user?: Dict; state?: Dict
     forceUpdate() {}
   }
   const React = { createRef: () => ({ current: null }) };
-  const document = { documentElement: { dataset: {}, style: {} } };
+  const document = {
+    documentElement: { dataset: {}, style: {} },
+    body: { appendChild() {} },
+    createElement: () => ({ click() {}, remove() {}, href: "", download: "" }),
+  };
   const factory = new Function(
     "DCLogic",
     "React",

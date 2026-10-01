@@ -55,11 +55,11 @@ export function toIsoDate(v: unknown): string | null {
   return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s ? null : s;
 }
 
-function toText(v: unknown): string | null {
+export function toText(v: unknown): string | null {
   return typeof v === "string" || typeof v === "number" ? clean(String(v)) : null;
 }
 
-function toGender(v: unknown): AuthorGender | null {
+export function toGender(v: unknown): AuthorGender | null {
   return AUTHOR_GENDERS.find((g) => g === v) ?? null;
 }
 
@@ -72,31 +72,56 @@ export function fromBackup(data: unknown, now: Date = new Date()): BookFields[] 
   if (!Array.isArray(data)) throw new InvalidBackupError();
   const books = data
     .filter((b): b is Record<string, unknown> => !!b && typeof b === "object" && !!toText((b as Record<string, unknown>).title))
-    .map((b): BookFields => {
-      const status = isBookStatus(b.status) ? b.status : "nao-lido";
-      return {
-        orderNo: toPositiveInt(b.order ?? b.orderNo),
-        title: toText(b.title)!,
-        author: toText(b.author),
-        authorGender: toGender(b.authorGender),
-        authorEthnicity: toText(b.authorEthnicity),
-        nationality: toText(b.nationality),
-        publisher: toText(b.publisher),
-        genre: toText(b.genre),
-        yearPublished: toPositiveInt(b.year ?? b.yearPublished),
-        pages: toPositiveInt(b.pages),
-        acquiredOn: toIsoDate(b.acquired ?? b.acquiredOn),
-        status,
-        borrower: status === "emprestado" ? toText(b.borrower) : null,
-        yearRead: toPositiveInt(b.yearRead),
-        notes: toText(b.notes),
-        coverUrl: toText(b.cover ?? b.coverUrl),
-        favorite: b.fav === true || b.favorite === true,
-        coverCheckedAt: b.coverTried || b.coverCheckedAt ? now.toISOString() : null,
-      };
-    });
+    .map((b) => legacyToFields(b, now));
   return withOrders(books);
 }
+
+/** Converte um livro no formato legado (strings) para os campos do modelo. */
+export function legacyToFields(b: Record<string, unknown>, now: Date = new Date()): BookFields {
+  const status = isBookStatus(b.status) ? b.status : "nao-lido";
+  return {
+    orderNo: toPositiveInt(b.order ?? b.orderNo),
+    title: toText(b.title) ?? "",
+    author: toText(b.author),
+    authorGender: toGender(b.authorGender),
+    authorEthnicity: toText(b.authorEthnicity),
+    nationality: toText(b.nationality),
+    publisher: toText(b.publisher),
+    genre: toText(b.genre),
+    yearPublished: toPositiveInt(b.year ?? b.yearPublished),
+    pages: toPositiveInt(b.pages),
+    acquiredOn: toIsoDate(b.acquired ?? b.acquiredOn),
+    status,
+    borrower: status === "emprestado" ? toText(b.borrower) : null,
+    yearRead: toPositiveInt(b.yearRead),
+    notes: toText(b.notes),
+    coverUrl: toText(b.cover ?? b.coverUrl),
+    favorite: b.fav === true || b.favorite === true,
+    coverCheckedAt: b.coverTried || b.coverCheckedAt ? now.toISOString() : null,
+  };
+}
+
+/** Chave legada (formato do standalone) → campo do modelo. */
+export const LEGACY_FIELD = {
+  order: "orderNo",
+  title: "title",
+  author: "author",
+  nationality: "nationality",
+  publisher: "publisher",
+  year: "yearPublished",
+  acquired: "acquiredOn",
+  status: "status",
+  notes: "notes",
+  cover: "coverUrl",
+  pages: "pages",
+  genre: "genre",
+  yearRead: "yearRead",
+  borrower: "borrower",
+  authorGender: "authorGender",
+  authorEthnicity: "authorEthnicity",
+} as const satisfies Record<string, keyof BookFields>;
+
+export type LegacyKey = keyof typeof LEGACY_FIELD;
 
 const str = (v: string | number | null | undefined) => (v == null ? "" : String(v));
 
