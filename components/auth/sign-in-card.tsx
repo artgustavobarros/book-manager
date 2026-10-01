@@ -120,8 +120,16 @@ function LoginForm({ callbackURL }: { callbackURL: string }) {
             {...register("email")}
           />
         </FieldLabel>
-        <FieldLabel label="Senha" error={formState.errors.password?.message}>
+        <div className="flex flex-col gap-2 text-xs font-medium text-mute">
+          {/* "Esqueci minha senha" na linha do rótulo: não altera a altura do cartão do design. */}
+          <div className="flex items-baseline justify-between gap-3">
+            <label htmlFor="login-password">Senha</label>
+            <Link href="/esqueci-senha" className="text-xs font-semibold text-mute no-underline hover:text-ink">
+              Esqueci minha senha
+            </Link>
+          </div>
           <Input
+            id="login-password"
             type="password"
             autoComplete="current-password"
             placeholder="••••••••"
@@ -129,10 +137,12 @@ function LoginForm({ callbackURL }: { callbackURL: string }) {
             aria-invalid={!!formState.errors.password}
             {...register("password")}
           />
-        </FieldLabel>
-        <Link href="/esqueci-senha" className="self-end text-xs font-semibold text-mute no-underline hover:text-ink">
-          Esqueci minha senha
-        </Link>
+          {formState.errors.password ? (
+            <span role="alert" className="text-xs font-normal text-acc">
+              {formState.errors.password.message}
+            </span>
+          ) : null}
+        </div>
       </div>
       {error ? (
         <AuthNotice tone="error">

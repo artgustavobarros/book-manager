@@ -15,6 +15,7 @@ function Modal({
   description,
   className,
   veilClassName,
+  initialFocus,
   children,
 }: {
   open: boolean;
@@ -24,6 +25,8 @@ function Modal({
   description?: string;
   className?: string;
   veilClassName?: string;
+  /** Seletor do elemento que recebe o foco ao abrir (padrão: o próprio painel). */
+  initialFocus?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -42,7 +45,9 @@ function Modal({
             // Foca o próprio painel ao abrir (sem anel de foco num botão); Tab continua preso no modal.
             onOpenAutoFocus={(e) => {
               e.preventDefault();
-              (e.currentTarget as HTMLElement | null)?.focus();
+              const panel = e.currentTarget as HTMLElement | null;
+              const target = (initialFocus && panel?.querySelector<HTMLElement>(initialFocus)) || panel;
+              target?.focus({ preventScroll: true });
             }}
             className={cn(
               "w-full animate-acv-rise overflow-hidden rounded-2xl bg-card text-ink shadow-modal outline-none",

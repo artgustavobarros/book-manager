@@ -21,8 +21,6 @@ import { bookFormSchema, type BookFormOutput, type BookFormValues } from "@/lib/
 
 // --- Peças compartilhadas ----------------------------------------------------
 
-const NARROW = "max-[640px]";
-
 /** Painel da capa (esquerda no desktop, linha no topo abaixo de 640px). */
 function CoverPanel({
   title,
@@ -42,19 +40,19 @@ function CoverPanel({
     <div
       className={cn(
         "flex max-w-full flex-[0_0_240px] flex-col items-stretch gap-3 bg-card p-6",
-        `${NARROW}:flex-[1_1_100%] ${NARROW}:flex-row ${NARROW}:items-center ${NARROW}:gap-[14px]`,
-        edit ? `${NARROW}:px-[18px] ${NARROW}:py-0` : `${NARROW}:px-[18px] ${NARROW}:py-4`,
+        "max-[640px]:flex-[1_1_100%] max-[640px]:flex-row max-[640px]:items-center max-[640px]:gap-[14px]",
+        edit ? "max-[640px]:px-[18px] max-[640px]:py-0" : "max-[640px]:px-[18px] max-[640px]:py-4",
       )}
     >
       <div
         style={{ background: coverBg, color: coverInk }}
         className={cn(
           "relative flex aspect-[2/3] w-full flex-none flex-col justify-between overflow-hidden rounded-md px-[14px] py-4 shadow-lift",
-          `${NARROW}:w-[84px] ${NARROW}:px-[7px] ${NARROW}:py-2`,
+          "max-[640px]:w-[84px] max-[640px]:px-[7px] max-[640px]:py-2",
         )}
       >
-        <span className={cn("text-[10px] font-semibold tracking-[.1em] uppercase opacity-80", `${NARROW}:text-[6px]`)}>{author}</span>
-        <span className={cn("text-[22px] leading-[1.08] font-bold", `${NARROW}:text-xs`)}>{title}</span>
+        <span className={cn("text-[10px] font-semibold tracking-[.1em] uppercase opacity-80", "max-[640px]:text-[6px]")}>{author}</span>
+        <span className={cn("text-[22px] leading-[1.08] font-bold", "max-[640px]:text-xs")}>{title}</span>
         <span className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: coverImage(coverUrl) }} />
       </div>
       <span className="text-xs leading-[1.5] text-mute">{hint}</span>
@@ -111,7 +109,7 @@ function ViewModal({ book }: { book: Book }) {
         coverUrl={book.coverUrl}
         hint={book.acquiredOn ? "No acervo desde " + fmtDate(book.acquiredOn) + "." : ""}
       />
-      <div className={cn("flex min-w-0 flex-[1_1_400px] flex-col gap-5 px-[26px] py-6", `${NARROW}:px-[18px] ${NARROW}:py-5`)}>
+      <div className={cn("flex min-w-0 flex-[1_1_400px] flex-col gap-5 px-[26px] py-6", "max-[640px]:px-[18px] max-[640px]:py-5")}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-1">
             <span className="text-xs font-semibold text-mute tabular-nums">{book.orderNo ? "Nº " + book.orderNo + " do acervo" : ""}</span>
@@ -346,7 +344,7 @@ function EditModal({ book }: { book: Book | null }) {
 
   return (
     <form noValidate onSubmit={onSubmit} className="flex flex-wrap">
-      <div className={cn("hidden flex-[1_1_100%] items-center justify-between gap-3 px-5 pt-5 pb-4", `${NARROW}:flex`)}>
+      <div className={cn("hidden flex-[1_1_100%] items-center justify-between gap-3 px-5 pt-5 pb-4", "max-[640px]:flex")}>
         <h2 className="m-0 text-xl font-bold">{modalTitle}</h2>
         <ModalClose />
       </div>
@@ -357,15 +355,15 @@ function EditModal({ book }: { book: Book | null }) {
         coverUrl={coverUrl || null}
         hint={book && book.acquiredOn ? "No acervo desde " + fmtDate(book.acquiredOn) + "." : "Sem imagem, a capa é gerada a partir do título e do autor."}
       />
-      <div className={cn("flex min-w-0 flex-[1_1_420px] flex-col gap-5 px-[26px] py-6", `${NARROW}:px-[18px] ${NARROW}:py-5`)}>
-        <div className={cn("flex items-center justify-between gap-3", `${NARROW}:hidden`)}>
+      <div className={cn("flex min-w-0 flex-[1_1_420px] flex-col gap-5 px-[26px] py-6", "max-[640px]:px-[18px] max-[640px]:py-5")}>
+        <div className={cn("flex items-center justify-between gap-3", "max-[640px]:hidden")}>
           <h2 className="m-0 text-xl font-bold">{modalTitle}</h2>
           <ModalClose />
         </div>
 
         <OnlineSearch form={form} />
 
-        <div className={cn("grid grid-cols-3 gap-4", `${NARROW}:grid-cols-2`)}>
+        <div className={cn("grid grid-cols-3 gap-4", "max-[640px]:grid-cols-2")}>
           <Field label="Título *" error={err("title")} className="col-span-full">
             <input {...register("title")} aria-invalid={!!err("title")} className={cn(fieldInput, "h-11 text-base font-semibold")} />
           </Field>
@@ -488,7 +486,7 @@ function LendDialog() {
   const book = app.lendFor;
   const [name, setName] = useState(book?.borrower ?? "");
   return (
-    <Modal open={!!book} onOpenChange={(o) => !o && app.closeLend()} title="Emprestado para quem?" className="max-w-[440px]" veilClassName="z-40 py-20">
+    <Modal open={!!book} onOpenChange={(o) => !o && app.closeLend()} title="Emprestado para quem?" className="max-w-[440px]" veilClassName="z-40 py-20" initialFocus="input">
       {book ? (
         <form
           className="flex flex-col gap-4 p-6"
@@ -506,7 +504,7 @@ function LendDialog() {
           </div>
           <label className="flex flex-col gap-2 text-xs font-semibold text-lentfg">
             Nome da pessoa
-            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome da pessoa" className={cn(fieldInput, "bg-lentbg")} />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome da pessoa" className={cn(fieldInput, "bg-lentbg")} />
           </label>
           <div className="flex justify-end gap-2">
             <button
@@ -537,6 +535,8 @@ export function BookModals() {
   return (
     <>
       <Modal
+        // Ficha → edição troca de véu, como no standalone (a rolagem volta ao topo).
+        key={m ? m.kind + (m.id ?? "new") : "none"}
         open={open}
         onOpenChange={(o) => !o && app.closeModal()}
         title={m?.kind === "view" ? book?.title ?? "Ficha" : book ? "Editar ficha" : "Registrar livro"}
