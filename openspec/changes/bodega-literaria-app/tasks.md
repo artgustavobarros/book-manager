@@ -109,7 +109,7 @@
 - [x] 13.2 Harness do oráculo no Playwright: abrir o standalone via `file://` com o storage injetado, relógio fixo e rede externa bloqueada
 - [x] 13.3 Specs visuais pareando standalone × app para todas as telas e modais do spec `app-shell`, a 1440×900 e 390×844, nos temas claro e escuro (tolerância de 1%)
 - [x] 13.4 Snapshots próprios das telas novas (verificar e-mail, esqueci a senha, nova senha, conta estendida, controle de empréstimo)
-- [ ] 13.5 Revisão de acessibilidade (foco visível, labels, `aria` dos botões de ícone, contraste nos dois temas) e performance (sem flash de tema nem de vazio; bundle)
+- [x] 13.5 Revisão de acessibilidade (foco visível, labels, `aria` dos botões de ícone, contraste nos dois temas) e performance (sem flash de tema nem de vazio; bundle)
 
 ## 14. Deploy
 

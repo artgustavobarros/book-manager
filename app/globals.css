@@ -141,6 +141,23 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  /* Foco visível do Design System: anel de 3px em cinza quente, sem o outline do navegador. */
+  :where(a, button, select, summary, [role="button"], [role="tab"], [role="radio"]):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(127, 120, 110, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @utility scrollbar-none {

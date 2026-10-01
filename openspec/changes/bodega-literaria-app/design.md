@@ -223,3 +223,6 @@ Resolvidas nesta revisão:
 - **Tolerância visual:** 1% (`maxDiffPixelRatio: 0.01`).
 - **URL de produção:** ainda indefinida; vem só de env (`BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`), e os redirect URIs do Google são cadastrados quando ela existir.
 - **Zod e T3 Env:** o Zod valida os formulários via `@hookform/resolvers` (e os mesmos schemas na API), e o T3 Env cuida das variáveis de ambiente. Nenhuma versão fixa de Zod é exigida além da compatível com os dois.
+
+Levantadas na implementação:
+- **Contraste dos tokens (WCAG AA):** quatro combinações do design ficam abaixo de 4,5:1: segmento inativo `--mute` sobre `--seg` (4,4:1); contagem dos chips com opacidade .55 (3,9:1); no escuro, avatar branco sobre `--acc` (3,0:1) e contagem do chip ativo (3,5:1). Foram mantidas por fidelidade (o teste do axe as exclui de forma documentada). Ajustar exige mudar tokens do design: decisão do dono do design.
