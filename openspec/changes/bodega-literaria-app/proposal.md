@@ -41,7 +41,7 @@ A Bodega Literária existe hoje só como um protótipo standalone exportado do C
 ## Impact
 
 - **Código:** projeto novo do zero na raiz do repositório. `design/handoff/` fica versionado como referência imutável.
-- **Dependências:** `next`, `react`, `tailwindcss`, shadcn/ui (Radix, `class-variance-authority`, `sonner`), `react-hook-form`, `@hookform/resolvers`, `zod`, `@t3-oss/env-nextjs`, `drizzle-orm`, `drizzle-kit`, `@neondatabase/serverless`, `better-auth`, `nodemailer`, `@tanstack/react-query`; testes com `vitest` e `@playwright/test`.
+- **Dependências:** `next`, `react`, `tailwindcss`, shadcn/ui (Radix, `class-variance-authority`, `sonner`), `react-hook-form`, `@hookform/resolvers`, `zod`, `@t3-oss/env-nextjs`, `drizzle-orm`, `drizzle-kit`, `pg`, `@electric-sql/pglite` (dev e testes), `@vercel/functions`, `better-auth`, `nodemailer`, `@tanstack/react-query`; testes com `vitest` e `@playwright/test`.
 - **Infra:** projeto na Vercel ligado a um repositório GitHub; banco Neon via Vercel Storage (plano gratuito, 0,5 GB); OAuth client no Google Cloud Console; senha de app do Gmail; um Vercel Cron diário (compatível com o plano Hobby).
 - **Variáveis de ambiente:** `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SMTP_USER`, `SMTP_PASS`, `CRON_SECRET`.
 - **APIs externas consumidas:** Google Books, Open Library, iTunes Search, imagens da Amazon (pelo client) e CSV do Google Sheets (pelo servidor).

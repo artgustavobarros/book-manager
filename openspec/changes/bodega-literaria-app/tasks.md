@@ -11,11 +11,11 @@
 
 ## 2. Banco de dados
 
-- [ ] 2.1 Instalar `drizzle-orm`, `drizzle-kit` e `@neondatabase/serverless`; criar `lib/db/index.ts` (cliente HTTP) e `drizzle.config.ts`
-- [ ] 2.2 Definir em `lib/db/schema.ts` o enum `book_status` e as tabelas `books`, `reading_goals` e `user_settings` (D3), com FKs em cascade e índices
-- [ ] 2.3 Gerar as tabelas do Better Auth (`user`, `session`, `account`, `verification`, `rateLimit`) via CLI do Better Auth no mesmo schema
-- [ ] 2.4 Gerar e versionar a migration inicial em `drizzle/`; scripts `db:generate`, `db:migrate` e `db:studio`
-- [ ] 2.5 Preparar o banco de desenvolvimento e teste (branch Neon de dev ou Postgres local) e documentar no README
+- [x] 2.1 Instalar `drizzle-orm`, `drizzle-kit`, `pg` e `@electric-sql/pglite`; criar `lib/db/index.ts` (pool `pg` para o Neon, PGlite para dev/testes) e `drizzle.config.ts`
+- [x] 2.2 Definir em `lib/db/schema.ts` o enum `book_status` e as tabelas `books`, `reading_goals` e `user_settings` (D3), com FKs em cascade e índices
+- [x] 2.3 Gerar as tabelas do Better Auth (`user`, `session`, `account`, `verification`, `rateLimit`) via CLI do Better Auth no mesmo schema
+- [x] 2.4 Gerar e versionar a migration inicial em `drizzle/`; scripts `db:generate`, `db:migrate` e `db:studio`
+- [x] 2.5 Preparar o banco de desenvolvimento e teste (PGlite em `.data/`, ou uma branch Neon via `DATABASE_URL`) e documentar no README
 
 ## 3. Domínio (funções puras + testes)
 
@@ -44,11 +44,11 @@
 
 ## 5. API de dados
 
-- [ ] 5.1 Camada de serviços `lib/services/books.ts` (listar, criar com `nextOrder`, atualizar, excluir, lote, importar com `db.batch`), sempre recebendo o `userId`
+- [ ] 5.1 Camada de serviços `lib/services/books.ts` (listar, criar com `nextOrder`, atualizar, excluir, lote, importar em transação), sempre recebendo o `userId`
 - [ ] 5.2 Route Handlers `/api/books` (GET, POST, PATCH lote) e `/api/books/[id]` (PATCH, DELETE), com validação Zod e 404 para livros de outro usuário
 - [ ] 5.3 `POST /api/books/import` (substituição atômica, compatível com o backup do standalone)
 - [ ] 5.4 `lib/services/goals.ts` + `GET/PUT /api/goals/[year]` (padrão 24) e `lib/services/settings.ts` + `GET/PUT /api/settings`
-- [ ] 5.5 `POST /api/sheet-sync`: fetch com timeout, rejeição de HTML, parse, `mergeSheet`, gravação em `db.batch` e resposta `{updated, added}`
+- [ ] 5.5 `POST /api/sheet-sync`: fetch com timeout, rejeição de HTML, parse, `mergeSheet`, gravação em transação e resposta `{updated, added}`
 - [ ] 5.6 Testes de integração da API contra o banco de teste: isolamento entre dois usuários, validações 400, lote, import e sync com CSV de fixture
 
 ## 6. Shell do app e primitivos de UI

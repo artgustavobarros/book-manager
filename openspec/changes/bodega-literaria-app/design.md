@@ -35,10 +35,9 @@ Restrições: plano gratuito (Vercel Hobby, Neon Free 0,5 GB, Gmail SMTP com ~50
 **Alternativa:** Server Actions. Menos boilerplate, mas acopla a mutação ao componente e não gera uma "API" de fato.
 
 ### D2. Neon Postgres via Vercel Storage + Drizzle ORM
-**Escolha:** banco Neon criado pela aba Storage da Vercel (env vars injetadas), acessado com `drizzle-orm` sobre `@neondatabase/serverless` (driver HTTP). Migrations com `drizzle-kit`, versionadas em `drizzle/`.
-**Por quê:** o Drizzle tem adapter oficial no Better Auth (um schema só para auth e domínio), é leve em serverless e tipa as queries.
-**Atomicidade:** o driver HTTP não tem transações interativas. Operações multi-statement (importar backup, merge da planilha, lote de capas) seguem o padrão **ler → calcular em TypeScript → gravar com `db.batch([...])`**, que é atômico. Se precisar de transação interativa, trocar pontualmente para o driver WebSocket (`neon-serverless` Pool).
-**Alternativas:** Prisma (cold start e binário mais pesados) e SQL puro (perde a tipagem).
+**Escolha:** banco Neon criado pela aba Storage da Vercel (env vars injetadas), acessado com `drizzle-orm` sobre **`node-postgres` (`pg`) com pool**, usando a URL *pooled* do Neon, e `attachDatabasePool` (`@vercel/functions`) para fechar conexões ociosas no Fluid compute. Em desenvolvimento e testes, sem Docker nem Postgres local, o mesmo código usa o **PGlite** (Postgres em WASM) quando `DATABASE_URL=pglite://…`. Migrations com `drizzle-kit`, versionadas em `drizzle/`, aplicadas por `pnpm db:migrate` nos dois casos.
+**Por quê:** o Drizzle tem adapter oficial no Better Auth (um schema só para auth e domínio) e tipa as queries. Com `pg`, há **transações interativas** reais (`db.transaction`) em produção e no PGlite, o que simplifica o import de backup, o merge da planilha e o lote de capas. O driver HTTP do Neon (planejado originalmente) não tem transações interativas nem roda contra um Postgres local.
+**Alternativas:** driver HTTP do Neon com `db.batch` (descartado pelos motivos acima), Prisma (cold start e binário mais pesados) e SQL puro (perde a tipagem).
 
 ### D3. Schema de dados
 Tabelas do Better Auth: `user`, `session`, `account`, `verification`, `rateLimit` (geradas pela CLI do Better Auth para o Drizzle). Tabelas do domínio:
@@ -176,13 +175,13 @@ Todos os formulários (entrar, criar conta, esqueci e nova senha, registrar/edit
 O `useAutoCovers` porta a fila do standalone (IntersectionObserver com `rootMargin` de 200px e 2 buscas simultâneas). Os resultados vão para um buffer que faz flush em `PATCH /api/books` a cada ~2 s ou a cada 20 itens (e no `pagehide`, via `sendBeacon`/`keepalive`). O cache do Query é atualizado de forma otimista. `cover_checked_at` só é gravado quando ao menos uma fonte respondeu.
 
 ### D14. Sincronização da planilha no servidor
-O `POST /api/sheet-sync` lê `sheet_url` (ou o enviado no corpo, salvando-o), aplica `sheetCsvUrl`, faz o `fetch` com timeout, rejeita respostas HTML, usa `parseCSV` + `mapHeader` + `mergeSheet` (puros) contra os livros do usuário e grava com `db.batch`. Devolve contagens; o cliente invalida `['books']`.
+O `POST /api/sheet-sync` lê `sheet_url` (ou o enviado no corpo, salvando-o), aplica `sheetCsvUrl`, faz o `fetch` com timeout, rejeita respostas HTML, usa `parseCSV` + `mapHeader` + `mergeSheet` (puros) contra os livros do usuário e grava numa transação (`db.transaction`). Devolve contagens; o cliente invalida `['books']`.
 
 ### D15. Verificação de fidelidade visual
 - O acervo de referência é o SEED do standalone, extraído para `tests/fixtures/reference-books.json`.
 - Playwright, com relógio fixo (`page.clock`) e rede externa bloqueada (sem capas):
   1. **Oráculo:** abre `design/handoff/Bodega Literária.html` via `file://`, injeta `localStorage` (acervo de referência, flags de seed, usuário, tema) e `sessionStorage` (`acervo-sessao`) e captura cada tela e estado.
-  2. **App:** um banco de teste (branch Neon ou Postgres local) com um usuário de teste e o mesmo acervo (`scripts/seed-reference.ts`) captura as mesmas telas.
+  2. **App:** um banco de teste (PGlite) com um usuário de teste e o mesmo acervo (`scripts/seed-reference.ts`) captura as mesmas telas.
 - A comparação é por pixel, com tolerância inicial de `maxDiffPixelRatio: 0.01`, a 1440×900 e 390×844, nos temas claro e escuro. As telas novas (verificação, redefinição, conta estendida) usam snapshots próprios, sem oráculo.
 
 ### D16. Deploy e ambientes
