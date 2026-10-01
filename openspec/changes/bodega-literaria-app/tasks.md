@@ -83,11 +83,11 @@
 
 ## 10. Dados do acervo
 
-- [ ] 10.1 Escopo, legenda e carrossel de 4 KPIs
-- [ ] 10.2 Termômetro e maiores livros; donut e legenda por status (clique → Estante filtrada)
-- [ ] 10.3 Barras por gênero, nacionalidade e editora (7 + expandir, clique → faceta) com a animação `acv-grow-x` escalonada
-- [ ] 10.4 Colunas de lidos por ano (`acv-grow-y`, ano corrente em acento, clique → faceta) e "Atribuir ano lido" (sem ano/todos, 5 anos, mostrar todos)
-- [ ] 10.5 Estado vazio da página (Registrar, Sincronizar, Restaurar backup) e carrossel de gráficos no mobile
+- [x] 10.1 Escopo, legenda e carrossel de 4 KPIs
+- [x] 10.2 Termômetro e maiores livros; donut e legenda por status (clique → Estante filtrada)
+- [x] 10.3 Barras por gênero, nacionalidade e editora (7 + expandir, clique → faceta) com a animação `acv-grow-x` escalonada
+- [x] 10.4 Colunas de lidos por ano (`acv-grow-y`, ano corrente em acento, clique → faceta) e "Atribuir ano lido" (sem ano/todos, 5 anos, mostrar todos)
+- [x] 10.5 Estado vazio da página (Registrar, Sincronizar, Restaurar backup) e carrossel de gráficos no mobile
 
 ## 11. Integrações e portabilidade
 
