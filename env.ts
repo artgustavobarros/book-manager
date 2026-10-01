@@ -9,12 +9,15 @@ import { z } from "zod";
  */
 export const env = createEnv({
   server: {
+    /** Conexão direta (sem pooler) do Neon, usada só pelas migrations quando existir. */
+    DATABASE_URL_UNPOOLED: z.string().optional(),
     DATABASE_URL: z
       .string()
       .min(1)
       .refine((v) => /^(postgres(ql)?|pglite):\/\//.test(v), "Use postgres:// ou pglite://"),
     BETTER_AUTH_SECRET: z.string().min(32),
-    BETTER_AUTH_URL: z.url(),
+    /** URL pública do app. Em previews da Vercel pode ficar vazia: usa VERCEL_URL. */
+    BETTER_AUTH_URL: z.url().optional(),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
     EMAIL_TRANSPORT: z.enum(["gmail", "outbox", "console"]).default("gmail"),
@@ -28,7 +31,7 @@ export const env = createEnv({
     FIXED_NOW: z.iso.datetime({ offset: true }).optional(),
   },
   client: {
-    NEXT_PUBLIC_APP_URL: z.url(),
+    NEXT_PUBLIC_APP_URL: z.url().optional(),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,

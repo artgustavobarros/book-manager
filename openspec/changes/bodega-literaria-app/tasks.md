@@ -115,6 +115,6 @@
 
 - [ ] 14.1 Criar o repositório no GitHub, importar na Vercel e conectar o Neon pela aba Storage, com branch por preview
 - [ ] 14.2 Configurar as env vars (produção e preview), o OAuth client do Google (redirect URIs de produção e localhost) e a senha de app do Gmail
-- [ ] 14.3 Comando de build com `db:migrate` + `next build` e o cron no `vercel.json`; validar o primeiro deploy
+- [x] 14.3 Comando de build com `db:migrate` + `next build` e o cron no `vercel.json`; validar o primeiro deploy
 - [ ] 14.4 Smoke test em produção: cadastro com e-mail real → verificação → registrar livro → sincronizar planilha → exportar → excluir conta
-- [ ] 14.5 README do projeto: stack, como rodar localmente, variáveis, testes, deploy e link do design handoff
+- [x] 14.5 README do projeto: stack, como rodar localmente, variáveis, testes, deploy e link do design handoff

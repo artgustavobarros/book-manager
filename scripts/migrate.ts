@@ -4,7 +4,8 @@ import { runMigrations } from "../lib/db/migrate";
 
 loadEnvConfig(process.cwd());
 
-const url = process.env.DATABASE_URL;
+// No Neon, migrations vão pela conexão direta quando disponível (DDL fora do pooler).
+const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 if (!url) {
   console.error("DATABASE_URL não definida.");
   process.exit(1);

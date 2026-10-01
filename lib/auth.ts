@@ -25,15 +25,16 @@ function deliver(message: EmailMessage) {
 
 export const googleEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
-const trustedOrigins = [
-  env.BETTER_AUTH_URL,
-  env.NEXT_PUBLIC_APP_URL,
-  env.VERCEL_URL ? `https://${env.VERCEL_URL}` : null,
-].filter((o): o is string => !!o);
+const vercelUrl = env.VERCEL_URL ? `https://${env.VERCEL_URL}` : undefined;
+
+/** Produção: BETTER_AUTH_URL. Previews da Vercel: a URL do próprio deploy. */
+export const appUrl = env.BETTER_AUTH_URL ?? vercelUrl ?? "http://localhost:3000";
+
+const trustedOrigins = [appUrl, env.NEXT_PUBLIC_APP_URL, vercelUrl].filter((o): o is string => !!o);
 
 export const auth = betterAuth({
   appName: "Bodega Literária",
-  baseURL: env.BETTER_AUTH_URL,
+  baseURL: appUrl,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins,
   database: drizzleAdapter(db, { provider: "pg", schema }),
