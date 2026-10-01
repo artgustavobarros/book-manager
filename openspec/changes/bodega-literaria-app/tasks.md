@@ -62,10 +62,10 @@
 
 ## 7. Livros: ficha, edição e status
 
-- [ ] 7.1 Modal de visualização da ficha (layout desktop e mobile, linhas de metadados com Cor/etnia, anotações, autor clicável, status, selo de empréstimo, excluir em dois cliques)
-- [ ] 7.2 Modal de registrar/editar (React Hook Form + o schema Zod do livro) com todos os campos (incluindo Cor/etnia com datalist), prévia de capa, chips de status, campo "Emprestado para quem?", Salvar inativo sem título e ano lido automático ao marcar "Lido"
-- [ ] 7.3 Mudança de status de qualquer origem; "Emprestado" abre um controle inline/mini-modal no estilo do app (substitui `window.prompt`) e sair do empréstimo limpa o nome
-- [ ] 7.4 Favoritar, ✓ lido/não lido e excluir pela lista (com confirmação no padrão do app, sem `window.confirm`)
+- [x] 7.1 Modal de visualização da ficha (layout desktop e mobile, linhas de metadados com Cor/etnia, anotações, autor clicável, status, selo de empréstimo, excluir em dois cliques)
+- [x] 7.2 Modal de registrar/editar (React Hook Form + o schema Zod do livro) com todos os campos (incluindo Cor/etnia com datalist), prévia de capa, chips de status, campo "Emprestado para quem?", Salvar inativo sem título e ano lido automático ao marcar "Lido"
+- [x] 7.3 Mudança de status de qualquer origem; "Emprestado" abre um controle inline/mini-modal no estilo do app (substitui `window.prompt`) e sair do empréstimo limpa o nome
+- [x] 7.4 Favoritar, ✓ lido/não lido e excluir pela lista (com confirmação no padrão do app, sem `window.confirm`)
 
 ## 8. Painel
 
@@ -91,7 +91,7 @@
 
 ## 11. Integrações e portabilidade
 
-- [ ] 11.1 Busca online no modal (Google, Open Library, Apple e Amazon por ISBN, em paralelo), lista de resultados e preenchimento do formulário
+- [x] 11.1 Busca online no modal (Google, Open Library, Apple e Amazon por ISBN, em paralelo), lista de resultados e preenchimento do formulário
 - [ ] 11.2 Modal "Sincronizar planilha" (URL salva, `/api/sheet-sync`, mensagens, carregamento) e invalidação do acervo
 - [ ] 11.3 Exportar CSV e salvar backup JSON no cliente; restaurar backup via `/api/books/import` com confirmação de substituição (exceto no acervo vazio) e erro "Arquivo inválido." no padrão do app
 - [ ] 11.4 Modal "Me surpreenda" (sorteio sem repetir, filtro por gênero, começar a ler, editar ficha, estado sem candidatos)

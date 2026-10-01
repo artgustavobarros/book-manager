@@ -38,8 +38,14 @@ function Modal({
         >
           <DialogPrimitive.Content
             data-slot="modal"
+            tabIndex={-1}
+            // Foca o próprio painel ao abrir (sem anel de foco num botão); Tab continua preso no modal.
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement | null)?.focus();
+            }}
             className={cn(
-              "w-full animate-acv-rise overflow-hidden rounded-xl bg-card text-ink shadow-modal outline-none",
+              "w-full animate-acv-rise overflow-hidden rounded-2xl bg-card text-ink shadow-modal outline-none",
               className,
             )}
           >
