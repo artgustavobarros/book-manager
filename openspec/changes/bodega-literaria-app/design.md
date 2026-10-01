@@ -126,7 +126,7 @@ Os Route Handlers de auth rodam no **runtime Node.js** (o Nodemailer não roda n
 
 ### D9. Estilo: Tailwind v4 a partir dos tokens
 - Os arquivos `design/handoff/tokens/*.css` são copiados para `app/styles/tokens/` sem alteração. O `globals.css` os importa e mapeia em `@theme inline` (por exemplo `--color-bg: var(--bg)`, `--color-ink: var(--ink)`, `--color-acc: var(--acc)`, `--color-status-lido: …`, `--shadow-book: …`, `--animate-acv-in: acv-in .5s var(--ease-emphasized) both`). Assim `bg-card`, `text-mute`, `border-line2` e `shadow-modal` trocam de tema sozinhos via `data-theme`.
-- A fonte Hanken Grotesk (400–700) vem do `next/font/google`, exposta como `--font-sans`.
+- A fonte Hanken Grotesk vem **dos mesmos arquivos variáveis embutidos no standalone** (`public/fonts/hanken-grotesk/`, com os mesmos `unicode-range`, preload do subset latino). O `next/font/google` foi descartado: o arquivo que ele baixa tem *hinting* diferente e deixava textos de 12px ~5% mais largos que o design (medido com Playwright); com os arquivos do handoff, as larguras ficam idênticas.
 - Cada `style="…"` do template vira classes Tailwind equivalentes. `style-hover`/`style-focus`/`style-active` viram `hover:`/`focus-visible:`/`active:`. Valores dinâmicos (porcentagens de barras, cores de capa, `animation-delay` escalonado) ficam em `style` com CSS variables.
 - Sem biblioteca de ícones: glifos Unicode, como no design.
 - **Fonte da verdade quando houver divergência:** `Acervo.dc.html` (toast de 2,4 s, dot ativo de 20px) prevalece sobre o texto do Design System (2,6 s, 24px). Os tokens prevalecem sobre valores soltos.
@@ -143,7 +143,7 @@ Os Route Handlers de auth rodam no **runtime Node.js** (o Nodemailer não roda n
 | Segmentado (abas, vista, escopo) | `ToggleGroup` | Trilho `--seg`, item ativo com `--shadow-seg` |
 | Campos | `Input`, `Textarea`, `Label` | Altura, borda `line2` e anel de foco do DS |
 | Formulários | `Form` (RHF + Zod) | Mensagem de erro no padrão "Erro" do DS |
-| Toast | `Sonner` | Estilizado como o toast do design (tinta, centralizado, `acv-toast`, 2,4 s, um por vez) |
+| Toast | — (customizado) | O toast do design é um único elemento (tinta, centralizado, `acv-toast`, 2,4 s, um por vez): um componente próprio de ~40 linhas é mais fiel que restilizar o Sonner |
 
 Continuam **customizados** (sem equivalente fiel no shadcn): `StatusSelect` (o design pede o `<select>` nativo com ponto e seta), `Chip`, `BookCover`/`MiniCover`, `Carousel`/`useCarousel` (snap, drag de mouse, dots e animação de 520 ms do standalone, mais simples que adaptar o Embla), `Kpi`, `BarList`, `Donut`, `EmptyState` e `BrandMark`.
 

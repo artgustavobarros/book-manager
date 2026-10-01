@@ -3,7 +3,7 @@
 - [x] 1.1 `git init`, `.gitignore` (Node, Next, `.env*`, artefatos do Playwright) e commit inicial com `design/handoff/` e `openspec/`
 - [x] 1.2 Criar o app Next.js (App Router, TypeScript strict, pnpm, ESLint) na raiz, sem os exemplos do template
 - [x] 1.3 Instalar e configurar o Tailwind v4; copiar `design/handoff/tokens/*.css` para `app/styles/tokens/` e mapear tudo em `@theme inline` no `globals.css` (cores, status, sombras, raios, durações, curvas, `animate-acv-*`)
-- [x] 1.4 Configurar a Hanken Grotesk (400–700) via `next/font/google` como `--font-sans` e os estilos base do `body` conforme o design
+- [x] 1.4 Configurar a Hanken Grotesk (400–700) com os arquivos do handoff (`@font-face` local; `next/font` descartado por diferença de métricas) como `--font-sans` e os estilos base do `body` conforme o design
 - [x] 1.5 Configurar Vitest (unit) e Playwright (e2e + visual) com scripts `test`, `test:e2e` e `test:visual`
 - [x] 1.6 Configurar o T3 Env (`env.ts` com `@t3-oss/env-nextjs`, server e client) e criar o `.env.example` documentando todas as variáveis (D18); proibir `process.env` direto via lint
 - [x] 1.7 Inicializar o shadcn/ui (`components.json`, `lib/utils.ts`) e mapear as variáveis do shadcn para os tokens da Bodega no `globals.css` (claro e escuro)
@@ -53,12 +53,12 @@
 
 ## 6. Shell do app e primitivos de UI
 
-- [ ] 6.1 Root layout com o cookie de tema (`data-theme` no SSR) e o cookie de fuso; layout `(app)` validando a sessão, carregando livros, meta e configurações e hidratando o TanStack Query
+- [x] 6.1 Root layout com o cookie de tema (`data-theme` no SSR) e o cookie de fuso; layout `(app)` validando a sessão, carregando livros, meta e configurações e hidratando o TanStack Query
 - [ ] 6.2 Restilizar os componentes shadcn para o Design System (Button com 4 variantes + desabilitado/inválido, ToggleGroup como segmentado, Input/Textarea/Label/Form com os estados padrão, foco e erro) e criar os customizados (IconButton, Chip, StatusSelect nativo, Card, Kpi, EmptyState, BrandMark), conferidos contra o Design System
-- [ ] 6.3 `Modal` sobre o `Dialog` do shadcn (véu `acv-fade`, painel `acv-rise`, Esc, clique fora, focus trap, retorno de foco), `ConfirmDialog` sobre o `AlertDialog`, e o toast sobre o `Sonner` (`acv-toast`, um por vez, 2,4 s)
+- [x] 6.3 `Modal` sobre o `Dialog` do shadcn (véu `acv-fade`, painel `acv-rise`, Esc, clique fora, focus trap, retorno de foco), `ConfirmDialog` sobre o `AlertDialog`, e o toast próprio (`acv-toast`, um por vez, 2,4 s; o Sonner foi descartado por fidelidade)
 - [ ] 6.4 `BookCover` / `MiniCover` (capa gerada + imagem por cima, badge de status, ♥, sombra de livro) e `useCarousel`/`Carousel` portando snap, drag de mouse, dots e animação de 520 ms abaixo de 640px
-- [ ] 6.5 Header (marca, busca → `/estante?q=`, abas como rotas, Me surpreenda com estado desabilitado, + Registrar livro, tema, avatar) e rodapé (nova assinatura + 4 ações)
-- [ ] 6.6 `AppProvider` com o estado dos modais globais e hooks de dados (`useBooks`, mutações otimistas com rollback e toast de erro)
+- [x] 6.5 Header (marca, busca → `/estante?q=`, abas como rotas, Me surpreenda com estado desabilitado, + Registrar livro, tema, avatar) e rodapé (nova assinatura + 4 ações)
+- [x] 6.6 `AppProvider` com o estado dos modais globais e hooks de dados (`useBooks`, mutações otimistas com rollback e toast de erro)
 
 ## 7. Livros: ficha, edição e status
 
@@ -69,9 +69,9 @@
 
 ## 8. Painel
 
-- [ ] 8.1 Cabeçalho (data e saudação com o fuso do usuário) e o carrossel de 5 KPIs
-- [ ] 8.2 Card da meta anual (progresso, marcador, linha de faltam, selo de ritmo oculto com o acervo vazio, −/+ persistindo em `/api/goals/:ano`) e "Lidos em <ano>"
-- [ ] 8.3 "Lendo agora" (Terminei) e "Últimos adicionados", com carrossel no mobile
+- [x] 8.1 Cabeçalho (data e saudação com o fuso do usuário) e o carrossel de 5 KPIs
+- [x] 8.2 Card da meta anual (progresso, marcador, linha de faltam, selo de ritmo oculto com o acervo vazio, −/+ persistindo em `/api/goals/:ano`) e "Lidos em <ano>"
+- [x] 8.3 "Lendo agora" (Terminei) e "Últimos adicionados", com carrossel no mobile
 
 ## 9. Estante
 

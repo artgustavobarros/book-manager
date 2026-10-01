@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Fonte: os mesmos arquivos do handoff (métricas idênticas ao design). */
+@import "./styles/fonts.css";
+
 /* Tokens do design handoff (design/handoff/tokens), copiados sem alteração. */
 @import "./styles/tokens/colors.css";
 @import "./styles/tokens/typography.css";
@@ -30,8 +33,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-hanken), "Hanken Grotesk", system-ui, sans-serif;
-  --font-heading: var(--font-hanken), "Hanken Grotesk", system-ui, sans-serif;
+  --font-sans: "Hanken Grotesk", system-ui, sans-serif;
+  --font-heading: "Hanken Grotesk", system-ui, sans-serif;
 
   /* Paleta da Bodega */
   --color-bg: var(--bg);

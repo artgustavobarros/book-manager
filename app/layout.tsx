@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk } from "next/font/google";
 import { cookies } from "next/headers";
 
 import { THEME_COOKIE, TZ_COOKIE, parseTheme } from "@/lib/theme";
 
 import "./globals.css";
-
-const hanken = Hanken_Grotesk({
-  variable: "--font-hanken",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Bodega Literária",
@@ -23,7 +16,10 @@ const tzScript = `try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;if(
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
-    <html lang="pt-BR" data-theme={theme} style={{ colorScheme: theme }} className={hanken.variable}>
+    <html lang="pt-BR" data-theme={theme} style={{ colorScheme: theme }}>
+      <head>
+        <link rel="preload" href="/fonts/hanken-grotesk/latin.woff2" as="font" type="font/woff2" crossOrigin="" />
+      </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: tzScript }} />
         {children}

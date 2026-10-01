@@ -1,16 +1,16 @@
 import { cn } from "cn";
 
-/** Marca de três lombadas (tinta, contorno e terracota). */
-export function BrandMark({ size = "md", className }: { size?: "md" | "lg"; className?: string }) {
-  const s =
-    size === "lg"
-      ? { box: "h-8", bar: "w-2", a: "h-6", b: "h-5", c: "h-8" }
-      : { box: "h-[26px]", bar: "w-1.5", a: "h-[22px]", b: "h-[18px]", c: "h-[26px]" };
+/**
+ * Marca de três lombadas (tinta, contorno e terracota).
+ * `header`: 8px de largura, 24/20/28 de altura · `lg` (entrada): 24/20/32.
+ */
+export function BrandMark({ size = "header", className }: { size?: "header" | "lg"; className?: string }) {
+  const tall = size === "lg" ? "h-8" : "h-7";
   return (
-    <span aria-hidden="true" className={cn("flex items-end gap-0.5", s.box, className)}>
-      <span className={cn(s.bar, s.a, "rounded-[2px] bg-ink")} />
-      <span className={cn(s.bar, s.b, "rounded-[2px] border-[1.5px] border-ink")} />
-      <span className={cn(s.bar, s.c, "rounded-[2px] bg-acc")} />
+    <span aria-hidden="true" className={cn("flex items-end gap-0.5", tall, className)}>
+      <span className="h-6 w-2 rounded-[2px] bg-ink" />
+      <span className="h-5 w-2 rounded-[2px] border-[1.5px] border-ink" />
+      <span className={cn("w-2 rounded-[2px] bg-acc", tall)} />
     </span>
   );
 }
