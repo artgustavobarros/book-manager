@@ -44,12 +44,12 @@
 
 ## 5. API de dados
 
-- [ ] 5.1 Camada de serviços `lib/services/books.ts` (listar, criar com `nextOrder`, atualizar, excluir, lote, importar em transação), sempre recebendo o `userId`
-- [ ] 5.2 Route Handlers `/api/books` (GET, POST, PATCH lote) e `/api/books/[id]` (PATCH, DELETE), com validação Zod e 404 para livros de outro usuário
-- [ ] 5.3 `POST /api/books/import` (substituição atômica, compatível com o backup do standalone)
-- [ ] 5.4 `lib/services/goals.ts` + `GET/PUT /api/goals/[year]` (padrão 24) e `lib/services/settings.ts` + `GET/PUT /api/settings`
-- [ ] 5.5 `POST /api/sheet-sync`: fetch com timeout, rejeição de HTML, parse, `mergeSheet`, gravação em transação e resposta `{updated, added}`
-- [ ] 5.6 Testes de integração da API contra o banco de teste: isolamento entre dois usuários, validações 400, lote, import e sync com CSV de fixture
+- [x] 5.1 Camada de serviços `lib/services/books.ts` (listar, criar com `nextOrder`, atualizar, excluir, lote, importar em transação), sempre recebendo o `userId`
+- [x] 5.2 Route Handlers `/api/books` (GET, POST, PATCH lote) e `/api/books/[id]` (PATCH, DELETE), com validação Zod e 404 para livros de outro usuário
+- [x] 5.3 `POST /api/books/import` (substituição atômica, compatível com o backup do standalone)
+- [x] 5.4 `lib/services/goals.ts` + `GET/PUT /api/goals/[year]` (padrão 24) e `lib/services/settings.ts` + `GET/PUT /api/settings`
+- [x] 5.5 `POST /api/sheet-sync`: fetch com timeout, rejeição de HTML, parse, `mergeSheet`, gravação em transação e resposta `{updated, added}`
+- [x] 5.6 Testes de integração da API contra o banco de teste: isolamento entre dois usuários, validações 400, lote, import e sync com CSV de fixture
 
 ## 6. Shell do app e primitivos de UI
 

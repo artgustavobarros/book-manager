@@ -55,7 +55,7 @@ describe("Better Auth", () => {
     await signUp("cris@exemplo.com");
     await clearOutbox();
     await auth.api.requestPasswordReset({ body: { email: "cris@exemplo.com", redirectTo: "/redefinir-senha" }, headers: headers() });
-    const link = linkFrom((await waitForEmail("cris@exemplo.com")).text);
+    const link = linkFrom((await waitForEmail("cris@exemplo.com", { subject: "Redefinir senha" })).text);
     const token = new URL(link).pathname.split("/").pop()!;
     await auth.api.resetPassword({ body: { token, newPassword: "nova-senha-456" }, headers: headers() });
     const [u] = await db.select().from(user).where(eq(user.email, "cris@exemplo.com"));

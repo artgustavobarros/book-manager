@@ -15,7 +15,7 @@ export interface EmailMessage {
 export const FROM_NAME = "Bodega Literária";
 
 /** Caixa de saída local usada pelos testes automatizados (EMAIL_TRANSPORT=outbox). */
-export const OUTBOX_FILE = path.join(process.cwd(), ".data", "outbox.jsonl");
+export const OUTBOX_FILE = env.EMAIL_OUTBOX_FILE ?? path.join(process.cwd(), ".data", "outbox.jsonl");
 
 let transporter: Transporter | null = null;
 

@@ -25,7 +25,10 @@ export async function clearOutbox() {
 }
 
 /** Espera um e-mail para o destinatário aparecer na caixa de saída de teste. */
-export async function waitForEmail(to: string, timeoutMs = 3000): Promise<{ subject: string; text: string; html: string }> {
+export async function waitForEmail(
+  to: string,
+  { subject, timeoutMs = 3000 }: { subject?: string; timeoutMs?: number } = {},
+): Promise<{ subject: string; text: string; html: string }> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const content = await readFile(OUTBOX_FILE, "utf8").catch(() => "");
@@ -34,7 +37,7 @@ export async function waitForEmail(to: string, timeoutMs = 3000): Promise<{ subj
       .filter(Boolean)
       .map((l) => JSON.parse(l))
       .reverse()
-      .find((m) => m.to === to);
+      .find((m) => m.to === to && (!subject || m.subject.includes(subject)));
     if (found) return found;
     await new Promise((r) => setTimeout(r, 25));
   }

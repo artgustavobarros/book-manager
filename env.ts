@@ -18,6 +18,8 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
     EMAIL_TRANSPORT: z.enum(["gmail", "outbox", "console"]).default("gmail"),
+    /** Arquivo da caixa de saída de teste (EMAIL_TRANSPORT=outbox). */
+    EMAIL_OUTBOX_FILE: z.string().optional(),
     SMTP_USER: z.email().optional(),
     SMTP_PASS: z.string().min(1).optional(),
     CRON_SECRET: z.string().min(16).optional(),
