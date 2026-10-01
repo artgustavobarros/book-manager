@@ -37,9 +37,9 @@
 - [x] 4.2 `lib/auth.ts`: Better Auth com o adapter Drizzle e a configuração do D7 (requireEmailVerification, minPasswordLength 8, reset com revogação de sessões e `onPasswordReset` marcando verificado, Google com `requireLocalEmailVerified`, changeEmail, deleteUser, rate limit em banco)
 - [x] 4.3 `app/api/auth/[...all]/route.ts` (runtime Node.js) e `lib/auth-client.ts`
 - [x] 4.4 Helper `requireSession()` para Route Handlers (401) e Server Components (redirect), e `proxy.ts`/middleware com redirecionamento otimista entre `(auth)` e `(app)`
-- [ ] 4.5 Tela `/entrar` fiel ao design: abas Entrar/Criar conta (`?modo=cadastro`), botão Google, divisória, campos, CTA e botão de tema; formulários com React Hook Form + Zod e mensagens de erro (credenciais, e-mail não verificado com reenvio, cadastro pendente no Google, rate limit 429)
-- [ ] 4.6 Telas `/verifique-email`, `/esqueci-senha` e `/redefinir-senha`, mais o estado de link inválido ou expirado, no mesmo cartão e com os componentes do Design System
-- [ ] 4.7 `GET /api/cron/purge-unverified` protegido por `CRON_SECRET`, excluindo não verificados com mais de 7 dias; registrar em `vercel.json`
+- [x] 4.5 Tela `/entrar` fiel ao design: abas Entrar/Criar conta (`?modo=cadastro`), botão Google, divisória, campos, CTA e botão de tema; formulários com React Hook Form + Zod e mensagens de erro (credenciais, e-mail não verificado com reenvio, cadastro pendente no Google, rate limit 429)
+- [x] 4.6 Telas `/verifique-email`, `/esqueci-senha` e `/redefinir-senha`, mais o estado de link inválido ou expirado, no mesmo cartão e com os componentes do Design System
+- [x] 4.7 `GET /api/cron/purge-unverified` protegido por `CRON_SECRET`, excluindo não verificados com mais de 7 dias; registrar em `vercel.json`
 - [ ] 4.8 Testes e2e: cadastro → e-mail capturado (transporte de teste) → verificação → Painel; login bloqueado sem verificação; esqueci a senha; logout; acesso sem sessão redireciona e a API responde 401
 
 ## 5. API de dados
