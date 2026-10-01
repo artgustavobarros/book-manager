@@ -1,0 +1,126 @@
+/**
+ * Backup JSON compatível com o standalone ("Salvar backup" / "Restaurar backup").
+ *
+ * O standalone guardava tudo como string (`pages: "416"`, `year: "1949"`) com as
+ * chaves `order`, `year`, `acquired`, `cover`, `fav`, `coverTried`. Aqui o backup é
+ * convertido para os tipos do modelo, e o modelo é exportado de volta no mesmo formato.
+ */
+import { withOrders } from "./orders";
+import { isBookStatus } from "./status";
+import { clean } from "./text";
+import { AUTHOR_GENDERS, type AuthorGender, type Book, type BookFields } from "./types";
+
+export interface BackupBook {
+  id: string;
+  order: string;
+  title: string;
+  author: string;
+  nationality: string;
+  publisher: string;
+  year: string;
+  acquired: string;
+  status: string;
+  notes: string;
+  cover: string;
+  pages: string;
+  genre: string;
+  yearRead: string;
+  borrower: string;
+  authorGender: string;
+  authorEthnicity: string;
+  fav?: boolean;
+  coverTried?: number;
+}
+
+export class InvalidBackupError extends Error {
+  constructor() {
+    super("Arquivo inválido.");
+    this.name = "InvalidBackupError";
+  }
+}
+
+/** Inteiro positivo a partir de string/número; qualquer outra coisa vira null. */
+export function toPositiveInt(v: unknown): number | null {
+  if (typeof v === "number") return Number.isInteger(v) && v > 0 ? v : null;
+  const n = parseInt(String(v ?? ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** Data YYYY-MM-DD válida ou null. */
+export function toIsoDate(v: unknown): string | null {
+  const s = String(v ?? "").trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const d = new Date(s + "T00:00:00Z");
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s ? null : s;
+}
+
+function toText(v: unknown): string | null {
+  return typeof v === "string" || typeof v === "number" ? clean(String(v)) : null;
+}
+
+function toGender(v: unknown): AuthorGender | null {
+  return AUTHOR_GENDERS.find((g) => g === v) ?? null;
+}
+
+/**
+ * Converte um backup (deste app ou do standalone) em campos de livro prontos para gravar.
+ * Entradas sem título são ignoradas; nºs ausentes são atribuídos como em `withOrders`.
+ * @throws InvalidBackupError se o conteúdo não for um array.
+ */
+export function fromBackup(data: unknown, now: Date = new Date()): BookFields[] {
+  if (!Array.isArray(data)) throw new InvalidBackupError();
+  const books = data
+    .filter((b): b is Record<string, unknown> => !!b && typeof b === "object" && !!toText((b as Record<string, unknown>).title))
+    .map((b): BookFields => {
+      const status = isBookStatus(b.status) ? b.status : "nao-lido";
+      return {
+        orderNo: toPositiveInt(b.order ?? b.orderNo),
+        title: toText(b.title)!,
+        author: toText(b.author),
+        authorGender: toGender(b.authorGender),
+        authorEthnicity: toText(b.authorEthnicity),
+        nationality: toText(b.nationality),
+        publisher: toText(b.publisher),
+        genre: toText(b.genre),
+        yearPublished: toPositiveInt(b.year ?? b.yearPublished),
+        pages: toPositiveInt(b.pages),
+        acquiredOn: toIsoDate(b.acquired ?? b.acquiredOn),
+        status,
+        borrower: status === "emprestado" ? toText(b.borrower) : null,
+        yearRead: toPositiveInt(b.yearRead),
+        notes: toText(b.notes),
+        coverUrl: toText(b.cover ?? b.coverUrl),
+        favorite: b.fav === true || b.favorite === true,
+        coverCheckedAt: b.coverTried || b.coverCheckedAt ? now.toISOString() : null,
+      };
+    });
+  return withOrders(books);
+}
+
+const str = (v: string | number | null | undefined) => (v == null ? "" : String(v));
+
+/** Exporta no formato do standalone (strings), acrescido de `authorEthnicity`. */
+export function toBackup(books: readonly Book[]): BackupBook[] {
+  return books.map((b) => ({
+    id: b.id,
+    order: str(b.orderNo),
+    title: b.title,
+    author: str(b.author),
+    nationality: str(b.nationality),
+    publisher: str(b.publisher),
+    year: str(b.yearPublished),
+    acquired: str(b.acquiredOn),
+    status: b.status,
+    notes: str(b.notes),
+    cover: str(b.coverUrl),
+    pages: str(b.pages),
+    genre: str(b.genre),
+    yearRead: str(b.yearRead),
+    borrower: str(b.borrower),
+    authorGender: str(b.authorGender),
+    authorEthnicity: str(b.authorEthnicity),
+    ...(b.favorite ? { fav: true } : {}),
+    ...(b.coverCheckedAt ? { coverTried: 1 } : {}),
+  }));
+}

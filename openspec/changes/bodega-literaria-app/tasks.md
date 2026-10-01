@@ -19,16 +19,16 @@
 
 ## 3. Domínio (funções puras + testes)
 
-- [ ] 3.1 Extrair o SEED do standalone para `tests/fixtures/reference-books.json` (formato do backup do standalone)
-- [ ] 3.2 `lib/domain/text.ts` (`norm`, `cmp`, `initial`, `fmtDate`, `nf`) e `status.ts` (STATUS, rótulos, plurais, cores), com testes
-- [ ] 3.3 `lib/domain/cover.ts` (paleta + `hash` → cores da capa gerada) e `orders.ts` (`withOrders`, `nextOrder`), com testes
-- [ ] 3.4 `lib/domain/shelf.ts`: filtros (busca, status, favoritos, faceta serializável), os 10 comparadores e a serialização para a URL, com testes
-- [ ] 3.5 `lib/domain/dashboard.ts`: seletores do Painel (KPIs, meta e ritmo, esperado até hoje, lidos no ano, lendo, recentes), com testes que usam data fixa
-- [ ] 3.6 `lib/domain/insights.ts`: seletores de Dados (KPIs, termômetro, maiores livros, donut, barras com "Não informado", anos, atribuição), com testes
+- [x] 3.1 Extrair o SEED do standalone para `tests/fixtures/reference-books.json` (formato do backup do standalone)
+- [x] 3.2 `lib/domain/text.ts` (`norm`, `cmp`, `initial`, `fmtDate`, `nf`) e `status.ts` (STATUS, rótulos, plurais, cores), com testes
+- [x] 3.3 `lib/domain/cover.ts` (paleta + `hash` → cores da capa gerada) e `orders.ts` (`withOrders`, `nextOrder`), com testes
+- [x] 3.4 `lib/domain/shelf.ts`: filtros (busca, status, favoritos, faceta serializável), os 10 comparadores e a serialização para a URL, com testes
+- [x] 3.5 `lib/domain/dashboard.ts`: seletores do Painel (KPIs, meta e ritmo, esperado até hoje, lidos no ano, lendo, recentes), com testes que usam data fixa
+- [x] 3.6 `lib/domain/insights.ts`: seletores de Dados (KPIs, termômetro, maiores livros, donut, barras com "Não informado", anos, atribuição), com testes
 - [ ] 3.7 `lib/domain/csv.ts`: `parseCSV` (`;`/`,`, aspas, BOM, CRLF) e a exportação CSV (BOM, `;`, colunas incluindo Cor/etnia), com testes
 - [ ] 3.8 `lib/domain/sheet.ts`: `sheetCsvUrl`, `mapHeader` (+ cor/etnia), `mapStatus`, `mapDate`, `mapGender`, a heurística de gênero do autor e `mergeSheet()` (retorna updates e inserts preservando notas, capa, páginas e ano lido), com testes cobrindo os cenários do spec
 - [ ] 3.9 `lib/domain/isbn.ts` e `lookup.ts` (`isbnOf`, `isbn10`, normalização das fontes, `titleMatch`, deduplicação e priorização por capa), com testes
-- [ ] 3.10 `lib/domain/backup.ts`: conversão do backup do standalone (strings → tipos, `fav`, `coverTried`) para o modelo e do modelo para o formato de backup, com testes de ida e volta
+- [x] 3.10 `lib/domain/backup.ts`: conversão do backup do standalone (strings → tipos, `fav`, `coverTried`) para o modelo e do modelo para o formato de backup, com testes de ida e volta
 - [ ] 3.11 `lib/validation/`: schemas Zod de livro (criar, atualizar, lote), meta, configurações, import e sync, compartilhados entre cliente e servidor
 
 ## 4. Autenticação
