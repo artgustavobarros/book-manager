@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 /* Tokens do design handoff (design/handoff/tokens), copiados sem alteração. */
 @import "./styles/tokens/colors.css";
@@ -6,6 +8,7 @@
 @import "./styles/tokens/spacing.css";
 @import "./styles/tokens/motion.css";
 
+/* Tema escuro do design: <html data-theme="dark">. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
@@ -28,7 +31,9 @@
 
 @theme inline {
   --font-sans: var(--font-hanken), "Hanken Grotesk", system-ui, sans-serif;
+  --font-heading: var(--font-hanken), "Hanken Grotesk", system-ui, sans-serif;
 
+  /* Paleta da Bodega */
   --color-bg: var(--bg);
   --color-card: var(--card);
   --color-ink: var(--ink);
@@ -56,6 +61,31 @@
   --color-warning-bg: var(--warning-bg);
   --color-warning-fg: var(--warning-fg);
 
+  /*
+   * Variáveis semânticas do shadcn/ui apontando para os tokens da Bodega.
+   * Mapeadas direto aqui (e não redefinindo --card/--ring/--radius em :root)
+   * porque esses nomes já existem nos tokens do design com outro significado:
+   * --ring é uma box-shadow e --radius vale 4px.
+   */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--card);
+  --color-secondary: var(--soft);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--soft);
+  --color-muted-foreground: var(--mute);
+  --color-accent: var(--hov);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--acc);
+  --color-border: var(--line2);
+  --color-input: var(--line2);
+  --color-ring: var(--focus-ring);
+
+  /* Sombras e movimento do design */
   --shadow-seg: var(--shadow-seg);
   --shadow-card: var(--shadow-card);
   --shadow-popover: var(--shadow-popover);
@@ -90,6 +120,10 @@
     transition:
       background 0.25s,
       color 0.25s;
+  }
+
+  * {
+    border-color: var(--line2);
   }
 
   a {

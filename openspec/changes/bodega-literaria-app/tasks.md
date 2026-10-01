@@ -6,8 +6,8 @@
 - [x] 1.4 Configurar a Hanken Grotesk (400–700) via `next/font/google` como `--font-sans` e os estilos base do `body` conforme o design
 - [x] 1.5 Configurar Vitest (unit) e Playwright (e2e + visual) com scripts `test`, `test:e2e` e `test:visual`
 - [x] 1.6 Configurar o T3 Env (`env.ts` com `@t3-oss/env-nextjs`, server e client) e criar o `.env.example` documentando todas as variáveis (D18); proibir `process.env` direto via lint
-- [ ] 1.7 Inicializar o shadcn/ui (`components.json`, `lib/utils.ts`) e mapear as variáveis do shadcn para os tokens da Bodega no `globals.css` (claro e escuro)
-- [ ] 1.8 Instalar `react-hook-form`, `@hookform/resolvers` e `zod`, e adicionar os componentes shadcn `button`, `dialog`, `alert-dialog`, `popover`, `toggle-group`, `input`, `textarea`, `label`, `form` e `sonner`
+- [x] 1.7 Inicializar o shadcn/ui (`components.json`, `lib/utils.ts`) e mapear as variáveis do shadcn para os tokens da Bodega no `globals.css` (claro e escuro)
+- [x] 1.8 Instalar `react-hook-form`, `@hookform/resolvers` e `zod`, e adicionar os componentes shadcn `button`, `dialog`, `alert-dialog`, `popover`, `toggle-group`, `input`, `textarea`, `label`, `field` (substituto atual do `form`, usado com o `Controller` do RHF) e `sonner`
 
 ## 2. Banco de dados
 
