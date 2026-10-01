@@ -54,7 +54,7 @@
 ## 6. Shell do app e primitivos de UI
 
 - [x] 6.1 Root layout com o cookie de tema (`data-theme` no SSR) e o cookie de fuso; layout `(app)` validando a sessão, carregando livros, meta e configurações e hidratando o TanStack Query
-- [ ] 6.2 Restilizar os componentes shadcn para o Design System (Button com 4 variantes + desabilitado/inválido, ToggleGroup como segmentado, Input/Textarea/Label/Form com os estados padrão, foco e erro) e criar os customizados (IconButton, Chip, StatusSelect nativo, Card, Kpi, EmptyState, BrandMark), conferidos contra o Design System
+- [x] 6.2 Restilizar os componentes shadcn para o Design System (Button com as variantes + desabilitado/inválido, Dialog/AlertDialog, Input com os estados padrão, foco e erro; Popover do Radix no menu de ordenação; componentes shadcn sem uso removidos) e criar os customizados (IconButton, Chip, StatusSelect nativo, Card, Kpi, EmptyState, BrandMark), conferidos contra o Design System
 - [x] 6.3 `Modal` sobre o `Dialog` do shadcn (véu `acv-fade`, painel `acv-rise`, Esc, clique fora, focus trap, retorno de foco), `ConfirmDialog` sobre o `AlertDialog`, e o toast próprio (`acv-toast`, um por vez, 2,4 s; o Sonner foi descartado por fidelidade)
 - [x] 6.4 `BookCover` / `MiniCover` (capa gerada + imagem por cima, badge de status, ♥, sombra de livro) e `useCarousel`/`Carousel` portando snap, drag de mouse, dots e animação de 520 ms abaixo de 640px
 - [x] 6.5 Header (marca, busca → `/estante?q=`, abas como rotas, Me surpreenda com estado desabilitado, + Registrar livro, tema, avatar) e rodapé (nova assinatura + 4 ações)
@@ -92,16 +92,16 @@
 ## 11. Integrações e portabilidade
 
 - [x] 11.1 Busca online no modal (Google, Open Library, Apple e Amazon por ISBN, em paralelo), lista de resultados e preenchimento do formulário
-- [ ] 11.2 Modal "Sincronizar planilha" (URL salva, `/api/sheet-sync`, mensagens, carregamento) e invalidação do acervo
-- [ ] 11.3 Exportar CSV e salvar backup JSON no cliente; restaurar backup via `/api/books/import` com confirmação de substituição (exceto no acervo vazio) e erro "Arquivo inválido." no padrão do app
-- [ ] 11.4 Modal "Me surpreenda" (sorteio sem repetir, filtro por gênero, começar a ler, editar ficha, estado sem candidatos)
+- [x] 11.2 Modal "Sincronizar planilha" (URL salva, `/api/sheet-sync`, mensagens, carregamento) e invalidação do acervo
+- [x] 11.3 Exportar CSV e salvar backup JSON no cliente; restaurar backup via `/api/books/import` com confirmação de substituição (exceto no acervo vazio) e erro "Arquivo inválido." no padrão do app
+- [x] 11.4 Modal "Me surpreenda" (sorteio sem repetir, filtro por gênero, começar a ler, editar ficha, estado sem candidatos)
 
 ## 12. Minha conta
 
-- [ ] 12.1 Formulários da conta com React Hook Form + Zod (erros do servidor via `setError`). Seção Perfil: nome e troca de e-mail com confirmação no novo endereço, mais as mensagens
-- [ ] 12.2 Seção Alterar senha (validações, revogação das outras sessões) e a variante para contas somente Google
-- [ ] 12.3 Seção Conta Google (status, vincular estando logado, desvincular só com senha definida)
-- [ ] 12.4 Seção Excluir conta (senha ou sessão recente, dois cliques, cascade, redirecionamento com "Conta excluída") e "Sair da conta"
+- [x] 12.1 Formulários da conta com React Hook Form + Zod (erros do servidor via `setError`). Seção Perfil: nome e troca de e-mail com confirmação no novo endereço, mais as mensagens
+- [x] 12.2 Seção Alterar senha (validações, revogação das outras sessões) e a variante para contas somente Google
+- [x] 12.3 Seção Conta Google (status, vincular estando logado, desvincular só com senha definida)
+- [x] 12.4 Seção Excluir conta (senha ou sessão recente, dois cliques, cascade, redirecionamento com "Conta excluída") e "Sair da conta"
 
 ## 13. Fidelidade visual e qualidade
 
