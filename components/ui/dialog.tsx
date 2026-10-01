@@ -50,8 +50,13 @@ function Modal({
             )}
           >
             <VisuallyHidden.Root>
-              <DialogPrimitive.Title>{title}</DialogPrimitive.Title>
-              <DialogPrimitive.Description>{description ?? title}</DialogPrimitive.Description>
+              {/* Nome acessível do diálogo; o cabeçalho visível (h2) fica no conteúdo. */}
+              <DialogPrimitive.Title asChild>
+                <span>{title}</span>
+              </DialogPrimitive.Title>
+              <DialogPrimitive.Description asChild>
+                <span>{description ?? title}</span>
+              </DialogPrimitive.Description>
             </VisuallyHidden.Root>
             {children}
           </DialogPrimitive.Content>

@@ -24,6 +24,8 @@ export const env = createEnv({
     SMTP_PASS: z.string().min(1).optional(),
     CRON_SECRET: z.string().min(16).optional(),
     VERCEL_URL: z.string().optional(),
+    /** Só para testes visuais: instante fixo usado pelo servidor como "agora". */
+    FIXED_NOW: z.iso.datetime({ offset: true }).optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),

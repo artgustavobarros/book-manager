@@ -40,7 +40,7 @@
 - [x] 4.5 Tela `/entrar` fiel ao design: abas Entrar/Criar conta (`?modo=cadastro`), botão Google, divisória, campos, CTA e botão de tema; formulários com React Hook Form + Zod e mensagens de erro (credenciais, e-mail não verificado com reenvio, cadastro pendente no Google, rate limit 429)
 - [x] 4.6 Telas `/verifique-email`, `/esqueci-senha` e `/redefinir-senha`, mais o estado de link inválido ou expirado, no mesmo cartão e com os componentes do Design System
 - [x] 4.7 `GET /api/cron/purge-unverified` protegido por `CRON_SECRET`, excluindo não verificados com mais de 7 dias; registrar em `vercel.json`
-- [ ] 4.8 Testes e2e: cadastro → e-mail capturado (transporte de teste) → verificação → Painel; login bloqueado sem verificação; esqueci a senha; logout; acesso sem sessão redireciona e a API responde 401
+- [x] 4.8 Testes e2e: cadastro → e-mail capturado (transporte de teste) → verificação → Painel; login bloqueado sem verificação; esqueci a senha; logout; acesso sem sessão redireciona e a API responde 401
 
 ## 5. API de dados
 
@@ -105,7 +105,7 @@
 
 ## 13. Fidelidade visual e qualidade
 
-- [ ] 13.1 `scripts/seed-reference.ts`: cria um usuário de teste verificado com o acervo de referência no banco de teste
+- [x] 13.1 `scripts/seed-reference.ts`: cria um usuário de teste verificado com o acervo de referência no banco de teste
 - [ ] 13.2 Harness do oráculo no Playwright: abrir o standalone via `file://` com o storage injetado, relógio fixo e rede externa bloqueada
 - [ ] 13.3 Specs visuais pareando standalone × app para todas as telas e modais do spec `app-shell`, a 1440×900 e 390×844, nos temas claro e escuro (tolerância de 1%)
 - [ ] 13.4 Snapshots próprios das telas novas (verificar e-mail, esqueci a senha, nova senha, conta estendida, controle de empréstimo)

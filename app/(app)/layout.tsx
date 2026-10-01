@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 
 import { AppProvider } from "@/components/app/app-provider";
 import { AppShell } from "@/components/app/app-shell";
+import { env } from "@/env";
 import { googleEnabled } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { account } from "@/lib/db/schema";
@@ -21,7 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { user } = await requirePageSession();
   const jar = await cookies();
   const tz = safeTimeZone(decodeURIComponent(jar.get(TZ_COOKIE)?.value ?? ""));
-  const now = new Date();
+  const now = env.FIXED_NOW ? new Date(env.FIXED_NOW) : new Date();
   const year = currentYear(now, tz);
 
   const [books, goal, settings, accounts] = await Promise.all([
