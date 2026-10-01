@@ -114,6 +114,10 @@ O sistema SHALL exigir sessão válida em todas as páginas do app (Painel, Esta
 ### Requirement: Envio de e-mails transacionais
 O sistema SHALL enviar os e-mails de verificação, redefinição de senha e confirmação de troca de e-mail via Gmail SMTP, através de uma interface de envio única que permita trocar o provedor sem alterar o restante do código. Os e-mails MUST usar o nome de exibição "Bodega Literária" e um layout HTML simples, com a paleta do Design System e versão em texto puro.
 
+#### Scenario: Envio sem revelar se a conta existe
+- **WHEN** um e-mail de verificação ou de redefinição é disparado
+- **THEN** o envio acontece em segundo plano (`waitUntil`), sem aumentar o tempo de resposta, para não revelar se a conta existe
+
 #### Scenario: Falha no envio
-- **WHEN** o provedor SMTP falha ao enviar um e-mail de verificação
-- **THEN** o sistema registra o erro no servidor e a UI informa que não foi possível enviar, oferecendo tentar novamente
+- **WHEN** o provedor SMTP falha ao enviar um e-mail
+- **THEN** o sistema registra o erro no servidor, e as telas "Verifique seu e-mail" e de link inválido continuam oferecendo "Reenviar"
