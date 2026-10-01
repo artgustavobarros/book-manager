@@ -6,6 +6,14 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" },
+      ],
+    },
+  },
+  {
     // Variáveis de ambiente só via `env.ts` (T3 Env).
     files: ["app/**", "components/**", "lib/**", "hooks/**"],
     rules: {
@@ -14,6 +22,15 @@ const eslintConfig = defineConfig([
         { object: "process", property: "env", message: "Importe `env` de '@/env'." },
       ],
     },
+  },
+  {
+    // Testes comparam com o standalone (JS sem tipos) e scripts CommonJS.
+    files: ["**/*.test.ts", "tests/**"],
+    rules: { "@typescript-eslint/no-explicit-any": "off" },
+  },
+  {
+    files: ["scripts/**/*.cjs"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
   },
   // Override default ignores of eslint-config-next.
   globalIgnores([

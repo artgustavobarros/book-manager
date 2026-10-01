@@ -7,7 +7,6 @@ import { groupBy, insights } from "./insights";
 
 const NOW = new Date("2026-06-15T18:00:00Z");
 const books = referenceBooks();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
 const stripColors = (bg: string) => bg.replace(/(var\(--[a-z-]+\)|#[0-9a-f]+|oklch\([^)]*\))/g, "C");
