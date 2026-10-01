@@ -1,0 +1,34 @@
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
+
+/**
+ * Variáveis de ambiente validadas (T3 Env). Nenhum outro módulo lê `process.env`.
+ *
+ * DATABASE_URL aceita `postgres://…` (Neon em produção) ou `pglite://<dir>` /
+ * `pglite://memory` (Postgres embutido para desenvolvimento e testes).
+ */
+export const env = createEnv({
+  server: {
+    DATABASE_URL: z
+      .string()
+      .min(1)
+      .refine((v) => /^(postgres(ql)?|pglite):\/\//.test(v), "Use postgres:// ou pglite://"),
+    BETTER_AUTH_SECRET: z.string().min(32),
+    BETTER_AUTH_URL: z.url(),
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    EMAIL_TRANSPORT: z.enum(["gmail", "outbox", "console"]).default("gmail"),
+    SMTP_USER: z.email().optional(),
+    SMTP_PASS: z.string().min(1).optional(),
+    CRON_SECRET: z.string().min(16).optional(),
+    VERCEL_URL: z.string().optional(),
+  },
+  client: {
+    NEXT_PUBLIC_APP_URL: z.url(),
+  },
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  },
+  skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+  emptyStringAsUndefined: true,
+});

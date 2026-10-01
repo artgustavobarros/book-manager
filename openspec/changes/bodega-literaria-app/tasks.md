@@ -1,11 +1,11 @@
 ## 1. Fundação do projeto
 
-- [ ] 1.1 `git init`, `.gitignore` (Node, Next, `.env*`, artefatos do Playwright) e commit inicial com `design/handoff/` e `openspec/`
-- [ ] 1.2 Criar o app Next.js (App Router, TypeScript strict, pnpm, ESLint) na raiz, sem os exemplos do template
-- [ ] 1.3 Instalar e configurar o Tailwind v4; copiar `design/handoff/tokens/*.css` para `app/styles/tokens/` e mapear tudo em `@theme inline` no `globals.css` (cores, status, sombras, raios, durações, curvas, `animate-acv-*`)
-- [ ] 1.4 Configurar a Hanken Grotesk (400–700) via `next/font/google` como `--font-sans` e os estilos base do `body` conforme o design
-- [ ] 1.5 Configurar Vitest (unit) e Playwright (e2e + visual) com scripts `test`, `test:e2e` e `test:visual`
-- [ ] 1.6 Configurar o T3 Env (`env.ts` com `@t3-oss/env-nextjs`, server e client) e criar o `.env.example` documentando todas as variáveis (D18); proibir `process.env` direto via lint
+- [x] 1.1 `git init`, `.gitignore` (Node, Next, `.env*`, artefatos do Playwright) e commit inicial com `design/handoff/` e `openspec/`
+- [x] 1.2 Criar o app Next.js (App Router, TypeScript strict, pnpm, ESLint) na raiz, sem os exemplos do template
+- [x] 1.3 Instalar e configurar o Tailwind v4; copiar `design/handoff/tokens/*.css` para `app/styles/tokens/` e mapear tudo em `@theme inline` no `globals.css` (cores, status, sombras, raios, durações, curvas, `animate-acv-*`)
+- [x] 1.4 Configurar a Hanken Grotesk (400–700) via `next/font/google` como `--font-sans` e os estilos base do `body` conforme o design
+- [x] 1.5 Configurar Vitest (unit) e Playwright (e2e + visual) com scripts `test`, `test:e2e` e `test:visual`
+- [x] 1.6 Configurar o T3 Env (`env.ts` com `@t3-oss/env-nextjs`, server e client) e criar o `.env.example` documentando todas as variáveis (D18); proibir `process.env` direto via lint
 - [ ] 1.7 Inicializar o shadcn/ui (`components.json`, `lib/utils.ts`) e mapear as variáveis do shadcn para os tokens da Bodega no `globals.css` (claro e escuro)
 - [ ] 1.8 Instalar `react-hook-form`, `@hookform/resolvers` e `zod`, e adicionar os componentes shadcn `button`, `dialog`, `alert-dialog`, `popover`, `toggle-group`, `input`, `textarea`, `label`, `form` e `sonner`
 

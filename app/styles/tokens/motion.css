@@ -1,0 +1,16 @@
+/* Durações Tailwind + curvas + keyframes usados no app. */
+:root {
+  --duration-75: 75ms; --duration-150: 150ms; --duration-200: 200ms;
+  --duration-300: 300ms; --duration-500: 500ms; --duration-700: 700ms; --duration-1000: 1000ms;
+  --ease-out: cubic-bezier(0,0,.2,1);
+  --ease-in-out: cubic-bezier(.4,0,.2,1);
+  --ease-emphasized: cubic-bezier(.2,.7,.2,1); /* entradas de cards, modais, carrossel */
+  --press-scale: .97;
+}
+@keyframes acv-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes acv-fade{from{opacity:0}to{opacity:1}}
+@keyframes acv-rise{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes acv-toast{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes acv-dot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+@keyframes acv-grow-x{from{transform:scaleX(0)}to{transform:none}}
+@keyframes acv-grow-y{from{transform:scaleY(0)}to{transform:none}}
