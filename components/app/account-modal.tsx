@@ -17,6 +17,7 @@ import {
 } from "@/lib/validation/auth";
 
 import { useApp } from "./app-provider";
+import { SheetExportSection } from "./sheet-export-section";
 import { toast } from "./toast";
 
 const input =
@@ -406,6 +407,8 @@ function AccountBody() {
       <PasswordSection />
       <Divider />
       <GoogleSection />
+      <Divider />
+      <SheetExportSection />
       <Divider />
       <DeleteSection />
       <Divider />

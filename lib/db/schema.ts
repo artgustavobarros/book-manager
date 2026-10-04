@@ -13,7 +13,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth-schema";
+import { account, user } from "./auth-schema";
 
 export * from "./auth-schema";
 
@@ -99,6 +99,54 @@ export const userSettings = pgTable("user_settings", {
   sheetUrl: text("sheet_url"),
   ...timestamps,
 });
+
+export const sheetExportStatus = pgEnum("sheet_export_status", [
+  "pending",
+  "enabled",
+  "reconnect",
+  "disabled",
+]);
+
+export const sheetExportRunStatus = pgEnum("sheet_export_run_status", [
+  "processing",
+  "succeeded",
+  "failed",
+]);
+
+export const sheetExportConnections = pgTable("sheet_export_connections", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  accountId: text("account_id").references(() => account.id, {
+    onDelete: "set null",
+  }),
+  spreadsheetId: text("spreadsheet_id"),
+  status: sheetExportStatus("status").notNull().default("pending"),
+  lastSucceededAt: timestamp("last_succeeded_at", { withTimezone: true }),
+  lastFailedAt: timestamp("last_failed_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  ...timestamps,
+});
+
+export const sheetExportRuns = pgTable(
+  "sheet_export_runs",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    weekKey: text("week_key").notNull(),
+    status: sheetExportRunStatus("status").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    leaseUntil: timestamp("lease_until", { withTimezone: true }),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    error: text("error"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.weekKey] }),
+    index("sheet_export_runs_status_idx").on(t.status, t.leaseUntil),
+  ]
+);
 
 export type BookRow = typeof books.$inferSelect;
 export type NewBookRow = typeof books.$inferInsert;

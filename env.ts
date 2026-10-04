@@ -23,6 +23,8 @@ export const env = createEnv({
     BETTER_AUTH_URL: z.url().optional(),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    /** Segredo enviado pela Vercel no header Authorization das invocações cron. */
+    CRON_SECRET: z.string().min(16).optional(),
     EMAIL_TRANSPORT: z.enum(["gmail", "outbox", "console"]).default("gmail"),
     /** Arquivo da caixa de saída de teste (EMAIL_TRANSPORT=outbox). */
     EMAIL_OUTBOX_FILE: z.string().optional(),

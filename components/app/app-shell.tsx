@@ -1,14 +1,38 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 import { AppFooter } from "./app-footer";
 import { AppHeader } from "./app-header";
 import { AppModals } from "./app-modals";
+import { useApp } from "./app-provider";
 import { EmailVerificationBanner } from "./email-verification-banner";
 import { MobileFabs } from "./mobile-fabs";
 import { RestoreHost } from "./restore-host";
-import { Toaster } from "./toast";
+import { Toaster, toast } from "./toast";
+
+function SheetExportReturn() {
+  const app = useApp();
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const outcome = url.searchParams.get("sheetExport");
+    if (!outcome) {
+      return;
+    }
+    url.searchParams.delete("sheetExport");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    app.setAccountOpen(true);
+    toast(
+      outcome === "ok"
+        ? "Cópia semanal conectada"
+        : outcome === "denied"
+          ? "Conexão com Google cancelada"
+          : "Confira a cópia semanal na sua conta"
+    );
+  }, [app.setAccountOpen]);
+  return null;
+}
 
 /** Estrutura das páginas autenticadas (Acervo.dc.html, bloco `authed`). */
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -34,6 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Toaster />
       <RestoreHost />
       <AppModals />
+      <SheetExportReturn />
     </div>
   );
 }

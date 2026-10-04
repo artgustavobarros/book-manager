@@ -75,6 +75,7 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 | `BETTER_AUTH_URL` | em produção | URL pública do app (nos previews usa a `VERCEL_URL`) |
 | `NEXT_PUBLIC_APP_URL` | não | URL pública extra confiável (origem) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | não | Login com Google; sem elas, o botão avisa que está indisponível |
+| `CRON_SECRET` | para cópia semanal | Segredo de 16+ caracteres para autenticar o cron da Vercel |
 | `EMAIL_TRANSPORT` | não | `gmail` (padrão), `console` ou `outbox` (testes) |
 | `SMTP_USER` / `SMTP_PASS` | com `gmail` | Conta Gmail e **senha de app** |
 
@@ -96,6 +97,16 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 4. Em **Settings → Environment Variables**, defina `BETTER_AUTH_SECRET`, `SMTP_USER`, `SMTP_PASS` e `EMAIL_TRANSPORT=gmail` (Production e Preview) e `BETTER_AUTH_URL` (só Production, com a URL definitiva).
 5. **Google (opcional):** no Google Cloud Console, crie um "ID do cliente OAuth" (aplicativo da Web) com o URI de redirecionamento `<BETTER_AUTH_URL>/api/auth/callback/google` (e `http://localhost:3000/api/auth/callback/google` para desenvolvimento) e defina `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`. Nos previews, que têm URL dinâmica, o login com Google não funciona; use e-mail e senha.
 6. **Gmail:** ative a verificação em duas etapas na conta e gere uma senha de app em <https://myaccount.google.com/apppasswords>.
+
+### Cópia semanal no Google Sheets
+
+1. No **mesmo projeto Google Cloud** do cliente OAuth acima, habilite as APIs **Google Sheets** e **Google Drive**. A Drive API permite reencontrar uma planilha criada quando o Google confirmou a criação, mas a gravação do identificador no banco falhou.
+2. Na tela de consentimento OAuth, configure o escopo `https://www.googleapis.com/auth/drive.file`. Esse escopo dá ao app acesso aos arquivos que ele cria ou que o usuário abre com ele; não solicite o escopo amplo `spreadsheets`. Publique a tela de consentimento para uso externo em produção e cumpra a verificação exigida pelo Google. Em modo **Testing**, um refresh token de app externo com esse escopo pode expirar em sete dias.
+3. Mantenha o URI de redirecionamento OAuth `<BETTER_AUTH_URL>/api/auth/callback/google`. A rota `/api/sheets-export/callback` é apenas o retorno **interno** do Better Auth após esse callback. Defina `CRON_SECRET` (16+ caracteres aleatórios, por exemplo `openssl rand -base64 32`) nas variáveis da Vercel em **Production**.
+4. Depois do deploy, a pessoa abre **Minha conta → Cópia semanal no Google Sheets → Conectar Google** e concede a permissão. O app cria uma planilha privada na conta autorizada. Cada aba `AAAA-Www` guarda um retrato de todos os livros daquela semana; metas e configurações não são exportadas. A planilha de importação informada no modal **Sincronizar planilha** é independente.
+5. O cron em `vercel.json` verifica pendências diariamente às **06:00 UTC** e grava no máximo uma aba por semana. Falhas temporárias são tentadas novamente no dia seguinte; falhas de autorização pedem reconexão. Use **Vercel → Settings → Cron Jobs → View Logs** para acompanhar o resultado. A rota `/api/cron/sheets-export` exige `Authorization: Bearer <CRON_SECRET>`; `next dev` não aciona o cron automaticamente. A implementação limita o trabalho de cada invocação para caber na duração da função; antes de muitos usuários, distribua o trabalho com uma fila.
+
+A opção **Desativar** para as novas cópias não apaga as abas antigas. Excluir a conta no app remove as configurações locais, mas a planilha criada permanece no Google Drive do usuário.
 
 ## Licenças
 
