@@ -135,6 +135,7 @@ describe("facetas e URL", () => {
       facet: { kind: "editora" as const, value: "Record" },
       sort: "paginas" as const,
       view: "list" as const,
+      page: 1,
     };
     const params = toShelfParams(state);
     expect(parseShelfParams(params)).toEqual(state);

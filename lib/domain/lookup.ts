@@ -1,5 +1,5 @@
 /** Normalização das fontes de busca online (porta de srcGoogle/srcApple/srcOL/srcAmazon). */
-import { isbn10 } from "./isbn";
+import { isbn10, isbnOf } from "./isbn";
 import { norm } from "./text";
 
 export type LookupSource =
@@ -111,9 +111,77 @@ export function amazonResult(isbn: string, url: string): LookupResult {
   };
 }
 
-/** Deduplica por fonte+título+autor+ano, mantém só resultados com título e prioriza os com capa. */
+const LINK_WORDS = new Set([
+  "a",
+  "as",
+  "e",
+  "o",
+  "os",
+  "de",
+  "da",
+  "das",
+  "do",
+  "dos",
+  "um",
+  "uma",
+]);
+
+function searchWords(query: string): string[] {
+  const words = query.split(" ").filter(Boolean);
+  const meaningful = words.filter((word) => !LINK_WORDS.has(word));
+  return meaningful.length ? meaningful : words;
+}
+
+function matchingWords(queryWords: string[], text: string): number {
+  const words = text.split(" ");
+  return queryWords.filter((queryWord) =>
+    words.some(
+      (word) =>
+        word === queryWord ||
+        (queryWord.length >= 3 && word.startsWith(queryWord))
+    )
+  ).length;
+}
+
+/** Faixa, cobertura do título, cobertura do autor e proximidade do tamanho. */
+function textRank(
+  result: LookupResult,
+  query: string,
+  queryWords: string[]
+): readonly number[] {
+  const title = norm(result.title);
+  const author = norm(result.author);
+  const titleMatches = matchingWords(queryWords, title);
+  const authorMatches = matchingWords(queryWords, author);
+  let tier = 0;
+  if (title === query) {
+    tier = 6;
+  } else if (title.startsWith(query + " ")) {
+    tier = 5;
+  } else if (title.includes(" " + query + " ") || title.endsWith(" " + query)) {
+    tier = 4;
+  } else if (queryWords.length > 0 && titleMatches === queryWords.length) {
+    tier = 3;
+  } else if (titleMatches > 0) {
+    tier = 2;
+  } else if (authorMatches > 0) {
+    tier = 1;
+  }
+  const distance = Math.abs(title.split(" ").length - queryWords.length);
+  return [tier, titleMatches, authorMatches, -distance];
+}
+
+function isbnSourceRank(result: LookupResult): number {
+  if (result.source === "Google Livros" || result.source === "Open Library") {
+    return 2;
+  }
+  return result.source === "Apple Books" ? 1 : 0;
+}
+
+/** Deduplica antes de classificar e limitar os resultados visíveis. */
 export function mergeResults(
   groups: readonly LookupResult[][],
+  query: string,
   limit = 12
 ): LookupResult[] {
   const all: LookupResult[] = [];
@@ -125,8 +193,38 @@ export function mergeResults(
       all.push(r);
     }
   }
-  all.sort((a, b) => (b.cover ? 1 : 0) - (a.cover ? 1 : 0));
-  return all.slice(0, limit);
+  if (isbnOf(query)) {
+    const coverOnly = all.find((result) => result.coverOnly);
+    const records = all.filter((result) => !result.coverOnly);
+    records.sort(
+      (a, b) =>
+        isbnSourceRank(b) - isbnSourceRank(a) ||
+        Number(Boolean(b.cover)) - Number(Boolean(a.cover))
+    );
+    return coverOnly
+      ? [...records.slice(0, Math.max(0, limit - 1)), coverOnly].slice(0, limit)
+      : records.slice(0, limit);
+  }
+
+  const normalizedQuery = norm(query);
+  const words = searchWords(normalizedQuery);
+  const ranked = all.map((result, index) => ({
+    result,
+    index,
+    rank: textRank(result, normalizedQuery, words),
+  }));
+  ranked.sort((a, b) => {
+    for (let i = 0; i < a.rank.length; i++) {
+      if (a.rank[i] !== b.rank[i]) {
+        return b.rank[i] - a.rank[i];
+      }
+    }
+    return (
+      Number(Boolean(b.result.cover)) - Number(Boolean(a.result.cover)) ||
+      a.index - b.index
+    );
+  });
+  return ranked.slice(0, limit).map(({ result }) => result);
 }
 
 /** Correspondência frouxa de título usada pelas capas automáticas. */

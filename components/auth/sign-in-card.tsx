@@ -158,13 +158,11 @@ function LoginForm({ callbackURL }: { callbackURL: string }) {
   const [error, setError] = useState<{ code?: string; status?: number } | null>(
     null
   );
-  const [resent, setResent] = useState(false);
-  const [resending, setResending] = useState(false);
   const form = useForm({
     resolver: zodResolver(signInSchema),
     defaultValues: { email: "", password: "" },
   });
-  const { register, handleSubmit, formState, getValues } = form;
+  const { register, handleSubmit, formState } = form;
   const submitOnce = useSingleFlight();
 
   return (
@@ -174,7 +172,6 @@ function LoginForm({ callbackURL }: { callbackURL: string }) {
       onSubmit={handleSubmit((values) =>
         submitOnce(async () => {
           setError(null);
-          setResent(false);
           const { error } = await authClient.signIn.email({
             ...values,
             callbackURL,
@@ -226,39 +223,7 @@ function LoginForm({ callbackURL }: { callbackURL: string }) {
         </div>
       </div>
       {error ? (
-        <AuthNotice tone="error">
-          {authErrorMessage(error)}
-          {error.code === "EMAIL_NOT_VERIFIED" ? (
-            <>
-              {" "}
-              {resent ? (
-                <strong className="font-semibold">
-                  Enviamos um novo link.
-                </strong>
-              ) : (
-                <button
-                  className="border-0 bg-transparent p-0 font-semibold text-ink text-xs underline hover:text-acc disabled:cursor-wait disabled:opacity-60"
-                  disabled={resending}
-                  onClick={async () => {
-                    setResending(true);
-                    const { error } = await authClient.sendVerificationEmail({
-                      email: getValues("email"),
-                      callbackURL: "/verifique-email",
-                    });
-                    setResending(false);
-                    if (error) {
-                      return setError(error);
-                    }
-                    setResent(true);
-                  }}
-                  type="button"
-                >
-                  {resending ? "Reenviando…" : "Reenviar e-mail de verificação"}
-                </button>
-              )}
-            </>
-          ) : null}
-        </AuthNotice>
+        <AuthNotice tone="error">{authErrorMessage(error)}</AuthNotice>
       ) : null}
       <Button
         className="active:scale-[.98]"
@@ -277,6 +242,10 @@ function SignupForm() {
   const [error, setError] = useState<{ code?: string; status?: number } | null>(
     null
   );
+  const [signInError, setSignInError] = useState<{
+    code?: string;
+    status?: number;
+  } | null>(null);
   const form = useForm({
     resolver: zodResolver(signUpSchema),
     defaultValues: { name: "", email: "", password: "", confirm: "" },
@@ -291,6 +260,7 @@ function SignupForm() {
       onSubmit={handleSubmit(({ name, email, password }) =>
         submitOnce(async () => {
           setError(null);
+          setSignInError(null);
           const { error } = await authClient.signUp.email({
             name,
             email,
@@ -300,7 +270,15 @@ function SignupForm() {
           if (error) {
             return setError(error);
           }
-          router.push("/verifique-email?email=" + encodeURIComponent(email));
+          // O cadastro devolve resposta genérica para e-mails já existentes.
+          // Só abrimos o acervo após autenticar de fato com as credenciais.
+          const signedIn = await authClient.signIn.email({ email, password });
+          if (signedIn.error) {
+            setSignInError(signedIn.error);
+            return;
+          }
+          router.replace("/");
+          router.refresh();
         })
       )}
     >
@@ -350,6 +328,37 @@ function SignupForm() {
       </div>
       {error ? (
         <AuthNotice tone="error">{authErrorMessage(error)}</AuthNotice>
+      ) : null}
+      {signInError ? (
+        <AuthNotice tone="error">
+          {signInError.status === 401 ? (
+            <>
+              Não foi possível entrar com essa senha. Se você já tinha cadastro,
+              use a senha anterior ou redefina a senha.
+            </>
+          ) : signInError.status === 429 ? (
+            <>
+              Muitas tentativas. Aguarde um minuto. Sua conta pode ter sido
+              criada; depois, tente entrar com a senha informada.
+            </>
+          ) : (
+            <>
+              Não foi possível entrar agora. Sua conta pode ter sido criada;
+              tente entrar novamente em instantes.
+            </>
+          )}{" "}
+          <Link className="font-semibold text-ink underline" href="/entrar">
+            Entrar
+          </Link>{" "}
+          ou{" "}
+          <Link
+            className="font-semibold text-ink underline"
+            href="/esqueci-senha"
+          >
+            redefinir senha
+          </Link>
+          .
+        </AuthNotice>
       ) : null}
       <Button
         className="active:scale-[.98]"

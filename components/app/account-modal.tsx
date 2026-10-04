@@ -10,7 +10,11 @@ import { Modal, ModalClose, useModalDraft } from "@/components/ui/dialog";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import { changePasswordSchema, profileSchema } from "@/lib/validation/auth";
+import {
+  changePasswordSchema,
+  MIN_PASSWORD,
+  profileSchema,
+} from "@/lib/validation/auth";
 
 import { useApp } from "./app-provider";
 import { toast } from "./toast";
@@ -196,7 +200,7 @@ function PasswordSection() {
             aria-invalid={!!e.password}
             autoComplete="new-password"
             className={input}
-            placeholder="Mínimo 8 caracteres"
+            placeholder={`Mínimo ${MIN_PASSWORD} caracteres`}
             type="password"
           />
         </label>

@@ -1,14 +1,18 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+
 import { AppFooter } from "./app-footer";
 import { AppHeader } from "./app-header";
 import { AppModals } from "./app-modals";
+import { EmailVerificationBanner } from "./email-verification-banner";
 import { MobileFabs } from "./mobile-fabs";
 import { RestoreHost } from "./restore-host";
 import { Toaster } from "./toast";
 
 /** Estrutura das páginas autenticadas (Acervo.dc.html, bloco `authed`). */
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   return (
     <div className="flex min-h-screen flex-col bg-bg text-ink transition-[background-color,color] duration-300">
       <a
@@ -18,6 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         Pular para o conteúdo
       </a>
       <AppHeader />
+      <EmailVerificationBanner key={pathname} />
       {children}
       <AppFooter />
       {/* Até 640px: espaço para os botões flutuantes não cobrirem o fim da página. */}

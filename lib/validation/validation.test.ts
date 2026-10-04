@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { safeCallback, signUpSchema } from "./auth";
+import { MIN_PASSWORD, safeCallback, signUpSchema } from "./auth";
 import {
   bookBatchSchema,
   bookCreateSchema,
@@ -85,6 +85,27 @@ describe("API", () => {
 });
 
 describe("auth", () => {
+  it("aceita senhas a partir do tamanho mínimo", () => {
+    const base = { name: "Ana", email: "ana@x.com" };
+    const validPassword = "a".repeat(MIN_PASSWORD);
+    const shortPassword = "a".repeat(MIN_PASSWORD - 1);
+
+    expect(
+      signUpSchema.safeParse({
+        ...base,
+        password: validPassword,
+        confirm: validPassword,
+      }).success
+    ).toBe(true);
+    expect(
+      signUpSchema.safeParse({
+        ...base,
+        password: shortPassword,
+        confirm: shortPassword,
+      }).success
+    ).toBe(false);
+  });
+
   it("confere a confirmação de senha", () => {
     const r = signUpSchema.safeParse({
       name: "Ana",

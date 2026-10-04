@@ -61,7 +61,6 @@ export default defineConfig({
       NEXT_PUBLIC_APP_URL: baseURL,
       EMAIL_TRANSPORT: "outbox",
       EMAIL_OUTBOX_FILE: ".data/outbox-e2e.jsonl",
-      CRON_SECRET: "e2e-cron-secret-0000",
       FIXED_NOW,
     },
   },

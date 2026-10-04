@@ -1,11 +1,14 @@
+import { eq } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-
+import * as verificationRoute from "@/app/api/account/verification/route";
 import * as bookById from "@/app/api/books/[id]/route";
 import * as importRoute from "@/app/api/books/import/route";
 import * as booksRoute from "@/app/api/books/route";
 import * as goalsRoute from "@/app/api/goals/[year]/route";
 import * as settingsRoute from "@/app/api/settings/route";
 import * as syncRoute from "@/app/api/sheet-sync/route";
+import { db } from "@/lib/db";
+import { user } from "@/lib/db/schema";
 import type { Book } from "@/lib/domain/types";
 import backup from "@/tests/fixtures/reference-books.json";
 
@@ -33,6 +36,35 @@ describe("autenticação da API", () => {
       (await goalsRoute.GET(req("/api/goals/2026"), ctx({ year: "2026" })))
         .status
     ).toBe(401);
+  });
+
+  it("consulta o estado atual de verificação só com sessão", async () => {
+    expect(
+      (await verificationRoute.GET(req("/api/account/verification"), ctx()))
+        .status
+    ).toBe(401);
+    await db
+      .update(user)
+      .set({ emailVerified: false })
+      .where(eq(user.id, ana.userId));
+    const pending = await verificationRoute.GET(
+      req("/api/account/verification", { cookie: ana.cookie }),
+      ctx()
+    );
+    expect(await body(pending)).toEqual({ emailVerified: false });
+    expect(pending.headers.get("cache-control")).toContain("no-store");
+    await db
+      .update(user)
+      .set({ emailVerified: true })
+      .where(eq(user.id, ana.userId));
+    expect(
+      await body(
+        await verificationRoute.GET(
+          req("/api/account/verification", { cookie: ana.cookie }),
+          ctx()
+        )
+      )
+    ).toEqual({ emailVerified: true });
   });
 });
 

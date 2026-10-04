@@ -19,7 +19,7 @@ import { parseTheme, THEME_COOKIE, TZ_COOKIE } from "@/lib/theme";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * Layout autenticado: valida a sessão (a verificação de verdade, além do proxy) e
+ * Layout autenticado: valida a sessão (além da checagem otimista do proxy) e
  * renderiza no servidor já com o acervo, a meta do ano e as configurações.
  */
 export default async function AppLayout({
@@ -50,6 +50,7 @@ export default async function AppLayout({
           id: user.id,
           name: user.name,
           email: user.email,
+          emailVerified: user.emailVerified,
           image: user.image ?? null,
         },
         books,

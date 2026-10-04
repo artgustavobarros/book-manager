@@ -25,6 +25,7 @@ import { toast } from "./toast";
 
 export interface AppUser {
   email: string;
+  emailVerified: boolean;
   id: string;
   image: string | null;
   name: string;
@@ -108,6 +109,10 @@ function AppState({
   const qc = useQueryClient();
   const actions = useBookActions();
   const [user, setUserState] = useState(initial.user);
+  const setUser = useCallback(
+    (patch: Partial<AppUser>) => setUserState((u) => ({ ...u, ...patch })),
+    []
+  );
   const [sheetUrl, setSheetUrl] = useState(initial.sheetUrl);
   const [modal, setModal] = useState<ModalState>(null);
   const [surpriseOpen, setSurpriseOpen] = useState(false);
@@ -171,7 +176,7 @@ function AppState({
       changeGoal,
       sheetUrl,
       setSheetUrl,
-      setUser: (patch) => setUserState((u) => ({ ...u, ...patch })),
+      setUser,
       modal,
       openView: (id) => setModal({ kind: "view", id }),
       openEdit: (id) => {
@@ -227,6 +232,7 @@ function AppState({
     [
       initial,
       user,
+      setUser,
       goal,
       changeGoal,
       sheetUrl,

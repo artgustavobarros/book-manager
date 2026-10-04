@@ -1,3 +1,5 @@
+import { MIN_PASSWORD } from "@/lib/validation/auth";
+
 /** Mensagens em pt-BR para os erros do Better Auth exibidos nas telas de entrada. */
 export function authErrorMessage(
   error: { code?: string; status?: number; message?: string } | null | undefined
@@ -19,7 +21,7 @@ export function authErrorMessage(
     case "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL":
       return "Não foi possível criar a conta com este e-mail.";
     case "PASSWORD_TOO_SHORT":
-      return "A senha precisa ter pelo menos 8 caracteres.";
+      return `A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`;
     case "INVALID_TOKEN":
       return "Link inválido ou expirado.";
     default:

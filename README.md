@@ -2,6 +2,8 @@
 
 Catálogo pessoal dos livros de casa: **Painel** (indicadores, meta anual, leituras em andamento), **Estante** (capas ou lista, busca, filtros, facetas, ordenação) e **Dados do acervo** (gráficos), com contas de usuário, sincronização com Google Sheets, busca de livros e capas online, exportação em CSV e backup em JSON.
 
+Quem cria uma conta com e-mail e senha pode usar o acervo imediatamente. Um aviso lembra da confirmação do endereço até que o link enviado por e-mail seja aberto; os dados criados nesse período ficam salvos.
+
 O app reproduz pixel a pixel o design do handoff em [`design/handoff/`](design/handoff/README.md), verificado por uma suíte visual que compara cada tela com o standalone original. O plano de implementação (proposta, specs, design e tasks) está em [`openspec/changes/bodega-literaria-app/`](openspec/changes/bodega-literaria-app/).
 
 ## Stack
@@ -20,7 +22,7 @@ O app reproduz pixel a pixel o design do handoff em [`design/handoff/`](design/h
 ## Estrutura
 
 ```
-app/                  rotas: (auth) entrar/cadastro/verificação/senha · (app) Painel/Estante/Dados · api/
+app/                  rotas: (auth) entrar/cadastro/senha · verifique-email · (app) Painel/Estante/Dados · api/
 components/           app (shell, modais), books, estante, dados, painel, auth, ui (primitivos)
 lib/domain/           lógica pura portada do standalone (filtros, Painel, Dados, CSV, planilha, backup…)
 lib/services/         acesso ao banco por usuário (livros, metas, configurações, planilha)
@@ -75,7 +77,6 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | não | Login com Google; sem elas, o botão avisa que está indisponível |
 | `EMAIL_TRANSPORT` | não | `gmail` (padrão), `console` ou `outbox` (testes) |
 | `SMTP_USER` / `SMTP_PASS` | com `gmail` | Conta Gmail e **senha de app** |
-| `CRON_SECRET` | em produção | Protege o cron que apaga cadastros não verificados |
 
 ## Testes
 
@@ -90,9 +91,9 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 ## Deploy (Vercel)
 
 1. Crie um repositório no GitHub e envie este projeto.
-2. Na Vercel, importe o repositório (preset Next.js). O `vercel.json` já define o build (`pnpm vercel-build`, que roda as migrations antes do `next build`) e o cron diário.
+2. Na Vercel, importe o repositório (preset Next.js). O `vercel.json` já define o build (`pnpm vercel-build`, que roda as migrations antes do `next build`).
 3. **Storage → Create Database → Neon**, conectado ao projeto, com branch por preview habilitada. A integração injeta `DATABASE_URL` e `DATABASE_URL_UNPOOLED`.
-4. Em **Settings → Environment Variables**, defina `BETTER_AUTH_SECRET`, `CRON_SECRET`, `SMTP_USER`, `SMTP_PASS` e `EMAIL_TRANSPORT=gmail` (Production e Preview) e `BETTER_AUTH_URL` (só Production, com a URL definitiva).
+4. Em **Settings → Environment Variables**, defina `BETTER_AUTH_SECRET`, `SMTP_USER`, `SMTP_PASS` e `EMAIL_TRANSPORT=gmail` (Production e Preview) e `BETTER_AUTH_URL` (só Production, com a URL definitiva).
 5. **Google (opcional):** no Google Cloud Console, crie um "ID do cliente OAuth" (aplicativo da Web) com o URI de redirecionamento `<BETTER_AUTH_URL>/api/auth/callback/google` (e `http://localhost:3000/api/auth/callback/google` para desenvolvimento) e defina `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`. Nos previews, que têm URL dinâmica, o login com Google não funciona; use e-mail e senha.
 6. **Gmail:** ative a verificação em duas etapas na conta e gere uma senha de app em <https://myaccount.google.com/apppasswords>.
 

@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { auth } from "@/lib/auth";
 import type { DB } from "@/lib/db";
-import { user } from "@/lib/db/schema";
+import { books, user } from "@/lib/db/schema";
 
 import {
   clearOutbox,
@@ -31,6 +31,15 @@ async function signUp(email: string, password = "senha-forte-123") {
 }
 
 describe("Better Auth", () => {
+  it("aceita senha de seis caracteres no cadastro", async () => {
+    await signUp("seis@exemplo.com", "abc123");
+    const [u] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, "seis@exemplo.com"));
+    expect(u.email).toBe("seis@exemplo.com");
+  });
+
   it("cadastro cria usuário não verificado e envia o link", async () => {
     await signUp("ana@exemplo.com");
     const [u] = await db
@@ -43,25 +52,85 @@ describe("Better Auth", () => {
     expect(linkFrom(mail.text)).toContain("/api/auth/verify-email?token=");
   });
 
-  it("bloqueia login antes de verificar e libera depois", async () => {
+  it("permite login antes de verificar e mantém acesso depois", async () => {
     await signUp("bia@exemplo.com");
-    await expect(
-      auth.api.signInEmail({
-        body: { email: "bia@exemplo.com", password: "senha-forte-123" },
-        headers: headers(),
-      })
-    ).rejects.toMatchObject({ status: "FORBIDDEN" });
+    const pending = await auth.api.signInEmail({
+      body: { email: "bia@exemplo.com", password: "senha-forte-123" },
+      headers: headers(),
+    });
+    expect(pending.user.emailVerified).toBe(false);
+    expect(pending.token).toBeTruthy();
 
     const token = new URL(
       linkFrom((await waitForEmail("bia@exemplo.com")).text)
     ).searchParams.get("token")!;
     await auth.api.verifyEmail({ query: { token }, headers: headers() });
+    await expect(
+      auth.api.verifyEmail({ query: { token: "invalid" }, headers: headers() })
+    ).rejects.toMatchObject({ status: "UNAUTHORIZED" });
 
     const res = await auth.api.signInEmail({
       body: { email: "bia@exemplo.com", password: "senha-forte-123" },
       headers: headers(),
     });
     expect(res.user.email).toBe("bia@exemplo.com");
+    expect(res.user.emailVerified).toBe(true);
+  });
+
+  it("responde genericamente a cadastro duplicado e só autentica com a senha correta", async () => {
+    await signUp("duplicado@exemplo.com");
+    const duplicate = await signUp("duplicado@exemplo.com", "senha-errada-456");
+    expect(duplicate.token).toBeNull();
+    await expect(
+      auth.api.signInEmail({
+        body: { email: "duplicado@exemplo.com", password: "senha-errada-456" },
+        headers: headers(),
+      })
+    ).rejects.toMatchObject({ status: "UNAUTHORIZED" });
+    const [existing] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, "duplicado@exemplo.com"));
+    expect(existing.emailVerified).toBe(false);
+  });
+
+  it("recusa um link de verificação após 24 horas", async () => {
+    await signUp("expirado@exemplo.com");
+    const token = new URL(
+      linkFrom((await waitForEmail("expirado@exemplo.com")).text)
+    ).searchParams.get("token")!;
+    vi.useFakeTimers({
+      toFake: ["Date"],
+      now: new Date(Date.now() + 25 * 60 * 60 * 1000),
+    });
+    try {
+      await expect(
+        auth.api.verifyEmail({ query: { token }, headers: headers() })
+      ).rejects.toMatchObject({ status: "UNAUTHORIZED" });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("preserva acesso e livros de uma conta pendente após sete dias", async () => {
+    await signUp("antiga@exemplo.com");
+    const [pending] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, "antiga@exemplo.com"));
+    await db
+      .update(user)
+      .set({ createdAt: new Date("2026-05-01T00:00:00Z") })
+      .where(eq(user.id, pending.id));
+    await db.insert(books).values({ userId: pending.id, title: "Livro salvo" });
+    const session = await auth.api.signInEmail({
+      body: { email: "antiga@exemplo.com", password: "senha-forte-123" },
+      headers: headers(),
+    });
+    expect(session.user.emailVerified).toBe(false);
+    expect(
+      await db.select().from(books).where(eq(books.userId, pending.id))
+    ).toHaveLength(1);
   });
 
   it("senha errada e e-mail inexistente dão o mesmo erro", async () => {
@@ -110,7 +179,7 @@ describe("Better Auth", () => {
   });
 
   it("senha curta é recusada", async () => {
-    await expect(signUp("curta@exemplo.com", "1234567")).rejects.toMatchObject({
+    await expect(signUp("curta@exemplo.com", "12345")).rejects.toMatchObject({
       status: "BAD_REQUEST",
     });
   });

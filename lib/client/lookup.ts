@@ -53,7 +53,8 @@ export async function searchCatalogs(
   const settled = await Promise.allSettled(jobs);
   return {
     results: mergeResults(
-      settled.map((s) => (s.status === "fulfilled" ? s.value : []))
+      settled.map((s) => (s.status === "fulfilled" ? s.value : [])),
+      q
     ),
     failed: settled.every((s) => s.status === "rejected"),
   };

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { FieldLabel } from "@/components/ui/text-field";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import { resetPasswordSchema } from "@/lib/validation/auth";
+import { MIN_PASSWORD, resetPasswordSchema } from "@/lib/validation/auth";
 
 import { AuthHeading, AuthNotice, authCardClass } from "./auth-ui";
 
@@ -80,7 +80,7 @@ export function ResetPasswordCard({ token }: { token: string | null }) {
               aria-invalid={!!form.formState.errors.password}
               autoComplete="new-password"
               className="h-11"
-              placeholder="Mínimo 8 caracteres"
+              placeholder={`Mínimo ${MIN_PASSWORD} caracteres`}
               type="password"
               {...form.register("password")}
             />

@@ -15,7 +15,7 @@ import { forgotPasswordSchema } from "@/lib/validation/auth";
 import { AuthHeading, AuthNotice, authCardClass } from "./auth-ui";
 
 /**
- * "Verifique seu e-mail" (após o cadastro) ou "Link inválido" (?error=…), sempre com
+ * "Verifique seu e-mail" ou "Link inválido" (?error=…), sempre com
  * a opção de reenviar o link de verificação.
  */
 export function VerifyEmailCard({

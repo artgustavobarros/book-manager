@@ -28,7 +28,6 @@ export const env = createEnv({
     EMAIL_OUTBOX_FILE: z.string().optional(),
     SMTP_USER: z.email().optional(),
     SMTP_PASS: z.string().min(1).optional(),
-    CRON_SECRET: z.string().min(16).optional(),
     VERCEL_URL: z.string().optional(),
     /** Só para testes visuais: instante fixo usado pelo servidor como "agora". */
     FIXED_NOW: z.iso.datetime({ offset: true }).optional(),

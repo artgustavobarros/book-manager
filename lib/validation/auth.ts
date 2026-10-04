@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const MIN_PASSWORD = 8;
+export const MIN_PASSWORD = 6;
 
 const email = z
   .string()

@@ -49,6 +49,61 @@ test.describe("acervo", () => {
     await expect(page.getByText("Livro de Teste E2E")).toHaveCount(0);
   });
 
+  test("busca online preenche o formulário ao escolher um livro", async ({
+    page,
+  }) => {
+    await page.route(
+      /^https:\/\/www\.googleapis\.com\/books\/v1\/volumes\?/,
+      (route) =>
+        route.fulfill({
+          json: {
+            items: [
+              {
+                volumeInfo: {
+                  title: "Torto arado: guia de leitura",
+                  imageLinks: { thumbnail: "https://exemplo.com/capa.jpg" },
+                },
+              },
+              {
+                volumeInfo: {
+                  title: "Torto arado",
+                  authors: ["Itamar Vieira Junior"],
+                  publisher: "Todavia",
+                  publishedDate: "2019-08-01",
+                  pageCount: 264,
+                },
+              },
+            ],
+          },
+        })
+    );
+    await page.route(/^https:\/\/openlibrary\.org\/search\.json\?/, (route) =>
+      route.fulfill({ json: { docs: [] } })
+    );
+    await page.route(/^https:\/\/itunes\.apple\.com\/search\?/, (route) =>
+      route.fulfill({ json: { results: [] } })
+    );
+
+    await page.goto("/estante");
+    await page.getByRole("button", { name: "+ Registrar livro" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Buscar online").fill("Torto arado");
+    await dialog.getByRole("button", { name: "Buscar", exact: true }).click();
+    const matches = dialog
+      .getByRole("button")
+      .filter({ hasText: "Torto arado" });
+    await expect(matches.first()).toContainText("Itamar Vieira Junior");
+    await matches.first().click();
+
+    await expect(dialog.getByLabel("Título *")).toHaveValue("Torto arado");
+    await expect(dialog.getByLabel("Autor(a) (opcional)")).toHaveValue(
+      "Itamar Vieira Junior"
+    );
+    await expect(dialog.getByLabel("Editora")).toHaveValue("Todavia");
+    await expect(dialog.getByLabel("Ano de lançamento")).toHaveValue("2019");
+    await expect(dialog.getByLabel("Páginas")).toHaveValue("264");
+  });
+
   test("Salvar fica inativo sem título e números são validados", async ({
     page,
   }) => {

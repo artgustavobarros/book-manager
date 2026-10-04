@@ -1,5 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm vercel-build",
-  "crons": [{ "path": "/api/cron/purge-unverified", "schedule": "0 6 * * *" }]
+  "buildCommand": "pnpm vercel-build"
 }

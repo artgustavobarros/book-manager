@@ -6,6 +6,7 @@ import {
   fromApple,
   fromGoogle,
   fromOpenLibrary,
+  type LookupResult,
   lookupUrls,
   mergeResults,
   titleMatch,
@@ -91,7 +92,22 @@ describe("normalização das fontes", () => {
 });
 
 describe("mergeResults", () => {
-  it("deduplica, descarta sem título e prioriza capas", () => {
+  const result = (
+    title: string,
+    source: LookupResult["source"] = "Google Livros",
+    options: Partial<LookupResult> = {}
+  ): LookupResult => ({
+    source,
+    title,
+    author: "",
+    publisher: "",
+    year: "",
+    pages: "",
+    cover: "",
+    ...options,
+  });
+
+  it("deduplica por fonte e descarta títulos vazios", () => {
     const g = fromGoogle({
       items: [
         { volumeInfo: { title: "A" } },
@@ -99,12 +115,97 @@ describe("mergeResults", () => {
         { volumeInfo: { title: "" } },
       ],
     });
-    const a = [amazonResult("123", "https://img")];
-    const out = mergeResults([g, a]);
-    expect(out.map((r) => r.source)).toEqual([
-      "Amazon (ISBN)",
-      "Google Livros",
+    const a = [result("A", "Apple Books", { cover: "https://img" })];
+    const out = mergeResults([g, a], "A");
+    expect(out.map((r) => r.source)).toEqual(["Apple Books", "Google Livros"]);
+  });
+
+  it("põe título exato sem capa antes de subtítulo com capa", () => {
+    const out = mergeResults(
+      [
+        [
+          result("Torto arado: guia de leitura", "Google Livros", {
+            cover: "https://img",
+          }),
+        ],
+        [result("Torto arado", "Open Library")],
+      ],
+      "Torto arado"
+    );
+    expect(out.map((r) => r.title)).toEqual([
+      "Torto arado",
+      "Torto arado: guia de leitura",
     ]);
+  });
+
+  it("compara acentos e termos do título antes do autor", () => {
+    const out = mergeResults(
+      [
+        [
+          result("Crônicas", "Google Livros", { author: "Memórias Póstumas" }),
+          result("Memórias antigas", "Apple Books"),
+          result("Memórias Póstumas de Brás Cubas", "Open Library"),
+        ],
+      ],
+      "memorias postumas"
+    );
+    expect(out.map((r) => r.title)).toEqual([
+      "Memórias Póstumas de Brás Cubas",
+      "Memórias antigas",
+      "Crônicas",
+    ]);
+  });
+
+  it("desempata por capa e depois mantém a ordem original", () => {
+    const out = mergeResults(
+      [
+        [
+          result("Guia de leitura: vol. A", "Google Livros"),
+          result("Guia de leitura: vol. B", "Open Library", {
+            cover: "https://img",
+          }),
+          result("Guia de leitura: vol. C", "Apple Books"),
+        ],
+      ],
+      "guia de leitura"
+    );
+    expect(out.map((r) => r.title)).toEqual([
+      "Guia de leitura: vol. B",
+      "Guia de leitura: vol. A",
+      "Guia de leitura: vol. C",
+    ]);
+  });
+
+  it("limita a 12 somente após ordenar por relevância", () => {
+    const unrelated = Array.from({ length: 12 }, (_, i) =>
+      result(`Outro livro ${i}`, "Google Livros", { cover: "https://img" })
+    );
+    const out = mergeResults(
+      [unrelated, [result("Torto arado", "Open Library")]],
+      "Torto arado"
+    );
+    expect(out).toHaveLength(12);
+    expect(out[0].title).toBe("Torto arado");
+  });
+
+  it("mantém a capa da Amazon ao fim da busca por ISBN", () => {
+    const isbn = "9788554512348";
+    const google = Array.from({ length: 12 }, (_, i) =>
+      result(`Edição ${i}`, "Google Livros")
+    );
+    const out = mergeResults(
+      [
+        [result("Resultado Apple", "Apple Books", { cover: "https://apple" })],
+        google,
+        [result("Resultado Open Library", "Open Library")],
+        [amazonResult(isbn, "https://amazon")],
+      ],
+      isbn
+    );
+    expect(out).toHaveLength(12);
+    expect(out[0].source).toBe("Google Livros");
+    expect(out.at(-1)?.source).toBe("Amazon (ISBN)");
+    expect(out.some((r) => r.source === "Apple Books")).toBe(false);
   });
 });
 
