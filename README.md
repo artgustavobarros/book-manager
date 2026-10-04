@@ -94,7 +94,7 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 1. O deploy de produção sai da branch `main`; as outras branches viram previews.
 2. Na Vercel, importe o repositório (preset Next.js). O `vercel.json` já define o build (`pnpm vercel-build`, que roda as migrations antes do `next build`). Antes do primeiro deploy, configure os passos 3 e 4.
 3. **Storage → Create Database → Neon**, conectado ao projeto, sem prefixo nas variáveis e com **branch por preview** habilitada. A integração injeta `DATABASE_URL` e `DATABASE_URL_UNPOOLED`.
-   - **Região:** a do banco não muda depois. Coloque as funções na mesma região do Neon: o padrão da Vercel é `iad1` (combina com `aws-us-east-1`); para `aws-sa-east-1` (São Paulo), adicione `"regions": ["gru1"]` ao `vercel.json`.
+   - **Região:** a do banco não muda depois. O `vercel.json` fixa as funções em `gru1` (São Paulo), junto do Neon em `aws-sa-east-1`; se o banco ficar em outra região, ajuste `regions` (ex.: `iad1` para `aws-us-east-1`).
    - **Branch por preview é obrigatória:** como todo build roda as migrations, sem ela um preview aplicaria as migrations da branch no banco de produção.
 4. Em **Settings → Environment Variables**:
 
