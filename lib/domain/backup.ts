@@ -8,28 +8,33 @@
 import { withOrders } from "./orders";
 import { isBookStatus } from "./status";
 import { clean } from "./text";
-import { AUTHOR_GENDERS, type AuthorGender, type Book, type BookFields } from "./types";
+import {
+  AUTHOR_GENDERS,
+  type AuthorGender,
+  type Book,
+  type BookFields,
+} from "./types";
 
 export interface BackupBook {
-  id: string;
-  order: string;
-  title: string;
-  author: string;
-  nationality: string;
-  publisher: string;
-  year: string;
   acquired: string;
-  status: string;
-  notes: string;
-  cover: string;
-  pages: string;
-  genre: string;
-  yearRead: string;
-  borrower: string;
-  authorGender: string;
+  author: string;
   authorEthnicity: string;
-  fav?: boolean;
+  authorGender: string;
+  borrower: string;
+  cover: string;
   coverTried?: number;
+  fav?: boolean;
+  genre: string;
+  id: string;
+  nationality: string;
+  notes: string;
+  order: string;
+  pages: string;
+  publisher: string;
+  status: string;
+  title: string;
+  year: string;
+  yearRead: string;
 }
 
 export class InvalidBackupError extends Error {
@@ -41,8 +46,10 @@ export class InvalidBackupError extends Error {
 
 /** Inteiro positivo a partir de string/número; qualquer outra coisa vira null. */
 export function toPositiveInt(v: unknown): number | null {
-  if (typeof v === "number") return Number.isInteger(v) && v > 0 ? v : null;
-  const n = parseInt(String(v ?? ""), 10);
+  if (typeof v === "number") {
+    return Number.isInteger(v) && v > 0 ? v : null;
+  }
+  const n = Number.parseInt(String(v ?? ""), 10);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
@@ -50,13 +57,19 @@ export function toPositiveInt(v: unknown): number | null {
 export function toIsoDate(v: unknown): string | null {
   const s = String(v ?? "").trim();
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!m) return null;
+  if (!m) {
+    return null;
+  }
   const d = new Date(s + "T00:00:00Z");
-  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s ? null : s;
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s
+    ? null
+    : s;
 }
 
 export function toText(v: unknown): string | null {
-  return typeof v === "string" || typeof v === "number" ? clean(String(v)) : null;
+  return typeof v === "string" || typeof v === "number"
+    ? clean(String(v))
+    : null;
 }
 
 export function toGender(v: unknown): AuthorGender | null {
@@ -68,16 +81,29 @@ export function toGender(v: unknown): AuthorGender | null {
  * Entradas sem título são ignoradas; nºs ausentes são atribuídos como em `withOrders`.
  * @throws InvalidBackupError se o conteúdo não for um array.
  */
-export function fromBackup(data: unknown, now: Date = new Date()): BookFields[] {
-  if (!Array.isArray(data)) throw new InvalidBackupError();
+export function fromBackup(
+  data: unknown,
+  now: Date = new Date()
+): BookFields[] {
+  if (!Array.isArray(data)) {
+    throw new InvalidBackupError();
+  }
   const books = data
-    .filter((b): b is Record<string, unknown> => !!b && typeof b === "object" && !!toText((b as Record<string, unknown>).title))
+    .filter(
+      (b): b is Record<string, unknown> =>
+        !!b &&
+        typeof b === "object" &&
+        !!toText((b as Record<string, unknown>).title)
+    )
     .map((b) => legacyToFields(b, now));
   return withOrders(books);
 }
 
 /** Converte um livro no formato legado (strings) para os campos do modelo. */
-export function legacyToFields(b: Record<string, unknown>, now: Date = new Date()): BookFields {
+export function legacyToFields(
+  b: Record<string, unknown>,
+  now: Date = new Date()
+): BookFields {
   const status = isBookStatus(b.status) ? b.status : "nao-lido";
   return {
     orderNo: toPositiveInt(b.order ?? b.orderNo),
@@ -123,7 +149,8 @@ export const LEGACY_FIELD = {
 
 export type LegacyKey = keyof typeof LEGACY_FIELD;
 
-const str = (v: string | number | null | undefined) => (v == null ? "" : String(v));
+const str = (v: string | number | null | undefined) =>
+  v == null ? "" : String(v);
 
 /** Exporta no formato do standalone (strings), acrescido de `authorEthnicity`. */
 export function toBackup(books: readonly Book[]): BackupBook[] {

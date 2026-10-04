@@ -9,8 +9,13 @@ describe("cover", () => {
     expect(hash("ab")).toBe(97 * 31 + 98);
   });
   it("escolhe a cor por título + autor", () => {
-    expect(coverColors("1984", "George Orwell")).toEqual({ coverBg: COVERS[1][0], coverInk: COVERS[1][1] });
-    expect(coverColors("Sem autor", null)).toEqual(coverColors("Sem autor", ""));
+    expect(coverColors("1984", "George Orwell")).toEqual({
+      coverBg: COVERS[1][0],
+      coverInk: COVERS[1][1],
+    });
+    expect(coverColors("Sem autor", null)).toEqual(
+      coverColors("Sem autor", "")
+    );
   });
   it("gera background-image", () => {
     expect(coverImage("https://x/y.jpg")).toBe('url("https://x/y.jpg")');

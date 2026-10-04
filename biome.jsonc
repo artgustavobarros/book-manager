@@ -1,0 +1,108 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/react",
+    "ultracite/biome/next",
+    "ultracite/biome/vitest"
+  ],
+  "files": {
+    "includes": [
+      "!!design",
+      "!!openspec",
+      "!!.agent",
+      "!!.agents",
+      "!!.claude",
+      "!!.codex",
+      "!!drizzle",
+      "!!playwright-report",
+      "!!test-results"
+    ]
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "useSortedKeys": "off",
+        "useSortedProperties": "off"
+      }
+    }
+  },
+  "linter": {
+    "rules": {
+      "a11y": {
+        "noLabelWithoutControl": "off",
+        "noNoninteractiveElementInteractions": "off",
+        "noNoninteractiveTabindex": "off",
+        "noStaticElementInteractions": "off",
+        "useKeyWithClickEvents": "off",
+        "useSemanticElements": "off"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off",
+        "noForEach": "off",
+        "noVoid": "off",
+        "useOptionalChain": "off"
+      },
+      "correctness": {
+        "noUnusedInstantiation": "off"
+      },
+      "performance": {
+        "noAwaitInLoops": "off",
+        "noBarrelFile": "off",
+        "noJsxPropsBind": "off",
+        "noNamespaceImport": "off",
+        "useTopLevelRegex": "off"
+      },
+      "style": {
+        "noIncrementDecrement": "off",
+        "noNestedTernary": "off",
+        "noNonNullAssertion": "off",
+        "noParameterProperties": "off",
+        "useConsistentMemberAccessibility": "off",
+        "useConsistentMethodSignatures": "off",
+        "useConsistentTypeDefinitions": "off",
+        "useDefaultSwitchClause": "off",
+        "useDestructuring": "off",
+        "useErrorCause": "off",
+        "useTemplate": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off",
+        "noAssignInExpressions": "off",
+        "noBitwiseOperators": "off",
+        "noControlCharactersInRegex": "off",
+        "noEmptyBlockStatements": "off",
+        "noEqualsToNull": "off",
+        "noNestedPromises": "off",
+        "noReturnAssign": "off",
+        "noShadow": "off",
+        "noUnnecessaryConditions": "off",
+        "useAwait": "off",
+        "useIterableCallbackReturn": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["app/**", "components/**", "lib/**", "hooks/**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noJsRestrictedProperties": {
+              "level": "error",
+              "options": {
+                "entries": [
+                  {
+                    "object": "process",
+                    "property": "env",
+                    "message": "Importe `env` de '@/env'."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

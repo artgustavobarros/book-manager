@@ -6,7 +6,11 @@ import { useMemo } from "react";
 import { useApp } from "@/components/app/app-provider";
 import { PageMain } from "@/components/app/app-shell";
 import { MiniCover } from "@/components/books/mini-cover";
-import { CarouselDots, trackNarrow, useCarousel } from "@/components/ui/carousel";
+import {
+  CarouselDots,
+  trackNarrow,
+  useCarousel,
+} from "@/components/ui/carousel";
 import { useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import { dashboard, type Pace } from "@/lib/domain/dashboard";
@@ -25,8 +29,14 @@ export function DashboardPage() {
   const books = useBooks();
   const { goShelf } = useShelfState();
   const d = useMemo(
-    () => dashboard(books, { goal: app.goal, now: new Date(app.now), tz: app.tz, userName: app.user.name }),
-    [books, app.goal, app.now, app.tz, app.user.name],
+    () =>
+      dashboard(books, {
+        goal: app.goal,
+        now: new Date(app.now),
+        tz: app.tz,
+        userName: app.user.name,
+      }),
+    [books, app.goal, app.now, app.tz, app.user.name]
   );
   const kpiCar = useCarousel(d.kpis.length);
   const listCar = useCarousel(2);
@@ -34,58 +44,92 @@ export function DashboardPage() {
   return (
     <PageMain>
       <div className="flex flex-col gap-1">
-        <span className="text-sm text-mute">{d.todayLabel}</span>
-        <h1 className="m-0 text-3xl font-bold tracking-[-.025em]">{d.greeting}</h1>
+        <span className="text-mute text-sm">{d.todayLabel}</span>
+        <h1 className="m-0 font-bold text-3xl tracking-[-.025em]">
+          {d.greeting}
+        </h1>
       </div>
 
       <div
         {...kpiCar.trackProps}
+        aria-label="Resumo do acervo"
         className={cn(
           "grid touch-pan-x touch-pan-y grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-3",
           "max-[640px]:auto-cols-[72%] max-[640px]:grid-flow-col max-[640px]:grid-cols-none",
-          trackNarrow,
+          trackNarrow
         )}
+        role="region"
+        tabIndex={0}
       >
         {d.kpis.map((k, i) => (
           <div
+            className={cn(
+              card,
+              "flex animate-acv-in snap-start flex-col gap-3 p-5"
+            )}
             key={k.label}
             style={{ animationDelay: i * 50 + "ms" }}
-            className={cn(card, "flex animate-acv-in snap-start flex-col gap-3 p-5")}
           >
-            <span className="text-xs font-medium text-mute">{k.label}</span>
-            <span className="text-3xl leading-none font-bold tracking-[-.025em] tabular-nums">{k.value}</span>
-            <span className="text-xs text-mute">{k.sub}</span>
+            <span className="font-medium text-mute text-xs">{k.label}</span>
+            <span className="font-bold text-3xl tabular-nums leading-none tracking-[-.025em]">
+              {k.value}
+            </span>
+            <span className="text-mute text-xs">{k.sub}</span>
           </div>
         ))}
       </div>
-      <CarouselDots count={d.kpis.length} index={kpiCar.index} onGo={kpiCar.go} />
+      <CarouselDots
+        count={d.kpis.length}
+        index={kpiCar.index}
+        onGo={kpiCar.go}
+      />
 
       <div className="flex flex-wrap gap-4">
-        <section className={cn(card, "flex min-w-0 flex-[2_1_460px] flex-col gap-5 px-6 py-5")}>
+        <section
+          className={cn(
+            card,
+            "flex min-w-0 flex-[2_1_460px] flex-col gap-5 px-6 py-5"
+          )}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="m-0 text-base font-semibold">Meta de leitura {d.year}</h2>
+            <h2 className="m-0 font-semibold text-base">
+              Meta de leitura {d.year}
+            </h2>
             {d.paceShow ? (
-              <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", PACE_CLASS[d.pace])}>{d.paceLabel}</span>
+              <span
+                className={cn(
+                  "rounded-full px-3 py-1 font-semibold text-xs",
+                  PACE_CLASS[d.pace]
+                )}
+              >
+                {d.paceLabel}
+              </span>
             ) : null}
           </div>
           <div className="flex flex-wrap items-baseline gap-3">
-            <span className="text-5xl leading-none font-bold tracking-[-.05em] tabular-nums">{d.goalDone}</span>
-            <span className="text-base text-mute">de {d.goal} livros lidos</span>
+            <span className="font-bold text-5xl tabular-nums leading-none tracking-[-.05em]">
+              {d.goalDone}
+            </span>
+            <span className="text-base text-mute">
+              de {d.goal} livros lidos
+            </span>
             <div className="ml-auto flex items-center gap-1 rounded-lg border border-line2 p-1">
               <button
-                type="button"
                 aria-label="Diminuir meta"
-                onClick={() => app.changeGoal(-1)}
                 className="size-7 rounded-md border-0 bg-transparent text-base text-ink hover:bg-hov"
+                onClick={() => app.changeGoal(-1)}
+                type="button"
               >
                 −
               </button>
-              <span className="px-2 text-xs font-semibold text-mute">Meta: {d.goal}</span>
+              <span className="px-2 font-semibold text-mute text-xs">
+                Meta: {d.goal}
+              </span>
               <button
-                type="button"
                 aria-label="Aumentar meta"
-                onClick={() => app.changeGoal(1)}
                 className="size-7 rounded-md border-0 bg-transparent text-base text-ink hover:bg-hov"
+                onClick={() => app.changeGoal(1)}
+                type="button"
               >
                 +
               </button>
@@ -98,66 +142,88 @@ export function DashboardPage() {
                 style={{ width: d.goalPct }}
               />
               <div
-                title="Esperado até hoje"
                 className="absolute -top-1 -bottom-1 w-0.5 rounded-[2px] bg-ink"
                 style={{ left: d.expectedPct }}
+                title="Esperado até hoje"
               />
             </div>
-            <div className="flex flex-wrap justify-between gap-3 text-xs text-mute">
+            <div className="flex flex-wrap justify-between gap-3 text-mute text-xs">
               <span>{d.goalLine}</span>
               <span>Marcador: {d.expectedN} esperados até hoje</span>
             </div>
           </div>
-          <div className="flex flex-col gap-3 border-t border-soft pt-4">
-            <span className="text-xs font-medium text-mute">Lidos em {d.year}</span>
+          <div className="flex flex-col gap-3 border-soft border-t pt-4">
+            <span className="font-medium text-mute text-xs">
+              Lidos em {d.year}
+            </span>
             {d.yearReads.length ? (
               <div className="flex flex-wrap gap-2">
                 {d.yearReads.map((b) => (
                   <MiniCover
-                    key={b.id}
                     as="button"
                     book={b}
-                    title={b.title}
-                    onClick={() => app.openView(b.id)}
                     className="h-14 w-9 rounded text-sm shadow-[var(--shadow-xs)] transition-transform duration-150 hover:-translate-y-[3px]"
+                    key={b.id}
+                    onClick={() => app.openView(b.id)}
+                    title={b.title}
                   />
                 ))}
               </div>
             ) : (
-              <span className="text-sm text-mute">Nenhum livro marcado como lido este ano ainda.</span>
+              <span className="text-mute text-sm">
+                Nenhum livro marcado como lido este ano ainda.
+              </span>
             )}
           </div>
         </section>
 
         <div
           {...listCar.trackProps}
+          aria-label="Listas do painel"
           className={cn(
             "contents",
             "max-[640px]:grid max-[640px]:flex-[1_1_100%] max-[640px]:auto-cols-[86%] max-[640px]:grid-flow-col max-[640px]:items-stretch max-[640px]:gap-3",
-            trackNarrow,
+            trackNarrow
           )}
+          role="region"
+          tabIndex={0}
         >
-          <section className={cn(card, "flex min-w-0 flex-[1_1_280px] snap-start flex-col gap-4 px-6 py-5")}>
+          <section
+            className={cn(
+              card,
+              "flex min-w-0 flex-[1_1_280px] snap-start flex-col gap-4 px-6 py-5"
+            )}
+          >
             <div className="flex items-center justify-between gap-3">
-              <h2 className="m-0 text-base font-semibold">Lendo agora</h2>
-              <span className="text-xs text-mute">{d.readingCount}</span>
+              <h2 className="m-0 font-semibold text-base">Lendo agora</h2>
+              <span className="text-mute text-xs">{d.readingCount}</span>
             </div>
             {d.reading.length ? (
               <div className="flex flex-col gap-3">
                 {d.reading.map((b) => (
-                  <div key={b.id} className="flex items-center gap-3">
-                    <MiniCover as="button" book={b} onClick={() => app.openView(b.id)} className="h-14 w-9 rounded text-sm" />
-                    <div
+                  <div className="flex items-center gap-3" key={b.id}>
+                    <MiniCover
+                      as="button"
+                      book={b}
+                      className="h-14 w-9 rounded text-sm"
                       onClick={() => app.openView(b.id)}
-                      className="flex min-w-0 flex-1 cursor-pointer flex-col gap-0.5"
-                    >
-                      <span className="truncate text-sm font-semibold">{b.title}</span>
-                      <span className="truncate text-xs text-mute">{b.author || "Autor desconhecido"}</span>
-                    </div>
+                    />
                     <button
+                      className="flex min-w-0 flex-1 cursor-pointer flex-col gap-0.5 border-0 bg-transparent p-0 text-left text-ink"
+                      onClick={() => app.openView(b.id)}
                       type="button"
+                    >
+                      <span className="w-full truncate font-semibold text-sm">
+                        {b.title}
+                      </span>
+                      <span className="w-full truncate text-mute text-xs">
+                        {b.author || "Autor desconhecido"}
+                      </span>
+                    </button>
+                    <button
+                      className="h-8 flex-none rounded-lg border border-line2 bg-card px-3 font-semibold text-ink text-xs hover:border-ink active:scale-95"
                       onClick={() => app.finish(b)}
-                      className="h-8 flex-none rounded-lg border border-line2 bg-card px-3 text-xs font-semibold text-ink hover:border-ink active:scale-95"
+                      type="button"
                     >
                       Terminei
                     </button>
@@ -165,41 +231,61 @@ export function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <span className="text-sm leading-[1.5] text-mute">
-                Nenhum livro em leitura. Mude o status de um livro para “Lendo” ou use “Me surpreenda”.
+              <span className="text-mute text-sm leading-[1.5]">
+                Nenhum livro em leitura. Mude o status de um livro para “Lendo”
+                ou use “Me surpreenda”.
               </span>
             )}
           </section>
-          <section className={cn(card, "flex min-w-0 flex-[1_1_280px] snap-start flex-col gap-4 px-6 py-5")}>
+          <section
+            className={cn(
+              card,
+              "flex min-w-0 flex-[1_1_280px] snap-start flex-col gap-4 px-6 py-5"
+            )}
+          >
             <div className="flex items-center justify-between gap-3">
-              <h2 className="m-0 text-base font-semibold">Últimos adicionados</h2>
+              <h2 className="m-0 font-semibold text-base">
+                Últimos adicionados
+              </h2>
               <button
-                type="button"
+                className="border-0 bg-transparent p-0 font-semibold text-mute text-xs hover:text-ink"
                 onClick={() => goShelf({})}
-                className="border-0 bg-transparent p-0 text-xs font-semibold text-mute hover:text-ink"
+                type="button"
               >
                 Ver estante →
               </button>
             </div>
             <div className="flex flex-col gap-3">
               {d.recent.map((b) => (
-                <div
+                <button
+                  className="-m-1 flex cursor-pointer items-center gap-3 rounded-lg border-0 bg-transparent p-1 text-left text-ink transition-[background-color] duration-150 hover:bg-hov"
                   key={b.id}
                   onClick={() => app.openView(b.id)}
-                  className="-m-1 flex cursor-pointer items-center gap-3 rounded-lg p-1 transition-[background-color] duration-150 hover:bg-hov"
+                  type="button"
                 >
                   <MiniCover book={b} className="h-11 w-8 rounded text-xs" />
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-sm font-semibold">{b.title}</span>
-                    <span className="truncate text-xs text-mute">{b.author || "Autor desconhecido"}</span>
-                  </div>
-                  <span className="flex-none text-xs text-mute tabular-nums">{fmtDate(b.acquiredOn)}</span>
-                </div>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="truncate font-semibold text-sm">
+                      {b.title}
+                    </span>
+                    <span className="truncate text-mute text-xs">
+                      {b.author || "Autor desconhecido"}
+                    </span>
+                  </span>
+                  <span className="flex-none text-mute text-xs tabular-nums">
+                    {fmtDate(b.acquiredOn)}
+                  </span>
+                </button>
               ))}
             </div>
           </section>
         </div>
-        <CarouselDots count={2} index={listCar.index} onGo={listCar.go} className="flex-[1_1_100%]" />
+        <CarouselDots
+          className="flex-[1_1_100%]"
+          count={2}
+          index={listCar.index}
+          onGo={listCar.go}
+        />
       </div>
     </PageMain>
   );

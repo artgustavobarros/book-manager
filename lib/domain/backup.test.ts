@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import raw from "@/tests/fixtures/reference-books.json";
 import { makeBook } from "@/tests/support/reference";
 
-import { InvalidBackupError, fromBackup, toBackup, toIsoDate, toPositiveInt } from "./backup";
+import {
+  fromBackup,
+  InvalidBackupError,
+  toBackup,
+  toIsoDate,
+  toPositiveInt,
+} from "./backup";
 
 describe("fromBackup", () => {
   it("converte o backup do standalone para os tipos do modelo", () => {
@@ -25,17 +31,32 @@ describe("fromBackup", () => {
       coverUrl: null,
     });
     const lent = books.find((x) => x.title === "Dom Casmurro")!;
-    expect(lent).toMatchObject({ status: "emprestado", borrower: "Ana", notes: "Emprestado em março." });
+    expect(lent).toMatchObject({
+      status: "emprestado",
+      borrower: "Ana",
+      notes: "Emprestado em março.",
+    });
   });
 
   it("aceita fav e coverTried e ignora entradas sem título", () => {
     const now = new Date("2026-06-15T12:00:00Z");
     const books = fromBackup(
-      [{ title: "A", pages: "416", fav: true, coverTried: 1, status: "xyz" }, { title: "  " }, null, { author: "x" }],
-      now,
+      [
+        { title: "A", pages: "416", fav: true, coverTried: 1, status: "xyz" },
+        { title: "  " },
+        null,
+        { author: "x" },
+      ],
+      now
     );
     expect(books).toHaveLength(1);
-    expect(books[0]).toMatchObject({ pages: 416, favorite: true, coverCheckedAt: now.toISOString(), status: "nao-lido", orderNo: 1 });
+    expect(books[0]).toMatchObject({
+      pages: 416,
+      favorite: true,
+      coverCheckedAt: now.toISOString(),
+      status: "nao-lido",
+      orderNo: 1,
+    });
   });
 
   it("rejeita o que não é array", () => {
@@ -43,7 +64,9 @@ describe("fromBackup", () => {
   });
 
   it("limpa 'emprestado para' fora do status emprestado", () => {
-    expect(fromBackup([{ title: "A", status: "lido", borrower: "Ana" }])[0].borrower).toBeNull();
+    expect(
+      fromBackup([{ title: "A", status: "lido", borrower: "Ana" }])[0].borrower
+    ).toBeNull();
   });
 });
 
@@ -62,7 +85,14 @@ describe("toBackup", () => {
       authorEthnicity: "Negra",
     });
     const out = toBackup([book]);
-    expect(out[0]).toMatchObject({ order: "4", pages: "264", year: "2019", acquired: "2022-02-11", fav: true, authorEthnicity: "Negra" });
+    expect(out[0]).toMatchObject({
+      order: "4",
+      pages: "264",
+      year: "2019",
+      acquired: "2022-02-11",
+      fav: true,
+      authorEthnicity: "Negra",
+    });
     const back = fromBackup(out)[0];
     const { id: _id, createdAt: _c, updatedAt: _u, ...fields } = book;
     expect(back).toEqual(fields);

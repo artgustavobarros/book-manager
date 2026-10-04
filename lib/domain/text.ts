@@ -11,22 +11,36 @@ export function norm(s: unknown): string {
 }
 
 /** Comparação de texto em pt-BR, sem diferenciar acentos nem maiúsculas. */
-export function cmp(a: string | null | undefined, b: string | null | undefined): number {
+export function cmp(
+  a: string | null | undefined,
+  b: string | null | undefined
+): number {
   return (a || "").localeCompare(b || "", "pt-BR", { sensitivity: "base" });
 }
 
 /** Inicial da capa gerada: primeira letra do título ignorando artigos iniciais. */
 export function initial(title: string | null | undefined): string {
-  return (title || "?").replace(/^(o|a|os|as|the)\s+/i, "").charAt(0).toUpperCase();
+  return (title || "?")
+    .replace(/^(o|a|os|as|the)\s+/i, "")
+    .charAt(0)
+    .toUpperCase();
 }
 
 /** "2023-04-12" → "12 abr 2023"; vazio ou inválido → "—". */
 export function fmtDate(d: string | null | undefined): string {
-  if (!d) return "—";
+  if (!d) {
+    return "—";
+  }
   const x = new Date(d + "T00:00:00");
-  if (Number.isNaN(x.getTime())) return "—";
+  if (Number.isNaN(x.getTime())) {
+    return "—";
+  }
   return x
-    .toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
+    .toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     .replace(/ de /g, " ")
     .replace(".", "");
 }

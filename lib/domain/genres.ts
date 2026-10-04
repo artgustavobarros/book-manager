@@ -20,6 +20,11 @@ export const GENRES = [
 ];
 
 /** Valores distintos (não vazios) ordenados em pt-BR, para os <datalist>. */
-export function suggestions(values: readonly (string | null | undefined)[], base: readonly string[] = []): string[] {
-  return [...new Set([...base, ...values.filter((v): v is string => !!v)])].sort(cmp);
+export function suggestions(
+  values: readonly (string | null | undefined)[],
+  base: readonly string[] = []
+): string[] {
+  return [
+    ...new Set([...base, ...values.filter((v): v is string => !!v)]),
+  ].sort(cmp);
 }

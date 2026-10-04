@@ -25,18 +25,24 @@ export function MiniCover({
   const Comp = as;
   return (
     <Comp
-      {...(as === "button" ? { type: "button" as const, onClick } : {})}
-      title={title}
-      style={{ background: coverBg, color: coverInk }}
+      {...(as === "button"
+        ? {
+            type: "button" as const,
+            onClick,
+            "aria-label": title ?? book.title,
+          }
+        : {})}
       className={cn(
         "relative flex flex-none items-center justify-center overflow-hidden border-0 p-0 font-bold",
         as === "button" && "cursor-pointer",
-        className,
+        className
       )}
+      style={{ background: coverBg, color: coverInk }}
+      title={title}
     >
       {initial(book.title)}
       <span
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-center bg-cover"
         style={{ backgroundImage: coverImage(book.coverUrl) }}
       />
     </Comp>

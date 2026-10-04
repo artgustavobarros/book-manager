@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldLabel } from "@/components/ui/text-field";
+import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage, oauthErrorMessage } from "@/lib/auth-errors";
 import { signInSchema, signUpSchema } from "@/lib/validation/auth";
@@ -19,30 +20,73 @@ import { AuthHeading, AuthNotice, authCardClass } from "./auth-ui";
 type Mode = "login" | "signup";
 
 const COPY = {
-  login: { title: "Bem-vindo de volta", sub: "Entre para acessar seu acervo.", btn: "Entrar" },
-  signup: { title: "Crie sua conta", sub: "Comece a catalogar os livros da sua estante.", btn: "Criar conta" },
+  login: {
+    title: "Bem-vindo de volta",
+    sub: "Entre para acessar seu acervo.",
+    btn: "Entrar",
+  },
+  signup: {
+    title: "Crie sua conta",
+    sub: "Comece a catalogar os livros da sua estante.",
+    btn: "Criar conta",
+  },
 } as const;
 
 const inputClass = "h-11";
 
-function Segmented({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
+const PANEL_ID = "auth-panel";
+const tabId = (m: Mode) => "auth-tab-" + m;
+
+/** Abas Entrar / Criar conta (padrão ARIA de abas: setas trocam a aba ativa). */
+function Segmented({
+  mode,
+  onChange,
+}: {
+  mode: Mode;
+  onChange: (m: Mode) => void;
+}) {
   const tabs: [Mode, string][] = [
     ["login", "Entrar"],
     ["signup", "Criar conta"],
   ];
   return (
-    <div role="tablist" className="flex gap-0.5 rounded-xl bg-seg p-1">
+    <div
+      aria-label="Entrar ou criar conta"
+      className="flex gap-0.5 rounded-xl bg-seg p-1"
+      onKeyDown={(e) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) {
+          return;
+        }
+        e.preventDefault();
+        const next: Mode =
+          e.key === "Home"
+            ? "login"
+            : e.key === "End"
+              ? "signup"
+              : mode === "login"
+                ? "signup"
+                : "login";
+        onChange(next);
+        document.getElementById(tabId(next))?.focus();
+      }}
+      role="tablist"
+    >
       {tabs.map(([k, label]) => (
         <button
-          key={k}
-          type="button"
-          role="tab"
+          aria-controls={PANEL_ID}
           aria-selected={mode === k}
-          onClick={() => onChange(k)}
           className={cn(
-            "h-9 flex-1 rounded-lg border-0 text-sm font-semibold transition-[background-color,color] duration-200 focus-visible:shadow-[0_0_0_3px_rgba(127,120,110,.35)] focus-visible:outline-none",
-            mode === k ? "bg-card text-ink shadow-seg" : "bg-transparent text-mute",
+            "h-9 flex-1 rounded-lg border-0 font-semibold text-sm transition-[background-color,color] duration-200 focus-visible:shadow-[0_0_0_3px_rgba(127,120,110,.35)] focus-visible:outline-none",
+            mode === k
+              ? "bg-card text-ink shadow-seg"
+              : "bg-transparent text-mute"
           )}
+          id={tabId(k)}
+          key={k}
+          onClick={() => onChange(k)}
+          role="tab"
+          tabIndex={mode === k ? 0 : -1}
+          type="button"
         >
           {label}
         </button>
@@ -51,28 +95,48 @@ function Segmented({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void
   );
 }
 
-function GoogleButton({ enabled, callbackURL }: { enabled: boolean; callbackURL: string }) {
+function GoogleButton({
+  enabled,
+  callbackURL,
+}: {
+  enabled: boolean;
+  callbackURL: string;
+}) {
   const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
   return (
     <>
       <button
-        type="button"
+        className="flex h-11 items-center justify-center gap-3 rounded-lg border border-line2 bg-card font-semibold text-ink text-sm transition-[border-color] duration-200 hover:border-ink focus-visible:shadow-[0_0_0_3px_rgba(127,120,110,.35)] focus-visible:outline-none disabled:cursor-wait disabled:opacity-60"
+        disabled={busy}
         onClick={async () => {
           if (!enabled) {
-            setMsg("O login com Google não está disponível neste ambiente. Use e-mail e senha.");
+            setMsg(
+              "O login com Google não está disponível neste ambiente. Use e-mail e senha."
+            );
             return;
           }
-          await authClient.signIn.social({ provider: "google", callbackURL, errorCallbackURL: "/entrar" });
+          setBusy(true);
+          // Em caso de sucesso o navegador sai para o Google; o botão fica travado até lá.
+          const { error } = await authClient.signIn.social({
+            provider: "google",
+            callbackURL,
+            errorCallbackURL: "/entrar",
+          });
+          if (error) {
+            setBusy(false);
+            setMsg(authErrorMessage(error));
+          }
         }}
-        className="flex h-11 items-center justify-center gap-3 rounded-lg border border-line2 bg-card text-sm font-semibold text-ink transition-[border-color] duration-200 hover:border-ink focus-visible:shadow-[0_0_0_3px_rgba(127,120,110,.35)] focus-visible:outline-none"
+        type="button"
       >
         <span
           aria-hidden="true"
-          className="flex size-5 items-center justify-center rounded-full border border-line2 text-xs font-bold"
+          className="flex size-5 items-center justify-center rounded-full border border-line2 font-bold text-xs"
         >
           G
         </span>
-        <span>Entrar com Google</span>
+        <span>{busy ? "Abrindo o Google…" : "Entrar com Google"}</span>
       </button>
       {msg ? <AuthNotice>{msg}</AuthNotice> : null}
     </>
@@ -81,7 +145,7 @@ function GoogleButton({ enabled, callbackURL }: { enabled: boolean; callbackURL:
 
 function Divider() {
   return (
-    <div className="flex items-center gap-3 text-xs text-mute">
+    <div className="flex items-center gap-3 text-mute text-xs">
       <span className="h-px flex-1 bg-line" />
       <span>ou com e-mail</span>
       <span className="h-px flex-1 bg-line" />
@@ -91,54 +155,71 @@ function Divider() {
 
 function LoginForm({ callbackURL }: { callbackURL: string }) {
   const router = useRouter();
-  const [error, setError] = useState<{ code?: string; status?: number } | null>(null);
+  const [error, setError] = useState<{ code?: string; status?: number } | null>(
+    null
+  );
   const [resent, setResent] = useState(false);
-  const form = useForm({ resolver: zodResolver(signInSchema), defaultValues: { email: "", password: "" } });
+  const [resending, setResending] = useState(false);
+  const form = useForm({
+    resolver: zodResolver(signInSchema),
+    defaultValues: { email: "", password: "" },
+  });
   const { register, handleSubmit, formState, getValues } = form;
+  const submitOnce = useSingleFlight();
 
   return (
     <form
-      noValidate
-      onSubmit={handleSubmit(async (values) => {
-        setError(null);
-        setResent(false);
-        const { error } = await authClient.signIn.email({ ...values, callbackURL });
-        if (error) return setError(error);
-        router.replace(callbackURL);
-        router.refresh();
-      })}
       className="contents"
+      noValidate
+      onSubmit={handleSubmit((values) =>
+        submitOnce(async () => {
+          setError(null);
+          setResent(false);
+          const { error } = await authClient.signIn.email({
+            ...values,
+            callbackURL,
+          });
+          if (error) {
+            return setError(error);
+          }
+          router.replace(callbackURL);
+          router.refresh();
+        })
+      )}
     >
       <div className="flex flex-col gap-3">
-        <FieldLabel label="E-mail" error={formState.errors.email?.message}>
+        <FieldLabel error={formState.errors.email?.message} label="E-mail">
           <Input
-            type="email"
-            autoComplete="email"
-            placeholder="voce@email.com"
-            className={inputClass}
             aria-invalid={!!formState.errors.email}
+            autoComplete="email"
+            className={inputClass}
+            placeholder="voce@email.com"
+            type="email"
             {...register("email")}
           />
         </FieldLabel>
-        <div className="flex flex-col gap-2 text-xs font-medium text-mute">
+        <div className="flex flex-col gap-2 font-medium text-mute text-xs">
           {/* "Esqueci minha senha" na linha do rótulo: não altera a altura do cartão do design. */}
           <div className="flex items-baseline justify-between gap-3">
             <label htmlFor="login-password">Senha</label>
-            <Link href="/esqueci-senha" className="text-xs font-semibold text-mute no-underline hover:text-ink">
+            <Link
+              className="font-semibold text-mute text-xs no-underline hover:text-ink"
+              href="/esqueci-senha"
+            >
               Esqueci minha senha
             </Link>
           </div>
           <Input
-            id="login-password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            className={inputClass}
             aria-invalid={!!formState.errors.password}
+            autoComplete="current-password"
+            className={inputClass}
+            id="login-password"
+            placeholder="••••••••"
+            type="password"
             {...register("password")}
           />
           {formState.errors.password ? (
-            <span role="alert" className="text-xs font-normal text-acc">
+            <span className="font-normal text-acc text-xs" role="alert">
               {formState.errors.password.message}
             </span>
           ) : null}
@@ -151,24 +232,40 @@ function LoginForm({ callbackURL }: { callbackURL: string }) {
             <>
               {" "}
               {resent ? (
-                <strong className="font-semibold">Enviamos um novo link.</strong>
+                <strong className="font-semibold">
+                  Enviamos um novo link.
+                </strong>
               ) : (
                 <button
-                  type="button"
-                  className="border-0 bg-transparent p-0 text-xs font-semibold text-ink underline hover:text-acc"
+                  className="border-0 bg-transparent p-0 font-semibold text-ink text-xs underline hover:text-acc disabled:cursor-wait disabled:opacity-60"
+                  disabled={resending}
                   onClick={async () => {
-                    await authClient.sendVerificationEmail({ email: getValues("email"), callbackURL: "/verifique-email" });
+                    setResending(true);
+                    const { error } = await authClient.sendVerificationEmail({
+                      email: getValues("email"),
+                      callbackURL: "/verifique-email",
+                    });
+                    setResending(false);
+                    if (error) {
+                      return setError(error);
+                    }
                     setResent(true);
                   }}
+                  type="button"
                 >
-                  Reenviar e-mail de verificação
+                  {resending ? "Reenviando…" : "Reenviar e-mail de verificação"}
                 </button>
               )}
             </>
           ) : null}
         </AuthNotice>
       ) : null}
-      <Button type="submit" size="lg" disabled={formState.isSubmitting} className="active:scale-[.98]">
+      <Button
+        className="active:scale-[.98]"
+        disabled={formState.isSubmitting}
+        size="lg"
+        type="submit"
+      >
         {formState.isSubmitting ? "Entrando…" : COPY.login.btn}
       </Button>
     </form>
@@ -177,67 +274,89 @@ function LoginForm({ callbackURL }: { callbackURL: string }) {
 
 function SignupForm() {
   const router = useRouter();
-  const [error, setError] = useState<{ code?: string; status?: number } | null>(null);
+  const [error, setError] = useState<{ code?: string; status?: number } | null>(
+    null
+  );
   const form = useForm({
     resolver: zodResolver(signUpSchema),
     defaultValues: { name: "", email: "", password: "", confirm: "" },
   });
   const { register, handleSubmit, formState } = form;
+  const submitOnce = useSingleFlight();
 
   return (
     <form
-      noValidate
-      onSubmit={handleSubmit(async ({ name, email, password }) => {
-        setError(null);
-        const { error } = await authClient.signUp.email({ name, email, password, callbackURL: "/verifique-email" });
-        if (error) return setError(error);
-        router.push("/verifique-email?email=" + encodeURIComponent(email));
-      })}
       className="contents"
+      noValidate
+      onSubmit={handleSubmit(({ name, email, password }) =>
+        submitOnce(async () => {
+          setError(null);
+          const { error } = await authClient.signUp.email({
+            name,
+            email,
+            password,
+            callbackURL: "/verifique-email",
+          });
+          if (error) {
+            return setError(error);
+          }
+          router.push("/verifique-email?email=" + encodeURIComponent(email));
+        })
+      )}
     >
       <div className="flex flex-col gap-3">
-        <FieldLabel label="Nome" error={formState.errors.name?.message}>
+        <FieldLabel error={formState.errors.name?.message} label="Nome">
           <Input
-            autoComplete="name"
-            placeholder="Como podemos te chamar?"
-            className={inputClass}
             aria-invalid={!!formState.errors.name}
+            autoComplete="name"
+            className={inputClass}
+            placeholder="Como podemos te chamar?"
             {...register("name")}
           />
         </FieldLabel>
-        <FieldLabel label="E-mail" error={formState.errors.email?.message}>
+        <FieldLabel error={formState.errors.email?.message} label="E-mail">
           <Input
-            type="email"
-            autoComplete="email"
-            placeholder="voce@email.com"
-            className={inputClass}
             aria-invalid={!!formState.errors.email}
+            autoComplete="email"
+            className={inputClass}
+            placeholder="voce@email.com"
+            type="email"
             {...register("email")}
           />
         </FieldLabel>
-        <FieldLabel label="Senha" error={formState.errors.password?.message}>
+        <FieldLabel error={formState.errors.password?.message} label="Senha">
           <Input
-            type="password"
-            autoComplete="new-password"
-            placeholder="••••••••"
-            className={inputClass}
             aria-invalid={!!formState.errors.password}
+            autoComplete="new-password"
+            className={inputClass}
+            placeholder="••••••••"
+            type="password"
             {...register("password")}
           />
         </FieldLabel>
-        <FieldLabel label="Confirmar senha" error={formState.errors.confirm?.message}>
+        <FieldLabel
+          error={formState.errors.confirm?.message}
+          label="Confirmar senha"
+        >
           <Input
-            type="password"
-            autoComplete="new-password"
-            placeholder="••••••••"
-            className={inputClass}
             aria-invalid={!!formState.errors.confirm}
+            autoComplete="new-password"
+            className={inputClass}
+            placeholder="••••••••"
+            type="password"
             {...register("confirm")}
           />
         </FieldLabel>
       </div>
-      {error ? <AuthNotice tone="error">{authErrorMessage(error)}</AuthNotice> : null}
-      <Button type="submit" size="lg" disabled={formState.isSubmitting} className="active:scale-[.98]">
+      {error ? (
+        <AuthNotice tone="error">{authErrorMessage(error)}</AuthNotice>
+      ) : null}
+      <Button
+        className="active:scale-[.98]"
+        disabled={formState.isSubmitting}
+        size="lg"
+        type="submit"
+      >
         {formState.isSubmitting ? "Criando…" : COPY.signup.btn}
       </Button>
     </form>
@@ -266,17 +385,33 @@ export function SignInCard({
         onChange={(m) => {
           setMode(m);
           const url = new URL(window.location.href);
-          if (m === "signup") url.searchParams.set("modo", "cadastro");
-          else url.searchParams.delete("modo");
+          if (m === "signup") {
+            url.searchParams.set("modo", "cadastro");
+          } else {
+            url.searchParams.delete("modo");
+          }
           window.history.replaceState(null, "", url);
         }}
       />
-      <AuthHeading title={copy.title} sub={copy.sub} />
+      <AuthHeading sub={copy.sub} title={copy.title} />
       {notice ? <AuthNotice>{notice}</AuthNotice> : null}
-      {oauthError ? <AuthNotice tone="error">{oauthErrorMessage(oauthError)}</AuthNotice> : null}
-      <GoogleButton enabled={googleEnabled} callbackURL={callbackURL} />
+      {oauthError ? (
+        <AuthNotice tone="error">{oauthErrorMessage(oauthError)}</AuthNotice>
+      ) : null}
+      <GoogleButton callbackURL={callbackURL} enabled={googleEnabled} />
       <Divider />
-      {mode === "login" ? <LoginForm callbackURL={callbackURL} /> : <SignupForm />}
+      <div
+        aria-labelledby={tabId(mode)}
+        className="contents"
+        id={PANEL_ID}
+        role="tabpanel"
+      >
+        {mode === "login" ? (
+          <LoginForm callbackURL={callbackURL} />
+        ) : (
+          <SignupForm />
+        )}
+      </div>
     </div>
   );
 }

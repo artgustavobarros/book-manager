@@ -22,18 +22,24 @@ export function StatusSelect({
 }) {
   const dot = stat(value).dot;
   return (
-    <span onClick={(e) => e.stopPropagation()} className={cn("relative flex items-center", className)}>
-      <span className="pointer-events-none absolute left-3 size-2 rounded-full" style={{ background: dot }} />
-      <span className="pointer-events-none absolute top-2 right-3 size-1 rotate-45 border-r-[1.5px] border-b-[1.5px] border-ink opacity-55" />
+    <span
+      className={cn("relative flex items-center", className)}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <span
+        className="pointer-events-none absolute left-3 size-2 rounded-full"
+        style={{ background: dot }}
+      />
+      <span className="pointer-events-none absolute top-2 right-3 size-1 rotate-45 border-ink border-r-[1.5px] border-b-[1.5px] opacity-55" />
       <select
         aria-label="Status"
-        value={value}
+        className={cn(
+          "h-7 cursor-pointer appearance-none rounded-full border border-transparent pr-7 pl-6 font-semibold text-ink text-xs outline-none transition-[border-color,background-color] duration-150 hover:border-line2 focus:border-ink",
+          selectClassName
+        )}
         onChange={(e) => onChange(e.target.value as BookStatus)}
         style={{ background: `color-mix(in oklch, ${dot} 16%, var(--card))` }}
-        className={cn(
-          "h-7 cursor-pointer appearance-none rounded-full border border-transparent pr-7 pl-6 text-xs font-semibold text-ink outline-none transition-[border-color,background-color] duration-150 hover:border-line2 focus:border-ink",
-          selectClassName,
-        )}
+        value={value}
       >
         {STATUS.map((s) => (
           <option key={s.k} value={s.k}>

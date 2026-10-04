@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { AppProvider } from "@/components/app/app-provider";
@@ -12,13 +13,20 @@ import { listBooks } from "@/lib/services/books";
 import { getGoal } from "@/lib/services/goals";
 import { getSettings } from "@/lib/services/settings";
 import { requirePageSession } from "@/lib/session";
-import { THEME_COOKIE, TZ_COOKIE, parseTheme } from "@/lib/theme";
+import { parseTheme, THEME_COOKIE, TZ_COOKIE } from "@/lib/theme";
+
+/** Páginas da conta: nada aqui é para buscador. */
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
  * Layout autenticado: valida a sessão (a verificação de verdade, além do proxy) e
  * renderiza no servidor já com o acervo, a meta do ano e as configurações.
  */
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user } = await requirePageSession();
   const jar = await cookies();
   const tz = safeTimeZone(decodeURIComponent(jar.get(TZ_COOKIE)?.value ?? ""));
@@ -29,13 +37,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     listBooks(db, user.id),
     getGoal(db, user.id, year),
     getSettings(db, user.id),
-    db.select({ providerId: account.providerId }).from(account).where(eq(account.userId, user.id)),
+    db
+      .select({ providerId: account.providerId })
+      .from(account)
+      .where(eq(account.userId, user.id)),
   ]);
 
   return (
     <AppProvider
       initial={{
-        user: { id: user.id, name: user.name, email: user.email, image: user.image ?? null },
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image ?? null,
+        },
         books,
         goal,
         sheetUrl: settings.sheetUrl,

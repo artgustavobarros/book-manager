@@ -4,7 +4,11 @@ import type { DB } from "@/lib/db";
 import { readingGoals } from "@/lib/db/schema";
 import { DEFAULT_GOAL } from "@/lib/domain/dashboard";
 
-export async function getGoal(db: DB, userId: string, year: number): Promise<number> {
+export async function getGoal(
+  db: DB,
+  userId: string,
+  year: number
+): Promise<number> {
   const [row] = await db
     .select({ target: readingGoals.target })
     .from(readingGoals)
@@ -12,10 +16,18 @@ export async function getGoal(db: DB, userId: string, year: number): Promise<num
   return row?.target ?? DEFAULT_GOAL;
 }
 
-export async function setGoal(db: DB, userId: string, year: number, target: number): Promise<number> {
+export async function setGoal(
+  db: DB,
+  userId: string,
+  year: number,
+  target: number
+): Promise<number> {
   await db
     .insert(readingGoals)
     .values({ userId, year, target })
-    .onConflictDoUpdate({ target: [readingGoals.userId, readingGoals.year], set: { target } });
+    .onConflictDoUpdate({
+      target: [readingGoals.userId, readingGoals.year],
+      set: { target },
+    });
   return target;
 }

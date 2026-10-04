@@ -23,29 +23,41 @@ type Patch = Partial<BookFields>;
 export function useBookActions() {
   const qc = useQueryClient();
   const snapshot = () => qc.getQueryData<Book[]>(BOOKS_KEY) ?? [];
-  const setBooks = (fn: (books: Book[]) => Book[]) => qc.setQueryData<Book[]>(BOOKS_KEY, (old) => fn(old ?? []));
+  const setBooks = (fn: (books: Book[]) => Book[]) =>
+    qc.setQueryData<Book[]>(BOOKS_KEY, (old) => fn(old ?? []));
   const fail = (prev: Book[]) => (error: Error) => {
     qc.setQueryData(BOOKS_KEY, prev);
     toast(error.message || "Não foi possível salvar. Tente de novo.");
   };
 
   const update = useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: Patch }) => api.patch<{ book: Book }>(`/api/books/${id}`, patch),
+    mutationFn: ({ id, patch }: { id: string; patch: Patch }) =>
+      api.patch<{ book: Book }>(`/api/books/${id}`, patch),
     onMutate: ({ id, patch }) => {
       const prev = snapshot();
       setBooks((bs) =>
         bs.map((b) =>
-          b.id === id ? { ...b, ...patch, ...(patch.status && patch.status !== "emprestado" ? { borrower: null } : {}) } : b,
-        ),
+          b.id === id
+            ? {
+                ...b,
+                ...patch,
+                ...(patch.status && patch.status !== "emprestado"
+                  ? { borrower: null }
+                  : {}),
+              }
+            : b
+        )
       );
       return { prev };
     },
     onError: (e, _v, ctx) => fail(ctx?.prev ?? [])(e),
-    onSuccess: ({ book }) => setBooks((bs) => bs.map((b) => (b.id === book.id ? book : b))),
+    onSuccess: ({ book }) =>
+      setBooks((bs) => bs.map((b) => (b.id === book.id ? book : b))),
   });
 
   const create = useMutation({
-    mutationFn: (fields: Patch & { title: string }) => api.post<{ book: Book }>("/api/books", fields),
+    mutationFn: (fields: Patch & { title: string }) =>
+      api.post<{ book: Book }>("/api/books", fields),
     onSuccess: ({ book }) => setBooks((bs) => [book, ...bs]),
     onError: (e) => toast(e.message),
   });
@@ -61,15 +73,28 @@ export function useBookActions() {
   });
 
   return {
-    /** Atualiza um livro (otimista). */
-    update: (id: string, patch: Patch) => update.mutateAsync({ id, patch }).catch(() => undefined),
+    /**
+     * Atualiza um livro (otimista). Resolve `true` quando a API confirma e `false` na
+     * falha (já desfeita e avisada por toast): o toast de sucesso fica com quem chama.
+     */
+    update: (id: string, patch: Patch) =>
+      update.mutateAsync({ id, patch }).then(
+        () => true,
+        () => false
+      ),
     create: (fields: Patch & { title: string }) => create.mutateAsync(fields),
-    remove: (id: string) => remove.mutateAsync(id).catch(() => undefined),
+    /** Exclui um livro (otimista). Resolve `true`/`false` como `update`. */
+    remove: (id: string) =>
+      remove.mutateAsync(id).then(
+        () => true,
+        () => false
+      ),
     /** Substitui o cache inteiro (após importar/sincronizar). */
     replaceAll: (books: Book[]) => qc.setQueryData(BOOKS_KEY, books),
     refetch: () => qc.invalidateQueries({ queryKey: BOOKS_KEY }),
     /** Aplica um patch local sem chamar a API (o lote de capas grava depois). */
-    patchLocal: (id: string, patch: Patch) => setBooks((bs) => bs.map((b) => (b.id === id ? { ...b, ...patch } : b))),
+    patchLocal: (id: string, patch: Patch) =>
+      setBooks((bs) => bs.map((b) => (b.id === id ? { ...b, ...patch } : b))),
     saving: create.isPending,
   };
 }

@@ -12,7 +12,11 @@ describe("norm", () => {
 
 describe("cmp", () => {
   it("ordena em pt-BR ignorando acentos e caixa", () => {
-    expect(["Ópera", "abacate", "Ensaio"].sort(cmp)).toEqual(["abacate", "Ensaio", "Ópera"]);
+    expect(["Ópera", "abacate", "Ensaio"].sort(cmp)).toEqual([
+      "abacate",
+      "Ensaio",
+      "Ópera",
+    ]);
     expect(cmp("ação", "Acao")).toBe(0);
     expect(cmp(null, "a")).toBeLessThan(0);
   });
@@ -38,6 +42,6 @@ describe("fmtDate", () => {
 
 describe("nf", () => {
   it("usa separador de milhar pt-BR", () => {
-    expect(nf(12345)).toBe("12.345");
+    expect(nf(12_345)).toBe("12.345");
   });
 });

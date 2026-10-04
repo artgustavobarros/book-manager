@@ -2,3 +2,5 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+# Ultracite offers other lint providers as optional peers; install only the selected Biome provider.
+autoInstallPeers: false

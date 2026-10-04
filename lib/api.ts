@@ -6,7 +6,7 @@ import { auth, type Session } from "@/lib/auth";
 export class HttpError extends Error {
   constructor(
     public status: number,
-    message: string,
+    message: string
   ) {
     super(message);
   }
@@ -19,7 +19,10 @@ export function json<T>(data: T, init?: ResponseInit) {
   return NextResponse.json(data, init);
 }
 
-export async function parseBody<T>(request: Request, schema: ZodType<T>): Promise<T> {
+export async function parseBody<T>(
+  request: Request,
+  schema: ZodType<T>
+): Promise<T> {
   let body: unknown;
   try {
     body = await request.json();
@@ -29,7 +32,12 @@ export async function parseBody<T>(request: Request, schema: ZodType<T>): Promis
   return schema.parse(body);
 }
 
-type Handler<C> = (ctx: { request: Request; session: Session; userId: string; params: C }) => Promise<Response>;
+type Handler<C> = (ctx: {
+  request: Request;
+  session: Session;
+  userId: string;
+  params: C;
+}) => Promise<Response>;
 
 /**
  * Route Handler autenticado: resolve a sessão (401 sem ela) e converte erros
@@ -39,17 +47,32 @@ export function withSession<P = Record<string, never>>(handler: Handler<P>) {
   return async (request: Request, context: { params: Promise<P> }) => {
     try {
       const session = await auth.api.getSession({ headers: request.headers });
-      if (!session) return json({ error: "Não autenticado." }, { status: 401 });
+      if (!session) {
+        return json({ error: "Não autenticado." }, { status: 401 });
+      }
       const params = (await context?.params) ?? ({} as P);
-      return await handler({ request, session, userId: session.user.id, params });
+      return await handler({
+        request,
+        session,
+        userId: session.user.id,
+        params,
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         return json(
-          { error: error.issues[0]?.message ?? "Dados inválidos.", issues: error.issues.map((i) => ({ path: i.path, message: i.message })) },
-          { status: 400 },
+          {
+            error: error.issues[0]?.message ?? "Dados inválidos.",
+            issues: error.issues.map((i) => ({
+              path: i.path,
+              message: i.message,
+            })),
+          },
+          { status: 400 }
         );
       }
-      if (error instanceof HttpError) return json({ error: error.message }, { status: error.status });
+      if (error instanceof HttpError) {
+        return json({ error: error.message }, { status: error.status });
+      }
       console.error("[api]", error);
       return json({ error: "Erro inesperado." }, { status: 500 });
     }

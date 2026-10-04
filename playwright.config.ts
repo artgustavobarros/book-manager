@@ -18,7 +18,11 @@ export default defineConfig({
   timeout: 60_000,
   reporter: [["list"], ["html", { open: "never" }]],
   expect: {
-    toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: "disabled", caret: "hide" },
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.01,
+      animations: "disabled",
+      caret: "hide",
+    },
   },
   use: {
     baseURL,
@@ -33,9 +37,17 @@ export default defineConfig({
       name: "e2e",
       testMatch: "e2e/**/*.spec.ts",
       dependencies: ["setup"],
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1440, height: 900 },
+      },
     },
-    { name: "visual", testMatch: "visual/**/*.spec.ts", dependencies: ["setup"], use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "visual",
+      testMatch: "visual/**/*.spec.ts",
+      dependencies: ["setup"],
+      use: { ...devices["Desktop Chrome"] },
+    },
   ],
   webServer: {
     command: `bash scripts/e2e-server.sh ${PORT}`,

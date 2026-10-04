@@ -32,3 +32,12 @@ playwright/.cache/
 npm-debug.log*
 pnpm-debug.log*
 .vercel
+
+
+#ai
+openspec
+.agent
+.agents
+.claude
+.codex
+design

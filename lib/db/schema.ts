@@ -26,10 +26,16 @@ export const bookStatus = pgEnum("book_status", [
   "doado",
 ]);
 
-export const authorGender = pgEnum("author_gender", ["Homem", "Mulher", "Não definido"]);
+export const authorGender = pgEnum("author_gender", [
+  "Homem",
+  "Mulher",
+  "Não definido",
+]);
 
 const timestamps = {
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()
@@ -67,7 +73,7 @@ export const books = pgTable(
     index("books_user_idx").on(t.userId),
     index("books_user_order_idx").on(t.userId, t.orderNo),
     check("books_pages_positive", sql`${t.pages} is null or ${t.pages} > 0`),
-  ],
+  ]
 );
 
 export const readingGoals = pgTable(
@@ -83,7 +89,7 @@ export const readingGoals = pgTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.year] }),
     check("reading_goals_target_positive", sql`${t.target} > 0`),
-  ],
+  ]
 );
 
 export const userSettings = pgTable("user_settings", {

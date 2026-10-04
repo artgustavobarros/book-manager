@@ -14,16 +14,22 @@ test.describe("acervo", () => {
 
   test("Painel mostra o acervo de referência", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Boa tarde, Ana" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Boa tarde, Ana" })
+    ).toBeVisible();
     await expect(page.getByText("Livros no acervo")).toBeVisible();
     await expect(page.getByText("Segunda-feira, 15 de junho")).toBeVisible();
   });
 
-  test("registrar livro, abrir a ficha e excluir em dois cliques", async ({ page }) => {
+  test("registrar livro, abrir a ficha e excluir em dois cliques", async ({
+    page,
+  }) => {
     await page.goto("/estante?ordem=recentes");
     await page.getByRole("button", { name: "+ Registrar livro" }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByRole("heading", { name: "Registrar livro" })).toBeVisible();
+    await expect(
+      dialog.getByRole("heading", { name: "Registrar livro" })
+    ).toBeVisible();
     await dialog.getByLabel("Título *").fill("Livro de Teste E2E");
     await dialog.getByLabel("Autor(a) *").fill("Autora Teste");
     await dialog.getByLabel("Páginas").fill("123");
@@ -43,24 +49,39 @@ test.describe("acervo", () => {
     await expect(page.getByText("Livro de Teste E2E")).toHaveCount(0);
   });
 
-  test("Salvar fica inativo sem título e números são validados", async ({ page }) => {
+  test("Salvar fica inativo sem título e números são validados", async ({
+    page,
+  }) => {
     await page.goto("/estante");
     await page.getByRole("button", { name: "+ Registrar livro" }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByRole("button", { name: "Salvar" })).toHaveAttribute("aria-disabled", "true");
+    await expect(
+      dialog.getByRole("button", { name: "Salvar" })
+    ).toHaveAttribute("aria-disabled", "true");
     await dialog.getByLabel("Título *").fill("X");
-    await dialog.getByLabel("Capa (link da imagem)").fill("javascript:alert(1)");
+    await dialog
+      .getByLabel("Capa (link da imagem)")
+      .fill("javascript:alert(1)");
     await dialog.getByRole("button", { name: "Salvar" }).click();
-    await expect(dialog.getByText("Use um link http(s) para a capa.")).toBeVisible();
+    await expect(
+      dialog.getByText("Use um link http(s) para a capa.")
+    ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);
   });
 
-  test("emprestar pede o nome no estilo do app e persiste", async ({ page }) => {
+  test("emprestar pede o nome no estilo do app e persiste", async ({
+    page,
+  }) => {
     await page.goto("/estante?q=frankenstein");
-    await page.getByRole("combobox", { name: "Status" }).first().selectOption("emprestado");
+    await page
+      .getByRole("combobox", { name: "Status" })
+      .first()
+      .selectOption("emprestado");
     const lend = page.getByRole("dialog");
-    await expect(lend.getByRole("heading", { name: "Emprestado para quem?" })).toBeVisible();
+    await expect(
+      lend.getByRole("heading", { name: "Emprestado para quem?" })
+    ).toBeVisible();
     await lend.getByLabel("Nome da pessoa").fill("Joana");
     await lend.getByRole("button", { name: "Marcar como emprestado" }).click();
     await expect(page.getByText("Com Joana")).toBeVisible();
@@ -68,7 +89,10 @@ test.describe("acervo", () => {
     await expect(page.getByText("Com Joana")).toBeVisible();
 
     // Voltar para "Não lido" limpa o "emprestado para".
-    await page.getByRole("combobox", { name: "Status" }).first().selectOption("nao-lido");
+    await page
+      .getByRole("combobox", { name: "Status" })
+      .first()
+      .selectOption("nao-lido");
     await expect(page.getByText("Com Joana")).toHaveCount(0);
   });
 
@@ -81,7 +105,9 @@ test.describe("acervo", () => {
     await expect(page).toHaveURL(/ordem=paginas/);
     await page.reload();
     await expect(page.getByText(/^\d+ de 30 livros$/)).toBeVisible();
-    await expect(page.getByRole("button", { name: /Ordenar/ })).toContainText("Páginas · maiores");
+    await expect(page.getByRole("button", { name: /Ordenar/ })).toContainText(
+      "Páginas · maiores"
+    );
   });
 
   test("meta anual persiste por ano", async ({ page }) => {
@@ -96,9 +122,15 @@ test.describe("acervo", () => {
 
   test("exportar CSV e backup", async ({ page }) => {
     await page.goto("/");
-    const [csv] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Exportar Excel (CSV)" }).click()]);
+    const [csv] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "Exportar Excel (CSV)" }).click(),
+    ]);
     expect(csv.suggestedFilename()).toMatch(/^acervo-\d{4}-\d{2}-\d{2}\.csv$/);
-    const [json] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Salvar backup" }).click()]);
+    const [json] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "Salvar backup" }).click(),
+    ]);
     expect(json.suggestedFilename()).toMatch(/\.json$/);
   });
 });

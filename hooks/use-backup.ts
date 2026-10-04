@@ -14,11 +14,19 @@ export function useBackup() {
   const books = useBooks();
   return {
     exportCsv: () => {
-      download(exportFileName("csv"), new Blob([exportCsv(books)], { type: "text/csv;charset=utf-8" }));
+      download(
+        exportFileName("csv"),
+        new Blob([exportCsv(books)], { type: "text/csv;charset=utf-8" })
+      );
       toast("Planilha CSV exportada");
     },
     exportJson: () => {
-      download(exportFileName("json"), new Blob([JSON.stringify(toBackup(books), null, 2)], { type: "application/json" }));
+      download(
+        exportFileName("json"),
+        new Blob([JSON.stringify(toBackup(books), null, 2)], {
+          type: "application/json",
+        })
+      );
     },
     pickRestore: () => window.dispatchEvent(new Event(RESTORE_EVENT)),
   };

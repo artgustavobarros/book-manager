@@ -28,7 +28,10 @@ export function RestoreHost() {
 
   async function restore(data: unknown[]) {
     try {
-      const res = await api.post<{ count: number; books: Book[] }>("/api/books/import", data);
+      const res = await api.post<{ count: number; books: Book[] }>(
+        "/api/books/import",
+        data
+      );
       replaceAll(res.books);
       toast("Backup restaurado · " + res.count + " livros");
     } catch (e) {
@@ -39,38 +42,45 @@ export function RestoreHost() {
   return (
     <>
       <input
-        ref={input}
-        type="file"
         accept=".json,application/json"
-        className="hidden"
         aria-hidden="true"
-        tabIndex={-1}
+        className="hidden"
         onChange={async (e) => {
           const file = e.target.files?.[0];
           e.target.value = "";
-          if (!file) return;
+          if (!file) {
+            return;
+          }
           let data: unknown;
           try {
             data = JSON.parse(await file.text());
           } catch {
             data = null;
           }
-          if (!Array.isArray(data)) return toast("Arquivo inválido.");
-          if (books.length) setPending(data);
-          else void restore(data);
+          if (!Array.isArray(data)) {
+            return toast("Arquivo inválido.");
+          }
+          if (books.length) {
+            setPending(data);
+          } else {
+            void restore(data);
+          }
         }}
+        ref={input}
+        tabIndex={-1}
+        type="file"
       />
       <ConfirmDialog
-        open={!!pending}
-        onOpenChange={(o) => !o && setPending(null)}
-        title="Substituir o acervo?"
-        description={`O backup tem ${pending?.length ?? 0} itens e vai substituir os ${books.length} livros atuais. Esta ação não pode ser desfeita.`}
         confirmLabel="Restaurar backup"
+        description={`O backup tem ${pending?.length ?? 0} itens e vai substituir os ${books.length} livros atuais. Esta ação não pode ser desfeita.`}
         onConfirm={() => {
           const data = pending!;
           setPending(null);
           void restore(data);
         }}
+        onOpenChange={(o) => !o && setPending(null)}
+        open={!!pending}
+        title="Substituir o acervo?"
       />
     </>
   );

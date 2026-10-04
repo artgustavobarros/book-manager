@@ -1,12 +1,37 @@
 /** Templates de e-mail com a paleta do design (estilos inline para clientes de e-mail). */
 import type { EmailMessage } from "./index";
 
-const C = { bg: "#f4f2ee", card: "#ffffff", ink: "#1b1a17", mute: "#6f695f", line: "#e6e1d8", acc: "#b5452c" };
+const C = {
+  bg: "#f4f2ee",
+  card: "#ffffff",
+  ink: "#1b1a17",
+  mute: "#6f695f",
+  line: "#e6e1d8",
+  acc: "#b5452c",
+};
 
 const escapeHtml = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+  s.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ]!
+  );
 
-function layout({ title, intro, cta, url, outro }: { title: string; intro: string; cta: string; url: string; outro: string }) {
+function layout({
+  title,
+  intro,
+  cta,
+  url,
+  outro,
+}: {
+  title: string;
+  intro: string;
+  cta: string;
+  url: string;
+  outro: string;
+}) {
   const safeUrl = escapeHtml(url);
   return `<!doctype html>
 <html lang="pt-BR"><body style="margin:0;padding:32px 16px;background:${C.bg};font-family:'Hanken Grotesk',Helvetica,Arial,sans-serif;color:${C.ink}">
@@ -30,7 +55,12 @@ function layout({ title, intro, cta, url, outro }: { title: string; intro: strin
 }
 
 function text(lines: string[]) {
-  return [...lines, "", "Se não foi você, ignore este e-mail.", "— Bodega Literária"].join("\n");
+  return [
+    ...lines,
+    "",
+    "Se não foi você, ignore este e-mail.",
+    "— Bodega Literária",
+  ].join("\n");
 }
 
 export function verificationEmail(to: string, url: string): EmailMessage {
@@ -39,12 +69,18 @@ export function verificationEmail(to: string, url: string): EmailMessage {
     subject: "Confirme seu e-mail · Bodega Literária",
     html: layout({
       title: "Confirme seu e-mail",
-      intro: "Falta só um passo para começar a catalogar os livros da sua estante.",
+      intro:
+        "Falta só um passo para começar a catalogar os livros da sua estante.",
       cta: "Confirmar e-mail",
       url,
       outro: "O link vale por 24 horas.",
     }),
-    text: text(["Confirme seu e-mail para entrar na Bodega Literária:", url, "", "O link vale por 24 horas."]),
+    text: text([
+      "Confirme seu e-mail para entrar na Bodega Literária:",
+      url,
+      "",
+      "O link vale por 24 horas.",
+    ]),
   };
 }
 
@@ -59,11 +95,20 @@ export function resetPasswordEmail(to: string, url: string): EmailMessage {
       url,
       outro: "O link vale por 1 hora e só pode ser usado uma vez.",
     }),
-    text: text(["Para criar uma nova senha, abra:", url, "", "O link vale por 1 hora e só pode ser usado uma vez."]),
+    text: text([
+      "Para criar uma nova senha, abra:",
+      url,
+      "",
+      "O link vale por 1 hora e só pode ser usado uma vez.",
+    ]),
   };
 }
 
-export function changeEmailEmail(to: string, newEmail: string, url: string): EmailMessage {
+export function changeEmailEmail(
+  to: string,
+  newEmail: string,
+  url: string
+): EmailMessage {
   return {
     to,
     subject: "Confirme o novo e-mail · Bodega Literária",

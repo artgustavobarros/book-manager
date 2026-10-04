@@ -5,7 +5,6 @@ import { loadStandalone } from "@/tests/support/standalone";
 
 import { legacyToFields, toText } from "./backup";
 import {
-  SheetError,
   isGoogleSheetsUrl,
   mapDate,
   mapGender,
@@ -13,6 +12,7 @@ import {
   mapStatus,
   mergeSheet,
   parseSheet,
+  type SheetError,
   sheetCsvUrl,
 } from "./sheet";
 import type { Book, BookFields } from "./types";
@@ -32,19 +32,35 @@ const CSV = [
 
 describe("sheetCsvUrl", () => {
   it("converte links de edição e publicação", () => {
-    expect(sheetCsvUrl("https://docs.google.com/spreadsheets/d/AbC-123_x/edit#gid=42")).toBe(
-      "https://docs.google.com/spreadsheets/d/AbC-123_x/gviz/tq?tqx=out:csv&gid=42",
+    expect(
+      sheetCsvUrl(
+        "https://docs.google.com/spreadsheets/d/AbC-123_x/edit#gid=42"
+      )
+    ).toBe(
+      "https://docs.google.com/spreadsheets/d/AbC-123_x/gviz/tq?tqx=out:csv&gid=42"
     );
-    expect(sheetCsvUrl("https://docs.google.com/spreadsheets/d/e/2PACX-1/pubhtml?gid=7&single=true")).toBe(
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1/pub?output=csv&gid=7",
+    expect(
+      sheetCsvUrl(
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1/pubhtml?gid=7&single=true"
+      )
+    ).toBe(
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1/pub?output=csv&gid=7"
     );
     expect(sheetCsvUrl("https://exemplo.com/planilha")).toBeNull();
     expect(sheetCsvUrl("  ")).toBeNull();
   });
   it("só permite buscar no Google Sheets", () => {
-    expect(isGoogleSheetsUrl("https://docs.google.com/spreadsheets/d/x/gviz/tq?tqx=out:csv")).toBe(true);
-    expect(isGoogleSheetsUrl("https://docs.google.com.evil.com/spreadsheets/x")).toBe(false);
-    expect(isGoogleSheetsUrl("http://docs.google.com/spreadsheets/x")).toBe(false);
+    expect(
+      isGoogleSheetsUrl(
+        "https://docs.google.com/spreadsheets/d/x/gviz/tq?tqx=out:csv"
+      )
+    ).toBe(true);
+    expect(
+      isGoogleSheetsUrl("https://docs.google.com.evil.com/spreadsheets/x")
+    ).toBe(false);
+    expect(isGoogleSheetsUrl("http://docs.google.com/spreadsheets/x")).toBe(
+      false
+    );
   });
 });
 
@@ -75,7 +91,12 @@ describe("parseSheet", () => {
   it("detecta a coluna de gênero do autor e ignora linhas sem título", () => {
     const recs = parseSheet(CSV);
     expect(recs).toHaveLength(6);
-    expect(recs[0]).toMatchObject({ authorGender: "Homem", genre: "Distopia", acquired: "2023-04-12", status: "lido" });
+    expect(recs[0]).toMatchObject({
+      authorGender: "Homem",
+      genre: "Distopia",
+      acquired: "2023-04-12",
+      status: "lido",
+    });
   });
   it("rejeita HTML, planilha vazia e planilha sem título", () => {
     const code = (fn: () => unknown) => {
@@ -102,12 +123,19 @@ describe("mergeSheet × standalone", () => {
   });
 
   it("produz o mesmo acervo final que o runSync() do standalone", async () => {
-    const oracle = loadStandalone({ state: { sheetUrl: "https://docs.google.com/spreadsheets/d/abc/edit" } });
+    const oracle = loadStandalone({
+      state: { sheetUrl: "https://docs.google.com/spreadsheets/d/abc/edit" },
+    });
     oracle.toast = () => {};
     vi.stubGlobal("fetch", async () => ({ ok: true, text: async () => CSV }));
     await (oracle as any).runSync();
-    expect(oracle.state.syncMsg).toBe("Sincronizado: 3 livros atualizados e 3 novos.");
-    const theirs = oracle.state.books.map((b: any) => ({ ...legacyToFields(b, NOW), borrower: toText(b.borrower) }));
+    expect(oracle.state.syncMsg).toBe(
+      "Sincronizado: 3 livros atualizados e 3 novos."
+    );
+    const theirs = oracle.state.books.map((b: any) => ({
+      ...legacyToFields(b, NOW),
+      borrower: toText(b.borrower),
+    }));
 
     const books = referenceBooks();
     const merge = mergeSheet(books, parseSheet(CSV), NOW);
@@ -115,7 +143,12 @@ describe("mergeSheet × standalone", () => {
     const ours: BookFields[] = [
       ...books.map((b) => {
         const u = merge.updates.find((x) => x.id === b.id);
-        const { id: _id, createdAt: _c, updatedAt: _u, ...fields } = { ...b, ...(u?.fields ?? {}) } as Book;
+        const {
+          id: _id,
+          createdAt: _c,
+          updatedAt: _u,
+          ...fields
+        } = { ...b, ...(u?.fields ?? {}) } as Book;
         return fields;
       }),
       ...merge.inserts,
@@ -124,13 +157,32 @@ describe("mergeSheet × standalone", () => {
   });
 
   it("preserva anotações, capa, páginas e ano lido do app", () => {
-    const book = makeBook({ title: "A", author: "B", notes: "minha nota", pages: 100, yearRead: 2020, coverUrl: "https://c" });
-    const merge = mergeSheet([book], parseSheet("Título;Autor;Anotações;Páginas;Ano lido;Capa;Editora\nA;B;outra;200;2021;https://d;Zahar"));
-    expect(merge.updates).toEqual([{ id: book.id, fields: { publisher: "Zahar" } }]);
+    const book = makeBook({
+      title: "A",
+      author: "B",
+      notes: "minha nota",
+      pages: 100,
+      yearRead: 2020,
+      coverUrl: "https://c",
+    });
+    const merge = mergeSheet(
+      [book],
+      parseSheet(
+        "Título;Autor;Anotações;Páginas;Ano lido;Capa;Editora\nA;B;outra;200;2021;https://d;Zahar"
+      )
+    );
+    expect(merge.updates).toEqual([
+      { id: book.id, fields: { publisher: "Zahar" } },
+    ]);
   });
 
   it("grava Cor/etnia vinda da planilha", () => {
     const merge = mergeSheet([], parseSheet("Título;Cor/etnia\nA;Parda"));
-    expect(merge.inserts[0]).toMatchObject({ title: "A", authorEthnicity: "Parda", orderNo: 1, status: "nao-lido" });
+    expect(merge.inserts[0]).toMatchObject({
+      title: "A",
+      authorEthnicity: "Parda",
+      orderNo: 1,
+      status: "nao-lido",
+    });
   });
 });

@@ -1,17 +1,17 @@
 /* Bodega Literária — cores. Tema claro em :root, escuro em [data-theme="dark"]. */
 :root {
-  --bg: #f4f2ee;            /* fundo da página */
-  --card: #ffffff;          /* superfícies: cards, modais, inputs */
-  --ink: #1b1a17;           /* texto principal e ação primária */
-  --mute: #6f695f;          /* texto secundário, labels */
-  --line: #e6e1d8;          /* borda de cards */
-  --line2: #e0dbd1;         /* borda de controles */
-  --soft: #efebe4;          /* preenchimento neutro */
-  --seg: #ebe7df;           /* trilho de segmented/tabs */
-  --hov: #f7f5f1;           /* hover de linhas e ghost */
-  --row: #f0ece5;           /* linhas alternadas / trilhos de barra */
-  --hdr: rgba(244,242,238,.92); /* header translúcido com blur */
-  --acc: oklch(0.52 0.15 30);   /* terracota: acento, hover do primário */
+  --bg: #f4f2ee; /* fundo da página */
+  --card: #ffffff; /* superfícies: cards, modais, inputs */
+  --ink: #1b1a17; /* texto principal e ação primária */
+  --mute: #686258; /* texto secundário, labels: contraste AA sobre --seg */
+  --line: #e6e1d8; /* borda de cards */
+  --line2: #e0dbd1; /* borda de controles */
+  --soft: #efebe4; /* preenchimento neutro */
+  --seg: #ebe7df; /* trilho de segmented/tabs */
+  --hov: #f7f5f1; /* hover de linhas e ghost */
+  --row: #f0ece5; /* linhas alternadas / trilhos de barra */
+  --hdr: rgba(244, 242, 238, 0.92); /* header translúcido com blur */
+  --acc: oklch(0.52 0.15 30); /* terracota: acento, hover do primário */
   --lentbg: oklch(0.94 0.05 75);
   --lentfg: oklch(0.42 0.1 60);
 
@@ -22,8 +22,10 @@
   --status-abandonado: oklch(0.58 0.15 30);
   --status-doado: oklch(0.58 0.12 250);
 
-  --success-bg: oklch(0.95 0.04 150); --success-fg: oklch(0.42 0.1 150);
-  --warning-bg: oklch(0.95 0.035 60); --warning-fg: oklch(0.45 0.1 50);
+  --success-bg: oklch(0.95 0.04 150);
+  --success-fg: oklch(0.42 0.1 150);
+  --warning-bg: oklch(0.95 0.035 60);
+  --warning-fg: oklch(0.45 0.1 50);
 
   /* aliases semânticos */
   --surface-page: var(--bg);
@@ -34,14 +36,23 @@
   --border-control: var(--line2);
   --action-primary: var(--ink);
   --action-primary-hover: var(--acc);
-  --focus-ring: rgba(127,120,110,.18);
+  --focus-ring: rgba(127, 120, 110, 0.18);
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --bg: #161513; --card: #211f1c; --ink: #ece7de; --mute: #a39c90;
-  --line: #34302a; --line2: #3f3a33; --soft: #2e2a26; --seg: #2a2723;
-  --hov: #2a2724; --row: #2c2925; --hdr: rgba(22,21,19,.9);
+  --bg: #161513;
+  --card: #211f1c;
+  --ink: #ece7de;
+  --mute: #a39c90;
+  --line: #34302a;
+  --line2: #3f3a33;
+  --soft: #2e2a26;
+  --seg: #2a2723;
+  --hov: #2a2724;
+  --row: #2c2925;
+  --hdr: rgba(22, 21, 19, 0.9);
   --acc: oklch(0.68 0.14 35);
-  --lentbg: oklch(0.34 0.06 70); --lentfg: oklch(0.9 0.08 80);
+  --lentbg: oklch(0.34 0.06 70);
+  --lentfg: oklch(0.9 0.08 80);
   color-scheme: dark;
 }

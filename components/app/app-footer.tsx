@@ -4,26 +4,45 @@ import { useBackup } from "@/hooks/use-backup";
 
 import { useApp } from "./app-provider";
 
-const linkClass = "border-0 bg-transparent p-0 text-xs font-semibold text-ink hover:text-acc";
+const linkClass =
+  "border-0 bg-transparent p-0 text-xs font-semibold text-ink hover:text-acc";
 
 export function AppFooter() {
   const app = useApp();
   const backup = useBackup();
   return (
-    <footer className="border-t border-line">
-      <div className="mx-auto flex max-w-[1440px] flex-wrap justify-between gap-4 px-7 py-4 text-xs text-mute">
-        <span>Bodega Literária · os livros de casa, guardados na sua conta.</span>
+    <footer className="border-line border-t">
+      <div className="mx-auto flex max-w-[1440px] flex-wrap justify-between gap-4 px-7 py-4 text-mute text-xs">
+        <span>
+          Bodega Literária · os livros de casa, guardados na sua conta.
+        </span>
         <div className="flex flex-wrap gap-5">
-          <button type="button" className={linkClass} onClick={() => app.setSyncOpen(true)}>
+          <button
+            className={linkClass}
+            onClick={() => app.setSyncOpen(true)}
+            type="button"
+          >
             Sincronizar planilha
           </button>
-          <button type="button" className={linkClass} onClick={backup.exportCsv}>
+          <button
+            className={linkClass}
+            onClick={backup.exportCsv}
+            type="button"
+          >
             Exportar Excel (CSV)
           </button>
-          <button type="button" className={linkClass} onClick={backup.exportJson}>
+          <button
+            className={linkClass}
+            onClick={backup.exportJson}
+            type="button"
+          >
             Salvar backup
           </button>
-          <button type="button" className={linkClass} onClick={backup.pickRestore}>
+          <button
+            className={linkClass}
+            onClick={backup.pickRestore}
+            type="button"
+          >
             Restaurar backup
           </button>
         </div>

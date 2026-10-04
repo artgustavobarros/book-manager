@@ -1,10 +1,22 @@
 "use client";
 
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 
 import { BOOKS_KEY, useBookActions } from "@/hooks/use-books";
 import { api } from "@/lib/client/api";
+import { createLatestSaver } from "@/lib/client/latest-saver";
 import { stat } from "@/lib/domain/status";
 import type { Book, BookStatus } from "@/lib/domain/types";
 import type { Theme } from "@/lib/theme";
@@ -12,62 +24,67 @@ import type { Theme } from "@/lib/theme";
 import { toast } from "./toast";
 
 export interface AppUser {
-  id: string;
-  name: string;
   email: string;
+  id: string;
   image: string | null;
+  name: string;
 }
 
 export interface AppInitial {
-  user: AppUser;
   books: Book[];
   goal: number;
-  sheetUrl: string | null;
-  year: number;
-  tz: string;
+  googleEnabled: boolean;
+  googleLinked: boolean;
+  hasPassword: boolean;
   /** Instante do render no servidor (mantém data/saudação iguais na hidratação). */
   now: string;
+  sheetUrl: string | null;
   theme: Theme;
-  googleEnabled: boolean;
-  hasPassword: boolean;
-  googleLinked: boolean;
+  tz: string;
+  user: AppUser;
+  year: number;
 }
 
-type ModalState = { kind: "view"; id: string } | { kind: "edit"; id: string | null } | null;
+type ModalState =
+  | { kind: "view"; id: string }
+  | { kind: "edit"; id: string | null }
+  | null;
 
 interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
-  initials: string;
-  goal: number;
+  accountOpen: boolean;
   changeGoal: (delta: number) => void;
-  setSheetUrl: (url: string | null) => void;
-  setUser: (patch: Partial<AppUser>) => void;
+  closeLend: () => void;
+  closeModal: () => void;
+  confirmLend: (book: Book, borrower: string) => void;
+  finish: (book: Book) => void;
+  goal: number;
+  initials: string;
+  lendFor: Book | null;
 
   modal: ModalState;
-  openView: (id: string) => void;
   openEdit: (id: string | null) => void;
-  closeModal: () => void;
-  surpriseOpen: boolean;
-  setSurpriseOpen: (v: boolean) => void;
-  accountOpen: boolean;
+  openView: (id: string) => void;
   setAccountOpen: (v: boolean) => void;
-  syncOpen: boolean;
-  setSyncOpen: (v: boolean) => void;
-  lendFor: Book | null;
-  closeLend: () => void;
+  setSheetUrl: (url: string | null) => void;
 
   /** Muda o status (abre o pedido de "com quem?" para Emprestado). */
   setStatus: (book: Book, status: BookStatus) => void;
-  confirmLend: (book: Book, borrower: string) => void;
+  setSurpriseOpen: (v: boolean) => void;
+  setSyncOpen: (v: boolean) => void;
+  setUser: (patch: Partial<AppUser>) => void;
+  surpriseOpen: boolean;
+  syncOpen: boolean;
   toggleFavorite: (book: Book) => void;
   toggleRead: (book: Book) => void;
-  finish: (book: Book) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function useApp(): AppContextValue {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error("useApp fora do AppProvider");
+  if (!ctx) {
+    throw new Error("useApp fora do AppProvider");
+  }
   return ctx;
 }
 
@@ -81,7 +98,13 @@ export function initialsOf(name: string, email: string): string {
     .toUpperCase();
 }
 
-function AppState({ initial, children }: { initial: AppInitial; children: React.ReactNode }) {
+function AppState({
+  initial,
+  children,
+}: {
+  initial: AppInitial;
+  children: React.ReactNode;
+}) {
   const qc = useQueryClient();
   const actions = useBookActions();
   const [user, setUserState] = useState(initial.user);
@@ -95,33 +118,48 @@ function AppState({ initial, children }: { initial: AppInitial; children: React.
   const goalKey = ["goal", initial.year] as const;
   const { data: goal = initial.goal } = useQuery({
     queryKey: goalKey,
-    queryFn: async () => (await api.get<{ target: number }>(`/api/goals/${initial.year}`)).target,
+    queryFn: async () =>
+      (await api.get<{ target: number }>(`/api/goals/${initial.year}`)).target,
     initialData: initial.goal,
-    staleTime: Infinity,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 
+  // PUTs da meta em fila: o último valor clicado é o último a chegar ao servidor.
+  const [saveGoal] = useState(() =>
+    createLatestSaver(
+      (target: number) => api.put(`/api/goals/${initial.year}`, { target }),
+      {
+        initial: initial.goal,
+        onFail: (lastSaved, e) => {
+          qc.setQueryData(["goal", initial.year], lastSaved);
+          toast(e.message);
+        },
+      }
+    )
+  );
   const changeGoal = useCallback(
     (delta: number) => {
       const next = Math.max(1, goal + delta);
-      qc.setQueryData(goalKey, next);
-      api.put(`/api/goals/${initial.year}`, { target: next }).catch((e: Error) => {
-        qc.setQueryData(goalKey, goal);
-        toast(e.message);
-      });
+      qc.setQueryData(["goal", initial.year], next);
+      void saveGoal(next);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [goal, qc, initial.year],
+    [goal, initial.year, qc, saveGoal]
   );
 
   const setStatus = useCallback(
     (book: Book, k: BookStatus) => {
-      if (k === "emprestado") return setLendFor(book);
+      if (k === "emprestado") {
+        return setLendFor(book);
+      }
       const patch: Partial<Book> = { status: k, borrower: null };
-      if (k === "lido" && !book.yearRead) patch.yearRead = initial.year;
-      actions.update(book.id, patch);
-      toast(book.title + " → " + stat(k).label);
+      if (k === "lido" && !book.yearRead) {
+        patch.yearRead = initial.year;
+      }
+      void actions
+        .update(book.id, patch)
+        .then((ok) => ok && toast(book.title + " → " + stat(k).label));
     },
-    [actions, initial.year],
+    [actions, initial.year]
   );
 
   const value: AppContextValue = useMemo(
@@ -152,28 +190,70 @@ function AppState({ initial, children }: { initial: AppInitial; children: React.
       setStatus,
       confirmLend: (book, borrower) => {
         setLendFor(null);
-        actions.update(book.id, { status: "emprestado", borrower: borrower.trim() || null });
-        toast(book.title + " → " + stat("emprestado").label);
+        void actions
+          .update(book.id, {
+            status: "emprestado",
+            borrower: borrower.trim() || null,
+          })
+          .then(
+            (ok) => ok && toast(book.title + " → " + stat("emprestado").label)
+          );
       },
       toggleFavorite: (book) => {
-        actions.update(book.id, { favorite: !book.favorite });
-        toast(book.favorite ? "Removido dos favoritos" : "♥ Adicionado aos favoritos");
+        void actions
+          .update(book.id, { favorite: !book.favorite })
+          .then(
+            (ok) =>
+              ok &&
+              toast(
+                book.favorite
+                  ? "Removido dos favoritos"
+                  : "♥ Adicionado aos favoritos"
+              )
+          );
       },
-      toggleRead: (book) => setStatus(book, book.status === "lido" ? "nao-lido" : "lido"),
+      toggleRead: (book) =>
+        setStatus(book, book.status === "lido" ? "nao-lido" : "lido"),
       finish: (book) => {
-        actions.update(book.id, { status: "lido", borrower: null, yearRead: book.yearRead || initial.year });
-        toast("✓ " + book.title + " marcado como lido");
+        void actions
+          .update(book.id, {
+            status: "lido",
+            borrower: null,
+            yearRead: book.yearRead || initial.year,
+          })
+          .then((ok) => ok && toast("✓ " + book.title + " marcado como lido"));
       },
     }),
-    [initial, user, goal, changeGoal, sheetUrl, modal, surpriseOpen, accountOpen, syncOpen, lendFor, setStatus, actions],
+    [
+      initial,
+      user,
+      goal,
+      changeGoal,
+      sheetUrl,
+      modal,
+      surpriseOpen,
+      accountOpen,
+      syncOpen,
+      lendFor,
+      setStatus,
+      actions,
+    ]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
-export function AppProvider({ initial, children }: { initial: AppInitial; children: React.ReactNode }) {
+export function AppProvider({
+  initial,
+  children,
+}: {
+  initial: AppInitial;
+  children: React.ReactNode;
+}) {
   const [client] = useState(() => {
-    const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } });
+    const qc = new QueryClient({
+      defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } },
+    });
     qc.setQueryData(BOOKS_KEY, initial.books);
     return qc;
   });

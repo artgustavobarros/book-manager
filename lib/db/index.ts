@@ -1,5 +1,8 @@
 import { attachDatabasePool } from "@vercel/functions";
-import { drizzle as drizzlePg, type NodePgDatabase } from "drizzle-orm/node-postgres";
+import {
+  drizzle as drizzlePg,
+  type NodePgDatabase,
+} from "drizzle-orm/node-postgres";
 import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
 import { Pool } from "pg";
 
@@ -31,7 +34,9 @@ export function createDb(url: string): { db: DB; close: () => Promise<void> } {
   return { db, close: () => pool.end() };
 }
 
-const globalForDb = globalThis as unknown as { __bodegaDb?: { db: DB; close: () => Promise<void> } };
+const globalForDb = globalThis as unknown as {
+  __bodegaDb?: { db: DB; close: () => Promise<void> };
+};
 
 /** Instância única por processo, criada no primeiro uso (não durante o build). */
 export function getDb(): DB {

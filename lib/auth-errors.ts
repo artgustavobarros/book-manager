@@ -1,7 +1,13 @@
 /** Mensagens em pt-BR para os erros do Better Auth exibidos nas telas de entrada. */
-export function authErrorMessage(error: { code?: string; status?: number; message?: string } | null | undefined): string {
-  if (!error) return "";
-  if (error.status === 429) return "Muitas tentativas. Aguarde um minuto e tente de novo.";
+export function authErrorMessage(
+  error: { code?: string; status?: number; message?: string } | null | undefined
+): string {
+  if (!error) {
+    return "";
+  }
+  if (error.status === 429) {
+    return "Muitas tentativas. Aguarde um minuto e tente de novo.";
+  }
   switch (error.code) {
     case "INVALID_EMAIL_OR_PASSWORD":
     case "INVALID_PASSWORD":
@@ -23,8 +29,11 @@ export function authErrorMessage(error: { code?: string; status?: number; messag
 
 /** Erros que voltam na URL após o OAuth do Google (`?error=`). */
 export function oauthErrorMessage(code: string | undefined): string {
-  if (!code) return "";
-  if (code === "account_not_linked")
+  if (!code) {
+    return "";
+  }
+  if (code === "account_not_linked") {
     return "Já existe um cadastro com este e-mail aguardando confirmação. Confirme pelo link que enviamos ou use “Esqueci minha senha” para assumir a conta.";
+  }
   return "Não foi possível entrar com o Google. Tente de novo.";
 }

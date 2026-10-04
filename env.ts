@@ -14,7 +14,10 @@ export const env = createEnv({
     DATABASE_URL: z
       .string()
       .min(1)
-      .refine((v) => /^(postgres(ql)?|pglite):\/\//.test(v), "Use postgres:// ou pglite://"),
+      .refine(
+        (v) => /^(postgres(ql)?|pglite):\/\//.test(v),
+        "Use postgres:// ou pglite://"
+      ),
     BETTER_AUTH_SECRET: z.string().min(32),
     /** URL pública do app. Em previews da Vercel pode ficar vazia: usa VERCEL_URL. */
     BETTER_AUTH_URL: z.url().optional(),

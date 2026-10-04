@@ -3,17 +3,19 @@
 export const DEFAULT_TZ = "America/Sao_Paulo";
 
 export interface WallClock {
-  year: number;
-  /** 0–11, como Date#getMonth. */
-  month: number;
   day: number;
   hour: number;
   minute: number;
+  /** 0–11, como Date#getMonth. */
+  month: number;
   second: number;
+  year: number;
 }
 
 export function safeTimeZone(tz: string | null | undefined): string {
-  if (!tz) return DEFAULT_TZ;
+  if (!tz) {
+    return DEFAULT_TZ;
+  }
   try {
     new Intl.DateTimeFormat("en-US", { timeZone: tz });
     return tz;
@@ -35,7 +37,7 @@ export function wallClock(now: Date, tz: string): WallClock {
       second: "numeric",
     })
       .formatToParts(now)
-      .map((p) => [p.type, p.value]),
+      .map((p) => [p.type, p.value])
   );
   return {
     year: Number(parts.year),

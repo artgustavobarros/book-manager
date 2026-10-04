@@ -1,5 +1,11 @@
 import type { DB } from "@/lib/db";
-import { SheetError, isGoogleSheetsUrl, mergeSheet, parseSheet, sheetCsvUrl } from "@/lib/domain/sheet";
+import {
+  isGoogleSheetsUrl,
+  mergeSheet,
+  parseSheet,
+  SheetError,
+  sheetCsvUrl,
+} from "@/lib/domain/sheet";
 
 import { applyMerge, listBooks } from "./books";
 import { saveSettings } from "./settings";
@@ -14,10 +20,18 @@ export const SHEET_MESSAGES = {
 } as const;
 
 async function fetchCsv(url: string, fetcher: typeof fetch): Promise<string> {
-  const res = await fetcher(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), redirect: "follow", cache: "no-store" });
-  if (!res.ok) throw new SheetError("fetch");
+  const res = await fetcher(url, {
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    redirect: "follow",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new SheetError("fetch");
+  }
   const text = await res.text();
-  if (text.length > MAX_BYTES) throw new SheetError("fetch");
+  if (text.length > MAX_BYTES) {
+    throw new SheetError("fetch");
+  }
   return text;
 }
 
@@ -29,10 +43,15 @@ export async function syncSheet(
   db: DB,
   userId: string,
   sheetUrl: string,
-  { fetcher = fetch, now = new Date() }: { fetcher?: typeof fetch; now?: Date } = {},
+  {
+    fetcher = fetch,
+    now = new Date(),
+  }: { fetcher?: typeof fetch; now?: Date } = {}
 ): Promise<{ updated: number; added: number }> {
   const url = sheetCsvUrl(sheetUrl);
-  if (!url || !isGoogleSheetsUrl(url)) throw new SheetError("invalid-url");
+  if (!(url && isGoogleSheetsUrl(url))) {
+    throw new SheetError("invalid-url");
+  }
   await saveSettings(db, userId, { sheetUrl: sheetUrl.trim() });
   const text = await fetchCsv(url, fetcher);
   const records = parseSheet(text);

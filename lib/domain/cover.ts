@@ -14,7 +14,9 @@ export const COVERS: readonly (readonly [bg: string, ink: string])[] = [
 
 export function hash(s: string | null | undefined): number {
   let h = 0;
-  for (const c of s || "") h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  for (const c of s || "") {
+    h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  }
   return h;
 }
 
@@ -22,7 +24,10 @@ export function hash(s: string | null | undefined): number {
  * Mesmo cálculo do standalone: `hash(b.title + b.author)`. No standalone, autor vazio
  * era "" e nunca undefined, então null é tratado como "".
  */
-export function coverColors(title: string | null | undefined, author: string | null | undefined) {
+export function coverColors(
+  title: string | null | undefined,
+  author: string | null | undefined
+) {
   const c = COVERS[hash((title || "") + (author || "")) % COVERS.length];
   return { coverBg: c[0], coverInk: c[1] };
 }

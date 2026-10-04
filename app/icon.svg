@@ -1,0 +1,16 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <title>Bodega Literária</title>
+  <rect fill="#f4f2ee" height="32" rx="7" width="32" />
+  <rect fill="#1b1a17" height="20" rx="1.5" width="7" x="4" y="7" />
+  <rect
+    fill="none"
+    height="15.8"
+    rx="1.5"
+    stroke="#1b1a17"
+    stroke-width="1.3"
+    width="5.8"
+    x="13.6"
+    y="10.6"
+  />
+  <rect fill="#af3e30" height="23" rx="1.5" width="7" x="21" y="4" />
+</svg>

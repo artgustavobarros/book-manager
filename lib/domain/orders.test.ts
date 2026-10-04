@@ -5,7 +5,9 @@ import { nextOrder, withOrders } from "./orders";
 describe("nextOrder", () => {
   it("é o maior nº + 1", () => {
     expect(nextOrder([])).toBe(1);
-    expect(nextOrder([{ orderNo: 3 }, { orderNo: null }, { orderNo: 7 }])).toBe(8);
+    expect(nextOrder([{ orderNo: 3 }, { orderNo: null }, { orderNo: 7 }])).toBe(
+      8
+    );
   });
 });
 

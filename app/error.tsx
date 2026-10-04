@@ -1,0 +1,39 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect } from "react";
+
+import { StatusScreen } from "@/components/app/status-screen";
+import { Button } from "@/components/ui/button";
+
+export default function AppError({
+  error,
+  retry,
+}: {
+  error: Error & { digest?: string };
+  retry: () => void;
+}) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <StatusScreen
+      text={
+        "Não foi possível carregar esta página. Tente de novo em instantes." +
+        (error.digest ? " Código: " + error.digest + "." : "")
+      }
+      title="Algo deu errado"
+    >
+      <Button onClick={() => retry()} size="lg">
+        Tentar de novo
+      </Button>
+      <Link
+        className="self-center font-semibold text-mute text-xs no-underline hover:text-ink"
+        href="/"
+      >
+        Voltar ao Painel
+      </Link>
+    </StatusScreen>
+  );
+}

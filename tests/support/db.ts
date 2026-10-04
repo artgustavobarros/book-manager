@@ -16,7 +16,10 @@ export async function setupTestDb(): Promise<DB> {
   const client = openPglite("pglite://memory");
   await runMigrations("pglite://memory", client);
   const db = drizzle(client, { schema }) as unknown as DB;
-  (globalThis as { __bodegaDb?: unknown }).__bodegaDb = { db, close: () => client.close() };
+  (globalThis as { __bodegaDb?: unknown }).__bodegaDb = {
+    db,
+    close: () => client.close(),
+  };
   return db;
 }
 
@@ -27,7 +30,7 @@ export async function clearOutbox() {
 /** Espera um e-mail para o destinatário aparecer na caixa de saída de teste. */
 export async function waitForEmail(
   to: string,
-  { subject, timeoutMs = 3000 }: { subject?: string; timeoutMs?: number } = {},
+  { subject, timeoutMs = 3000 }: { subject?: string; timeoutMs?: number } = {}
 ): Promise<{ subject: string; text: string; html: string }> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -38,7 +41,9 @@ export async function waitForEmail(
       .map((l) => JSON.parse(l))
       .reverse()
       .find((m) => m.to === to && (!subject || m.subject.includes(subject)));
-    if (found) return found;
+    if (found) {
+      return found;
+    }
     await new Promise((r) => setTimeout(r, 25));
   }
   throw new Error(`Nenhum e-mail para ${to}`);
@@ -46,6 +51,8 @@ export async function waitForEmail(
 
 export function linkFrom(text: string): string {
   const m = text.match(/https?:\/\/\S+/);
-  if (!m) throw new Error("Link não encontrado no e-mail");
+  if (!m) {
+    throw new Error("Link não encontrado no e-mail");
+  }
   return m[0];
 }

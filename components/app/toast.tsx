@@ -30,17 +30,20 @@ export function Toaster() {
   const t = useSyncExternalStore(
     subscribe,
     () => current,
-    () => null,
+    () => null
   );
-  if (!t) return null;
+  // A região viva fica sempre montada: leitores de tela costumam ignorar regiões
+  // que já nascem com conteúdo.
   return (
-    <div
-      key={t.id}
-      role="status"
-      aria-live="polite"
-      className="fixed bottom-7 left-1/2 z-50 -translate-x-1/2 animate-acv-toast rounded-lg bg-ink px-5 py-3 text-sm font-medium text-card shadow-[0_10px_30px_rgba(0,0,0,.3)]"
-    >
-      {t.msg}
+    <div aria-atomic="true" aria-live="polite" role="status">
+      {t ? (
+        <div
+          className="fixed bottom-7 left-1/2 z-50 max-w-[calc(100vw-32px)] -translate-x-1/2 animate-acv-toast rounded-lg bg-ink px-5 py-3 text-center font-medium text-card text-sm shadow-[0_10px_30px_rgba(0,0,0,.3)] max-[640px]:bottom-36"
+          key={t.id}
+        >
+          {t.msg}
+        </div>
+      ) : null}
     </div>
   );
 }

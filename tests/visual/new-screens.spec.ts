@@ -3,7 +3,7 @@
  * snapshots próprios, comparados com a linha de base versionada (tolerância de 1%).
  * Gerar/atualizar a base: pnpm test:visual --update-snapshots
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 import { FIXED_NOW } from "../../playwright.config";
 import { AUTH_STATE } from "../support/e2e";
@@ -21,7 +21,10 @@ async function prepare(page: Page) {
 async function snap(page: Page, name: string) {
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(400);
-  await expect(page).toHaveScreenshot(name + ".png", { animations: "disabled", caret: "hide" });
+  await expect(page).toHaveScreenshot(name + ".png", {
+    animations: "disabled",
+    caret: "hide",
+  });
 }
 
 for (const vp of VIEWPORTS) {
@@ -65,7 +68,10 @@ for (const vp of VIEWPORTS) {
       test("emprestado para quem?", async ({ page }) => {
         await prepare(page);
         await page.goto("/estante?q=frankenstein");
-        await page.getByRole("combobox", { name: "Status" }).first().selectOption("emprestado");
+        await page
+          .getByRole("combobox", { name: "Status" })
+          .first()
+          .selectOption("emprestado");
         await snap(page, `emprestado-para-quem-${vp.name}`);
       });
     });

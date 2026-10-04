@@ -21,14 +21,22 @@ export function Segmented<K extends string | boolean>({
   label?: string;
 }) {
   return (
-    <div role="group" aria-label={label} className={cn("flex gap-0.5 bg-seg", className)}>
+    <div
+      aria-label={label}
+      className={cn("flex gap-0.5 bg-seg", className)}
+      role="group"
+    >
       {options.map(([k, text]) => (
         <button
-          key={String(k)}
-          type="button"
           aria-pressed={value === k}
+          className={cn(
+            "border-0 font-semibold",
+            segClass(value === k),
+            itemClassName
+          )}
+          key={String(k)}
           onClick={() => onChange(k)}
-          className={cn("border-0 font-semibold", segClass(value === k), itemClassName)}
+          type="button"
         >
           {text}
         </button>

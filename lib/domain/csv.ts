@@ -21,19 +21,28 @@ export function parseCSV(input: string): string[][] {
         if (text[i + 1] === '"') {
           cur += '"';
           i++;
-        } else q = false;
-      } else cur += c;
-    } else if (c === '"') q = true;
-    else if (c === d) {
+        } else {
+          q = false;
+        }
+      } else {
+        cur += c;
+      }
+    } else if (c === '"') {
+      q = true;
+    } else if (c === d) {
       row.push(cur);
       cur = "";
     } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++;
+      if (c === "\r" && text[i + 1] === "\n") {
+        i++;
+      }
       row.push(cur);
       rows.push(row);
       row = [];
       cur = "";
-    } else cur += c;
+    } else {
+      cur += c;
+    }
   }
   if (cur || row.length) {
     row.push(cur);
@@ -42,9 +51,13 @@ export function parseCSV(input: string): string[][] {
   return rows.filter((r) => r.some((x) => x.trim()));
 }
 
-type Column = readonly [header: string, value: (b: Book) => string | number | null];
+type Column = readonly [
+  header: string,
+  value: (b: Book) => string | number | null,
+];
 
-const brDate = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "");
+const brDate = (iso: string | null) =>
+  iso ? iso.split("-").reverse().join("/") : "";
 
 export const CSV_COLUMNS: readonly Column[] = [
   ["Ordem", (b) => b.orderNo],
@@ -75,12 +88,17 @@ export function exportCsv(books: readonly Book[]): string {
   const ordN = (b: Book) => b.orderNo || 1e9;
   const lines = [
     CSV_COLUMNS.map((c) => c[0]).join(";"),
-    ...[...books].sort((a, b) => ordN(a) - ordN(b)).map((b) => CSV_COLUMNS.map(([, get]) => esc(get(b))).join(";")),
+    ...[...books]
+      .sort((a, b) => ordN(a) - ordN(b))
+      .map((b) => CSV_COLUMNS.map(([, get]) => esc(get(b))).join(";")),
   ];
   return "﻿" + lines.join("\r\n");
 }
 
 /** Nome de arquivo com a data local: acervo-AAAA-MM-DD.<ext> (como no standalone). */
-export function exportFileName(ext: "csv" | "json", now: Date = new Date()): string {
+export function exportFileName(
+  ext: "csv" | "json",
+  now: Date = new Date()
+): string {
   return "acervo-" + now.toISOString().slice(0, 10) + "." + ext;
 }

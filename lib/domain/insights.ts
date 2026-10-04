@@ -9,33 +9,33 @@ export type InsightScope = "todos" | "lidos";
 export type BarField = "genre" | "nationality" | "publisher";
 
 export interface BarItem {
+  count: number;
   key: string;
   label: string;
-  count: number;
   pct: string;
 }
 
 export interface Bars {
-  list: BarItem[];
-  total: number;
   badge: string;
+  list: BarItem[];
   more: boolean;
   moreLabel: string;
+  total: number;
 }
 
 export interface StatusSegment extends StatusInfo {
-  count: number;
   bar: string;
+  count: number;
   pct: string;
 }
 
 export interface YearColumn {
-  year: number;
   count: number;
-  pages: number;
-  sub: string;
-  pct: string;
   current: boolean;
+  pages: number;
+  pct: string;
+  sub: string;
+  year: number;
 }
 
 export interface AssignRow {
@@ -44,34 +44,34 @@ export interface AssignRow {
 }
 
 export interface Insights {
-  scopeCaption: string;
-  dataKpis: Kpi[];
-  thermoPct: string;
-  thermoPctLabel: string;
-  thermoLabel: string;
-  bigBooks: { book: Book; rank: number; pages: string }[];
-  baseLabel: string;
-  donutTotal: string;
-  donutBg: string;
-  statusSeg: StatusSegment[];
-  genre: Bars;
-  nat: Bars;
-  pub: Bars;
-  yearCols: YearColumn[];
-  yearBadge: string;
+  assignEmpty: boolean;
+  assignMoreLabel: string;
+  assignMoreShow: boolean;
   assignNoYearCount: number;
   assignReadCount: number;
   assignRows: AssignRow[];
-  assignEmpty: boolean;
-  assignMoreShow: boolean;
-  assignMoreLabel: string;
+  baseLabel: string;
+  bigBooks: { book: Book; rank: number; pages: string }[];
+  dataKpis: Kpi[];
+  donutBg: string;
+  donutTotal: string;
+  genre: Bars;
+  nat: Bars;
+  pub: Bars;
+  scopeCaption: string;
+  statusSeg: StatusSegment[];
+  thermoLabel: string;
+  thermoPct: string;
+  thermoPctLabel: string;
+  yearBadge: string;
+  yearCols: YearColumn[];
 }
 
 export interface InsightOptions {
-  scope: InsightScope;
-  expanded: Partial<Record<BarField, boolean>>;
   assignAll: boolean;
   assignMore: boolean;
+  expanded: Partial<Record<BarField, boolean>>;
+  scope: InsightScope;
   year: number;
 }
 
@@ -79,7 +79,10 @@ const pg = (b: Book) => b.pages || 0;
 const BAR_LIMIT = 7;
 const ASSIGN_LIMIT = 6;
 
-export function groupBy(books: readonly Book[], field: BarField): { key: string; label: string; count: number }[] {
+export function groupBy(
+  books: readonly Book[],
+  field: BarField
+): { key: string; label: string; count: number }[] {
   const m = new Map<string, { key: string; label: string; count: number }>();
   for (const b of books) {
     const raw = (b[field] || "").trim();
@@ -88,14 +91,24 @@ export function groupBy(books: readonly Book[], field: BarField): { key: string;
     e.count++;
     m.set(key, e);
   }
-  return [...m.values()].sort((a, b) => b.count - a.count || cmp(a.label, b.label));
+  return [...m.values()].sort(
+    (a, b) => b.count - a.count || cmp(a.label, b.label)
+  );
 }
 
-function bars(books: readonly Book[], field: BarField, unit: string, open: boolean): Bars {
+function bars(
+  books: readonly Book[],
+  field: BarField,
+  unit: string,
+  open: boolean
+): Bars {
   const arr = groupBy(books, field);
   const max = Math.max(1, ...arr.map((e) => e.count));
   return {
-    list: (open ? arr : arr.slice(0, BAR_LIMIT)).map((e) => ({ ...e, pct: (e.count / max) * 100 + "%" })),
+    list: (open ? arr : arr.slice(0, BAR_LIMIT)).map((e) => ({
+      ...e,
+      pct: (e.count / max) * 100 + "%",
+    })),
     total: arr.length,
     badge: arr.length + " " + unit,
     more: arr.length > BAR_LIMIT,
@@ -103,18 +116,25 @@ function bars(books: readonly Book[], field: BarField, unit: string, open: boole
   };
 }
 
-export function insights(books: readonly Book[], opts: InsightOptions): Insights {
+export function insights(
+  books: readonly Book[],
+  opts: InsightOptions
+): Insights {
   const { scope, expanded, assignAll, assignMore, year: Y } = opts;
   const read = books.filter((b) => b.status === "lido");
   const base = scope === "lidos" ? read : books;
   const withP = books.filter((b) => pg(b) > 0);
   const readP = read.filter((b) => pg(b) > 0);
-  const avg = withP.length ? withP.reduce((s, b) => s + pg(b), 0) / withP.length : 0;
+  const avg = withP.length
+    ? withP.reduce((s, b) => s + pg(b), 0) / withP.length
+    : 0;
   const shelfPages = withP.reduce((s, b) => s + pg(b), 0);
   const estFull = Math.round(shelfPages + (books.length - withP.length) * avg);
   const readPages = read.reduce((s, b) => s + pg(b), 0);
   const avgRead = readP.length ? Math.round(readPages / readP.length) : 0;
-  const readPct = books.length ? Math.round((read.length / books.length) * 100) : 0;
+  const readPct = books.length
+    ? Math.round((read.length / books.length) * 100)
+    : 0;
   const readingN = books.filter((b) => b.status === "lendo").length;
   const missingP = books.length - withP.length;
 
@@ -122,26 +142,46 @@ export function insights(books: readonly Book[], opts: InsightOptions): Insights
     {
       label: "Páginas lidas",
       value: nf(readPages),
-      sub: "média de " + nf(avgRead) + " p. por livro lido · ~" + nf(estFull) + " p. para ler 100% do acervo",
+      sub:
+        "média de " +
+        nf(avgRead) +
+        " p. por livro lido · ~" +
+        nf(estFull) +
+        " p. para ler 100% do acervo",
     },
     {
       label: "Páginas na estante",
       value: nf(shelfPages),
       sub: missingP
-        ? "~" + nf(estFull) + " estimadas, contando " + missingP + " livros sem nº de páginas"
+        ? "~" +
+          nf(estFull) +
+          " estimadas, contando " +
+          missingP +
+          " livros sem nº de páginas"
         : "em " + nf(books.length) + " livros",
     },
-    { label: "Leitura concluída", value: readPct + "%", sub: read.length + " lidos · " + readingN + " em leitura agora" },
+    {
+      label: "Leitura concluída",
+      value: readPct + "%",
+      sub: read.length + " lidos · " + readingN + " em leitura agora",
+    },
     {
       label: "Diversidade literária",
       value: nf(distinctCount(books, "nationality")),
       sub:
-        "países · " + distinctCount(books, "publisher") + " editoras · " + distinctCount(books, "genre") + " gêneros",
+        "países · " +
+        distinctCount(books, "publisher") +
+        " editoras · " +
+        distinctCount(books, "genre") +
+        " gêneros",
     },
   ];
   const thermo = estFull ? Math.min(100, (readPages / estFull) * 100) : 0;
 
-  const counts = STATUS.map((s) => ({ ...s, count: base.filter((b) => b.status === s.k).length })).filter((s) => s.count);
+  const counts = STATUS.map((s) => ({
+    ...s,
+    count: base.filter((b) => b.status === s.k).length,
+  })).filter((s) => s.count);
   const bmax = Math.max(1, ...counts.map((s) => s.count));
   let acc = 0;
   const stops = counts.map((s) => {
@@ -152,7 +192,9 @@ export function insights(books: readonly Book[], opts: InsightOptions): Insights
 
   const years = new Map<number, { n: number; p: number }>();
   for (const b of read) {
-    if (!b.yearRead) continue;
+    if (!b.yearRead) {
+      continue;
+    }
     const e = years.get(b.yearRead) ?? { n: 0, p: 0 };
     e.n++;
     e.p += pg(b);
@@ -163,7 +205,9 @@ export function insights(books: readonly Book[], opts: InsightOptions): Insights
   const ymax = Math.max(1, ...ys.map((y) => years.get(y)!.n));
 
   const noYear = read.filter((b) => !b.yearRead);
-  const pool = assignAll ? [...read].sort((a, b) => cmp(a.title, b.title)) : noYear;
+  const pool = assignAll
+    ? [...read].sort((a, b) => cmp(a.title, b.title))
+    : noYear;
   const lim = assignMore ? pool.length : ASSIGN_LIMIT;
 
   return {
@@ -181,7 +225,9 @@ export function insights(books: readonly Book[], opts: InsightOptions): Insights
       .map((book, i) => ({ book, rank: i + 1, pages: nf(pg(book)) + " p." })),
     baseLabel: nf(base.length) + " livros",
     donutTotal: nf(base.length),
-    donutBg: stops.length ? "conic-gradient(" + stops.join(",") + ")" : "var(--soft)",
+    donutBg: stops.length
+      ? "conic-gradient(" + stops.join(",") + ")"
+      : "var(--soft)",
     statusSeg: counts.map((s) => ({
       ...s,
       bar: (s.count / bmax) * 100 + "%",
@@ -192,17 +238,31 @@ export function insights(books: readonly Book[], opts: InsightOptions): Insights
     pub: bars(base, "publisher", "editoras", !!expanded.publisher),
     yearCols: ys.map((y) => {
       const e = years.get(y)!;
-      return { year: y, count: e.n, pages: e.p, sub: nf(e.p) + " páginas", pct: (e.n / ymax) * 82 + "%", current: y === Y };
+      return {
+        year: y,
+        count: e.n,
+        pages: e.p,
+        sub: nf(e.p) + " páginas",
+        pct: (e.n / ymax) * 82 + "%",
+        current: y === Y,
+      };
     }),
-    yearBadge: ys.length ? nf(ys.reduce((s, y) => s + years.get(y)!.p, 0)) + " páginas" : "",
+    yearBadge: ys.length
+      ? nf(ys.reduce((s, y) => s + years.get(y)!.p, 0)) + " páginas"
+      : "",
     assignNoYearCount: noYear.length,
     assignReadCount: read.length,
     assignRows: pool.slice(0, lim).map((book) => ({
       book,
-      years: [Y - 4, Y - 3, Y - 2, Y - 1, Y].map((year) => ({ year, on: book.yearRead === year })),
+      years: [Y - 4, Y - 3, Y - 2, Y - 1, Y].map((year) => ({
+        year,
+        on: book.yearRead === year,
+      })),
     })),
     assignEmpty: pool.length === 0,
     assignMoreShow: pool.length > ASSIGN_LIMIT,
-    assignMoreLabel: assignMore ? "Mostrar menos" : "Mostrar todos (" + pool.length + ")",
+    assignMoreLabel: assignMore
+      ? "Mostrar menos"
+      : "Mostrar todos (" + pool.length + ")",
   };
 }

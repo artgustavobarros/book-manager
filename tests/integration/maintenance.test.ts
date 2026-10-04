@@ -16,14 +16,40 @@ describe("purgeUnverifiedUsers", () => {
     const old = new Date("2026-06-01T00:00:00Z");
     const recent = new Date("2026-06-14T00:00:00Z");
     await db.insert(user).values([
-      { id: "old-unverified", name: "A", email: "a@x.com", emailVerified: false, createdAt: old, updatedAt: old },
-      { id: "old-verified", name: "B", email: "b@x.com", emailVerified: true, createdAt: old, updatedAt: old },
-      { id: "new-unverified", name: "C", email: "c@x.com", emailVerified: false, createdAt: recent, updatedAt: recent },
+      {
+        id: "old-unverified",
+        name: "A",
+        email: "a@x.com",
+        emailVerified: false,
+        createdAt: old,
+        updatedAt: old,
+      },
+      {
+        id: "old-verified",
+        name: "B",
+        email: "b@x.com",
+        emailVerified: true,
+        createdAt: old,
+        updatedAt: old,
+      },
+      {
+        id: "new-unverified",
+        name: "C",
+        email: "c@x.com",
+        emailVerified: false,
+        createdAt: recent,
+        updatedAt: recent,
+      },
     ]);
     await db.insert(books).values({ userId: "old-unverified", title: "Some" });
-    const removed = await purgeUnverifiedUsers(db, new Date("2026-06-15T00:00:00Z"));
+    const removed = await purgeUnverifiedUsers(
+      db,
+      new Date("2026-06-15T00:00:00Z")
+    );
     expect(removed).toBe(1);
-    const ids = (await db.select({ id: user.id }).from(user)).map((u) => u.id).sort();
+    const ids = (await db.select({ id: user.id }).from(user))
+      .map((u) => u.id)
+      .sort();
     expect(ids).toEqual(["new-unverified", "old-verified"]);
     expect(await db.select().from(books)).toHaveLength(0);
   });

@@ -1,11 +1,16 @@
 /** Filtros, facetas e ordenação da Estante (porta de `estante()` do standalone). */
-import { STATUS, isBookStatus } from "./status";
+import { isBookStatus, STATUS } from "./status";
 import { cmp, norm } from "./text";
 import type { Book, BookStatus } from "./types";
 
 // --- Facetas --------------------------------------------------------------
 
-export type FacetKind = "autor" | "genero" | "nacionalidade" | "editora" | "lidos-em";
+export type FacetKind =
+  | "autor"
+  | "genero"
+  | "nacionalidade"
+  | "editora"
+  | "lidos-em";
 
 /** Faceta serializável (o standalone guardava uma função; aqui cabe na URL). */
 export interface Facet {
@@ -59,9 +64,13 @@ export function serializeFacet(f: Facet): string {
 }
 
 export function parseFacet(s: string | null | undefined): Facet | null {
-  if (!s) return null;
+  if (!s) {
+    return null;
+  }
   const i = s.indexOf(":");
-  if (i < 0) return null;
+  if (i < 0) {
+    return null;
+  }
   const kind = s.slice(0, i) as FacetKind;
   const value = s.slice(i + 1);
   return kind in FACET_PREFIX && value ? { kind, value } : null;
@@ -96,12 +105,33 @@ export const SORT_LABELS: Record<SortKey, string> = {
   paginas: "Páginas · maiores",
 };
 
-export const SORT_GROUPS: readonly { label: string; opts: readonly (readonly [SortKey, string])[] }[] = [
-  { label: "Ordem da planilha", opts: [["ordem", "1 → fim"], ["ordem-desc", "fim → 1"]] },
-  { label: "Título", opts: [["titulo", "A–Z"], ["titulo-desc", "Z–A"]] },
+export const SORT_GROUPS: readonly {
+  label: string;
+  opts: readonly (readonly [SortKey, string])[];
+}[] = [
+  {
+    label: "Ordem da planilha",
+    opts: [
+      ["ordem", "1 → fim"],
+      ["ordem-desc", "fim → 1"],
+    ],
+  },
+  {
+    label: "Título",
+    opts: [
+      ["titulo", "A–Z"],
+      ["titulo-desc", "Z–A"],
+    ],
+  },
   { label: "Autor(a)", opts: [["autor", "A–Z"]] },
   { label: "Editora", opts: [["editora", "A–Z"]] },
-  { label: "Lançamento", opts: [["lanc-novos", "Novos"], ["lanc-antigos", "Antigos"]] },
+  {
+    label: "Lançamento",
+    opts: [
+      ["lanc-novos", "Novos"],
+      ["lanc-antigos", "Antigos"],
+    ],
+  },
   { label: "Aquisição", opts: [["recentes", "Recentes"]] },
   { label: "Páginas", opts: [["paginas", "Maiores"]] },
 ];
@@ -131,37 +161,60 @@ export function sortBooks(books: readonly Book[], sort: SortKey): Book[] {
 export type StatusFilter = "todos" | "fav" | BookStatus;
 
 export interface ShelfFilters {
+  facet: Facet | null;
   q: string;
   status: StatusFilter;
-  facet: Facet | null;
 }
 
 /** Campos pesquisados pela busca global. */
-const SEARCH_FIELDS = ["title", "author", "publisher", "nationality", "genre", "borrower", "notes"] as const;
+const SEARCH_FIELDS = [
+  "title",
+  "author",
+  "publisher",
+  "nationality",
+  "genre",
+  "borrower",
+  "notes",
+] as const;
 
-export function filterBooks(books: readonly Book[], { q, status, facet }: ShelfFilters): Book[] {
+export function filterBooks(
+  books: readonly Book[],
+  { q, status, facet }: ShelfFilters
+): Book[] {
   const ql = norm(q);
   const test = facet ? facetTest(facet) : null;
   return books.filter(
     (b) =>
       (!test || test(b)) &&
-      (status === "todos" || b.status === status || (status === "fav" && b.favorite)) &&
-      (!ql || SEARCH_FIELDS.some((k) => norm(b[k]).includes(ql))),
+      (status === "todos" ||
+        b.status === status ||
+        (status === "fav" && b.favorite)) &&
+      (!ql || SEARCH_FIELDS.some((k) => norm(b[k]).includes(ql)))
   );
 }
 
 export interface Chip {
+  count: number;
+  dot: string | null;
   k: StatusFilter;
   label: string;
-  dot: string | null;
-  count: number;
 }
 
 export function shelfChips(books: readonly Book[]): Chip[] {
   return [
     { k: "todos", label: "Todos", dot: null, count: books.length },
-    ...STATUS.map((s) => ({ k: s.k, label: s.plural, dot: s.dot, count: books.filter((b) => b.status === s.k).length })),
-    { k: "fav", label: "♥ Favoritos", dot: null, count: books.filter((b) => b.favorite).length },
+    ...STATUS.map((s) => ({
+      k: s.k,
+      label: s.plural,
+      dot: s.dot,
+      count: books.filter((b) => b.status === s.k).length,
+    })),
+    {
+      k: "fav",
+      label: "♥ Favoritos",
+      dot: null,
+      count: books.filter((b) => b.favorite).length,
+    },
   ];
 }
 
@@ -170,11 +223,19 @@ export function shelfChips(books: readonly Book[]): Chip[] {
 export type ShelfView = "grid" | "list";
 
 export interface ShelfState extends ShelfFilters {
+  page: number;
   sort: SortKey;
   view: ShelfView;
 }
 
-export const DEFAULT_SHELF: ShelfState = { q: "", status: "todos", facet: null, sort: "recentes", view: "grid" };
+export const DEFAULT_SHELF: ShelfState = {
+  q: "",
+  status: "todos",
+  facet: null,
+  sort: "recentes",
+  view: "grid",
+  page: 1,
+};
 
 type ParamSource = { get(name: string): string | null };
 
@@ -182,23 +243,41 @@ export function parseShelfParams(params: ParamSource): ShelfState {
   const status = params.get("status");
   const sort = params.get("ordem");
   const view = params.get("vista");
+  const rawPage = params.get("pagina");
+  const page = rawPage && /^\d+$/.test(rawPage) ? Number(rawPage) : 1;
   return {
     q: params.get("q") ?? "",
     status: status === "fav" || isBookStatus(status) ? status : "todos",
     facet: parseFacet(params.get("faceta")),
-    sort: SORT_KEYS.includes(sort as SortKey) ? (sort as SortKey) : DEFAULT_SHELF.sort,
+    sort: SORT_KEYS.includes(sort as SortKey)
+      ? (sort as SortKey)
+      : DEFAULT_SHELF.sort,
     view: view === "lista" ? "list" : "grid",
+    page: Number.isSafeInteger(page) && page > 0 ? page : 1,
   };
 }
 
 /** Serializa omitindo os valores padrão. */
 export function toShelfParams(state: Partial<ShelfState>): URLSearchParams {
   const p = new URLSearchParams();
-  if (state.q) p.set("q", state.q);
-  if (state.status && state.status !== "todos") p.set("status", state.status);
-  if (state.facet) p.set("faceta", serializeFacet(state.facet));
-  if (state.sort && state.sort !== DEFAULT_SHELF.sort) p.set("ordem", state.sort);
-  if (state.view === "list") p.set("vista", "lista");
+  if (state.q) {
+    p.set("q", state.q);
+  }
+  if (state.status && state.status !== "todos") {
+    p.set("status", state.status);
+  }
+  if (state.facet) {
+    p.set("faceta", serializeFacet(state.facet));
+  }
+  if (state.sort && state.sort !== DEFAULT_SHELF.sort) {
+    p.set("ordem", state.sort);
+  }
+  if (state.view === "list") {
+    p.set("vista", "lista");
+  }
+  if (state.page && state.page > 1) {
+    p.set("pagina", String(state.page));
+  }
   return p;
 }
 

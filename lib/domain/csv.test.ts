@@ -29,8 +29,14 @@ describe("parseCSV", () => {
 
   it("é idêntico ao parser do standalone", () => {
     const oracleParse = loadStandaloneParse();
-    const samples = ['a;b\n"1;2";3', "x,y\r\n1,\"2,3\"\r\n", '﻿T;A\n"um ""dois""";3\r\n\r\n;;\n4;5'];
-    for (const s of samples) expect(parseCSV(s)).toEqual(oracleParse(s));
+    const samples = [
+      'a;b\n"1;2";3',
+      'x,y\r\n1,"2,3"\r\n',
+      '﻿T;A\n"um ""dois""";3\r\n\r\n;;\n4;5',
+    ];
+    for (const s of samples) {
+      expect(parseCSV(s)).toEqual(oracleParse(s));
+    }
   });
 });
 
@@ -61,7 +67,9 @@ describe("exportCsv × standalone", () => {
         .split("\r\n")
         .map((line) => {
           const cells = parseCSV(line)[0] ?? [];
-          return cells.length === 16 ? line.split(";").toSpliced(11, 1).join(";") : line;
+          return cells.length === 16
+            ? line.split(";").toSpliced(11, 1).join(";")
+            : line;
         })
         .join("\r\n");
     expect(ours.startsWith("﻿")).toBe(true);

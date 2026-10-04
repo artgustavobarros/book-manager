@@ -143,7 +143,15 @@
   }
 
   /* Foco visível do Design System: anel de 3px em cinza quente, sem o outline do navegador. */
-  :where(a, button, select, summary, [role="button"], [role="tab"], [role="radio"]):focus-visible {
+  :where(
+    a,
+    button,
+    select,
+    summary,
+    [role="button"],
+    [role="tab"],
+    [role="radio"]
+  ):focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px rgba(127, 120, 110, 0.35);
   }

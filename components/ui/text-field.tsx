@@ -1,5 +1,5 @@
 import { cn } from "cn";
-import * as React from "react";
+import type * as React from "react";
 
 /**
  * Rótulo + controle + erro, no padrão "Campos" do Design System:
@@ -17,11 +17,16 @@ export function FieldLabel({
   children: React.ReactNode;
 }) {
   return (
-    <label className={cn("flex flex-col gap-2 text-xs font-medium text-mute", className)}>
+    <label
+      className={cn(
+        "flex flex-col gap-2 font-medium text-mute text-xs",
+        className
+      )}
+    >
       {label}
       {children}
       {error ? (
-        <span role="alert" className="text-xs font-normal text-acc">
+        <span className="font-normal text-acc text-xs" role="alert">
           {error}
         </span>
       ) : null}

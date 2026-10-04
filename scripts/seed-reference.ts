@@ -21,8 +21,13 @@ async function main() {
 
   const db = getDb();
   await db.delete(user).where(eq(user.email, email));
-  const { user: created } = await auth.api.signUpEmail({ body: { name: "Ana Lima", email, password } });
-  await db.update(user).set({ emailVerified: true }).where(eq(user.id, created.id));
+  const { user: created } = await auth.api.signUpEmail({
+    body: { name: "Ana Lima", email, password },
+  });
+  await db
+    .update(user)
+    .set({ emailVerified: true })
+    .where(eq(user.id, created.id));
   await replaceBooks(db, created.id, fromBackup(raw));
   await setGoal(db, created.id, 2026, 24);
   console.log(`Usuário ${email} / ${password} com ${raw.length} livros.`);

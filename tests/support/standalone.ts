@@ -11,11 +11,11 @@ import raw from "../fixtures/reference-books.json";
 type Dict = Record<string, unknown>;
 
 export interface StandaloneComponent {
-  state: Dict & { books: Dict[] };
-  props: Dict;
-  painel(books: Dict[]): Dict;
   dados(books: Dict[]): Dict;
   estante(books: Dict[]): Dict;
+  painel(books: Dict[]): Dict;
+  props: Dict;
+  state: Dict & { books: Dict[] };
   [k: string]: unknown;
 }
 
@@ -32,7 +32,10 @@ function memoryStorage(initial: Record<string, string>) {
 let source: string | null = null;
 function standaloneScript(): string {
   if (!source) {
-    const file = readFileSync(path.join(process.cwd(), "design/handoff/source/Acervo.dc.html"), "utf8");
+    const file = readFileSync(
+      path.join(process.cwd(), "design/handoff/source/Acervo.dc.html"),
+      "utf8"
+    );
     const start = file.indexOf(">", file.indexOf("data-dc-script")) + 1;
     const end = file.indexOf("</script>", start);
     source = file.slice(start, end);
@@ -40,12 +43,16 @@ function standaloneScript(): string {
   return source;
 }
 
-export function loadStandalone(opts: { books?: Dict[]; user?: Dict; state?: Dict } = {}): StandaloneComponent {
+export function loadStandalone(
+  opts: { books?: Dict[]; user?: Dict; state?: Dict } = {}
+): StandaloneComponent {
   const localStorage = memoryStorage({
     "acervo-livros-v1": JSON.stringify(opts.books ?? raw),
     "acervo-seed-v2": "1",
     "acervo-seed-v3": "1",
-    "acervo-usuario": JSON.stringify(opts.user ?? { name: "Ana Lima", email: "ana@exemplo.com" }),
+    "acervo-usuario": JSON.stringify(
+      opts.user ?? { name: "Ana Lima", email: "ana@exemplo.com" }
+    ),
   });
   const sessionStorage = memoryStorage({ "acervo-sessao": "1" });
   class DCLogic {
@@ -69,9 +76,16 @@ export function loadStandalone(opts: { books?: Dict[]; user?: Dict; state?: Dict
     "sessionStorage",
     "document",
     "window",
-    standaloneScript() + "\nreturn Component;",
+    standaloneScript() + "\nreturn Component;"
   );
-  const Component = factory(DCLogic, React, localStorage, sessionStorage, document, {});
+  const Component = factory(
+    DCLogic,
+    React,
+    localStorage,
+    sessionStorage,
+    document,
+    {}
+  );
   const comp = new Component() as StandaloneComponent;
   Object.assign(comp.state, opts.state ?? {});
   return comp;
