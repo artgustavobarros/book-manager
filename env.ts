@@ -19,7 +19,10 @@ export const env = createEnv({
         "Use postgres:// ou pglite://"
       ),
     BETTER_AUTH_SECRET: z.string().min(32),
-    /** URL pública do app. Em previews da Vercel pode ficar vazia: usa VERCEL_URL. */
+    /**
+     * URL pública do app. Na Vercel pode ficar vazia: produção usa o domínio de
+     * produção do projeto e os previews usam a VERCEL_URL do deploy.
+     */
     BETTER_AUTH_URL: z.url().optional(),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
@@ -31,6 +34,9 @@ export const env = createEnv({
     SMTP_USER: z.email().optional(),
     SMTP_PASS: z.string().min(1).optional(),
     VERCEL_URL: z.string().optional(),
+    VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
+    /** Domínio de produção do projeto (sem protocolo), definido pela Vercel. */
+    VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
     /** Só para testes visuais: instante fixo usado pelo servidor como "agora". */
     FIXED_NOW: z.iso.datetime({ offset: true }).optional(),
   },

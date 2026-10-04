@@ -72,7 +72,7 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 | `DATABASE_URL` | sim | `postgres://…` (Neon, URL *pooled*) ou `pglite://<pasta>` |
 | `DATABASE_URL_UNPOOLED` | não | Conexão direta do Neon, usada só nas migrations |
 | `BETTER_AUTH_SECRET` | sim | 32+ caracteres aleatórios |
-| `BETTER_AUTH_URL` | em produção | URL pública do app (nos previews usa a `VERCEL_URL`) |
+| `BETTER_AUTH_URL` | não | URL pública do app. Na Vercel, se vazia, usa o domínio de produção do projeto (produção) ou a `VERCEL_URL` (previews) |
 | `NEXT_PUBLIC_APP_URL` | não | URL pública extra confiável (origem) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | não | Login com Google; sem elas, o botão avisa que está indisponível |
 | `CRON_SECRET` | para cópia semanal | Segredo de 16+ caracteres para autenticar o cron da Vercel |
@@ -91,12 +91,29 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 
 ## Deploy (Vercel)
 
-1. Crie um repositório no GitHub e envie este projeto.
-2. Na Vercel, importe o repositório (preset Next.js). O `vercel.json` já define o build (`pnpm vercel-build`, que roda as migrations antes do `next build`).
-3. **Storage → Create Database → Neon**, conectado ao projeto, com branch por preview habilitada. A integração injeta `DATABASE_URL` e `DATABASE_URL_UNPOOLED`.
-4. Em **Settings → Environment Variables**, defina `BETTER_AUTH_SECRET`, `SMTP_USER`, `SMTP_PASS` e `EMAIL_TRANSPORT=gmail` (Production e Preview) e `BETTER_AUTH_URL` (só Production, com a URL definitiva).
-5. **Google (opcional):** no Google Cloud Console, crie um "ID do cliente OAuth" (aplicativo da Web) com o URI de redirecionamento `<BETTER_AUTH_URL>/api/auth/callback/google` (e `http://localhost:3000/api/auth/callback/google` para desenvolvimento) e defina `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`. Nos previews, que têm URL dinâmica, o login com Google não funciona; use e-mail e senha.
+1. O deploy de produção sai da branch `main`; as outras branches viram previews.
+2. Na Vercel, importe o repositório (preset Next.js). O `vercel.json` já define o build (`pnpm vercel-build`, que roda as migrations antes do `next build`). Antes do primeiro deploy, configure os passos 3 e 4.
+3. **Storage → Create Database → Neon**, conectado ao projeto, sem prefixo nas variáveis e com **branch por preview** habilitada. A integração injeta `DATABASE_URL` e `DATABASE_URL_UNPOOLED`.
+   - **Região:** a do banco não muda depois. Coloque as funções na mesma região do Neon: o padrão da Vercel é `iad1` (combina com `aws-us-east-1`); para `aws-sa-east-1` (São Paulo), adicione `"regions": ["gru1"]` ao `vercel.json`.
+   - **Branch por preview é obrigatória:** como todo build roda as migrations, sem ela um preview aplicaria as migrations da branch no banco de produção.
+4. Em **Settings → Environment Variables**:
+
+   | Variável | Production | Preview |
+   |---|---|---|
+   | `ENABLE_EXPERIMENTAL_COREPACK=1` | ✓ | ✓ |
+   | `BETTER_AUTH_SECRET` | ✓ | ✓ (o build falha sem ela) |
+   | `EMAIL_TRANSPORT` | `gmail` | `console` (links nos logs da função) ou `gmail` |
+   | `SMTP_USER` / `SMTP_PASS` | ✓ | só com `gmail` |
+   | `CRON_SECRET` | ✓ | — |
+   | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✓ | opcional |
+   | `BETTER_AUTH_URL` | só para forçar outro domínio | — |
+
+   `ENABLE_EXPERIMENTAL_COREPACK` faz a Vercel usar o pnpm do campo `packageManager` (pnpm 11); sem ela, a versão é deduzida pelo lockfile (pnpm 9/10), que não entende o `pnpm-workspace.yaml` deste projeto.
+5. **Google (opcional):** no Google Cloud Console, crie um "ID do cliente OAuth" (aplicativo da Web) com o URI de redirecionamento `<URL de produção>/api/auth/callback/google` (e `http://localhost:3000/api/auth/callback/google` para desenvolvimento) e defina `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`. Nos previews, que têm URL dinâmica, o login com Google não funciona; use e-mail e senha.
 6. **Gmail:** ative a verificação em duas etapas na conta e gere uma senha de app em <https://myaccount.google.com/apppasswords>.
+7. Depois do deploy, teste cadastro, e-mail de verificação, login com Google e, em **Settings → Cron Jobs**, rode o cron manualmente (**Run**).
+
+> **`vercel env pull`:** a integração aponta o ambiente *Development* para a branch principal do Neon, ou seja, o banco de produção. Depois de puxar as variáveis, troque `DATABASE_URL` por `pglite://./.data/dev` ou por uma branch `dev` do Neon antes de rodar `pnpm dev` ou `pnpm db:migrate`.
 
 ### Cópia semanal no Google Sheets
 
