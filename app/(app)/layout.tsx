@@ -7,7 +7,7 @@ import { AppShell } from "@/components/app/app-shell";
 import { env } from "@/env";
 import { googleEnabled } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { account } from "@/lib/db/schema";
+import { account, user as userTable } from "@/lib/db/schema";
 import { currentYear, safeTimeZone } from "@/lib/domain/clock";
 import { listBooks } from "@/lib/services/books";
 import { getGoal } from "@/lib/services/goals";
@@ -33,7 +33,7 @@ export default async function AppLayout({
   const now = env.FIXED_NOW ? new Date(env.FIXED_NOW) : new Date();
   const year = currentYear(now, tz);
 
-  const [books, goal, settings, accounts] = await Promise.all([
+  const [books, goal, settings, accounts, profile] = await Promise.all([
     listBooks(db, user.id),
     getGoal(db, user.id, year),
     getSettings(db, user.id),
@@ -41,6 +41,11 @@ export default async function AppLayout({
       .select({ providerId: account.providerId })
       .from(account)
       .where(eq(account.userId, user.id)),
+    db
+      .select({ image: userTable.image })
+      .from(userTable)
+      .where(eq(userTable.id, user.id))
+      .limit(1),
   ]);
 
   return (
@@ -51,7 +56,7 @@ export default async function AppLayout({
           name: user.name,
           email: user.email,
           emailVerified: user.emailVerified,
-          image: user.image ?? null,
+          image: profile[0] ? profile[0].image : (user.image ?? null),
         },
         books,
         goal,

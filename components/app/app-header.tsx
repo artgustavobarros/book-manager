@@ -11,6 +11,7 @@ import { useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 
 import { useApp } from "./app-provider";
+import { Avatar } from "./avatar";
 
 const TABS = [
   ["/", "Painel"],
@@ -74,14 +75,18 @@ function AccountButton({ className }: { className?: string }) {
     <button
       aria-label="Minha conta"
       className={cn(
-        "flex size-10 flex-none items-center justify-center rounded-full border-0 bg-acc font-bold text-sm text-white tracking-[.025em] transition-transform duration-100 active:scale-95 dark:text-[#1b1a17]",
+        "flex size-10 flex-none items-center justify-center rounded-full border-0 p-0 font-bold text-sm tracking-[.025em] transition-transform duration-100 active:scale-95",
         className
       )}
       onClick={() => app.setAccountOpen(true)}
       title="Minha conta"
       type="button"
     >
-      {app.initials}
+      <Avatar
+        className="size-full"
+        image={app.user.image}
+        initials={app.initials}
+      />
     </button>
   );
 }

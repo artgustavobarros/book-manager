@@ -68,6 +68,7 @@ test.describe("acervo", () => {
                 volumeInfo: {
                   title: "Torto arado",
                   authors: ["Itamar Vieira Junior"],
+                  categories: ["Romance"],
                   publisher: "Todavia",
                   publishedDate: "2019-08-01",
                   pageCount: 264,
@@ -100,6 +101,7 @@ test.describe("acervo", () => {
       "Itamar Vieira Junior"
     );
     await expect(dialog.getByLabel("Editora")).toHaveValue("Todavia");
+    await expect(dialog.getByLabel("Gênero da obra")).toHaveValue("Romance");
     await expect(dialog.getByLabel("Ano de lançamento")).toHaveValue("2019");
     await expect(dialog.getByLabel("Páginas")).toHaveValue("264");
   });

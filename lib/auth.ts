@@ -10,6 +10,7 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { type EmailMessage, sendEmail } from "@/lib/email";
 import { resetPasswordEmail, verificationEmail } from "@/lib/email/templates";
+import { syncGoogleAvatar } from "@/lib/services/google-avatar";
 import { MIN_PASSWORD } from "@/lib/validation/auth";
 
 /**
@@ -88,6 +89,16 @@ export const auth = betterAuth({
       requireLocalEmailVerified: true,
       // Vincular explicitamente (estando logado) pode usar outro endereço Google.
       allowDifferentEmails: true,
+    },
+  },
+
+  databaseHooks: {
+    account: {
+      create: {
+        after: async (linkedAccount) => {
+          await syncGoogleAvatar(db, linkedAccount);
+        },
+      },
     },
   },
 

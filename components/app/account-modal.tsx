@@ -17,6 +17,7 @@ import {
 } from "@/lib/validation/auth";
 
 import { useApp } from "./app-provider";
+import { Avatar } from "./avatar";
 import { SheetExportSection } from "./sheet-export-section";
 import { toast } from "./toast";
 
@@ -390,9 +391,11 @@ function AccountBody() {
     <div className="flex flex-col gap-6 px-7 py-6">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-11 flex-none items-center justify-center rounded-full bg-acc font-bold text-base text-white">
-            {app.initials}
-          </span>
+          <Avatar
+            className="size-11 font-bold text-base"
+            image={app.user.image}
+            initials={app.initials}
+          />
           <div className="flex min-w-0 flex-col gap-0.5">
             <h2 className="m-0 font-bold text-xl">Minha conta</h2>
             <span className="truncate text-mute text-sm">

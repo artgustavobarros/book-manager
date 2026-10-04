@@ -329,6 +329,7 @@ function OnlineSearch({
     } else {
       set("title", r.title);
       set("author", r.author);
+      set("genre", r.genre);
       set("publisher", r.publisher);
       set("yearPublished", r.year);
       set("pages", r.pages);
@@ -395,6 +396,7 @@ function OnlineSearch({
                 <span className="text-mute text-xs">
                   {[
                     r.publisher,
+                    r.genre,
                     r.year,
                     r.pages ? r.pages + " p." : "",
                     r.source,

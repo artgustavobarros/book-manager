@@ -38,6 +38,7 @@ describe("normalização das fontes", () => {
           volumeInfo: {
             title: "Torto arado",
             authors: ["Itamar Vieira Junior"],
+            categories: ["Fiction / Literary"],
             publisher: "Todavia",
             publishedDate: "2019-08-01",
             pageCount: 264,
@@ -52,6 +53,7 @@ describe("normalização das fontes", () => {
       source: "Google Livros",
       title: "Torto arado",
       author: "Itamar Vieira Junior",
+      genre: "Fiction / Literary",
       publisher: "Todavia",
       year: "2019",
       pages: "264",
@@ -65,18 +67,23 @@ describe("normalização das fontes", () => {
           {
             trackName: "T",
             artistName: "A",
+            primaryGenreName: "Fiction & Literature",
             releaseDate: "2020-01-01",
             artworkUrl100: "https://a/100x100bb.jpg",
           },
         ],
-      })[0].cover
-    ).toBe("https://a/600x600bb.jpg");
+      })[0]
+    ).toMatchObject({
+      cover: "https://a/600x600bb.jpg",
+      genre: "Fiction & Literature",
+    });
     expect(
       fromOpenLibrary({
         docs: [
           {
             title: "T",
             author_name: ["A", "B"],
+            subject: ["Poetry", "Literature"],
             cover_i: 9,
             first_publish_year: 1900,
           },
@@ -84,10 +91,17 @@ describe("normalização das fontes", () => {
       })[0]
     ).toMatchObject({
       author: "A, B",
+      genre: "Poetry",
       year: "1900",
       cover: "https://covers.openlibrary.org/b/id/9-L.jpg",
     });
     expect(fromGoogle({})).toEqual([]);
+    expect(
+      fromGoogle({ items: [{ volumeInfo: { title: "T" } }] })[0].genre
+    ).toBe("");
+    expect(
+      fromApple({ results: [{ primaryGenreName: "Books" }] })[0].genre
+    ).toBe("");
   });
 });
 
@@ -100,6 +114,7 @@ describe("mergeResults", () => {
     source,
     title,
     author: "",
+    genre: "",
     publisher: "",
     year: "",
     pages: "",

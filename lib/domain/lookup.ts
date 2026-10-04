@@ -13,6 +13,7 @@ export interface LookupResult {
   cover: string;
   /** Resultado que só traz a capa (Amazon por ISBN). */
   coverOnly?: boolean;
+  genre: string;
   pages: string;
   publisher: string;
   source: LookupSource;
@@ -37,7 +38,7 @@ export const lookupUrls = {
     "https://itunes.apple.com/search?country=br&media=ebook&limit=5&term=" +
     enc(q),
   openLibrary: (q: string, isbn: string | null) =>
-    "https://openlibrary.org/search.json?limit=6&fields=title,author_name,publisher,first_publish_year,number_of_pages_median,cover_i&" +
+    "https://openlibrary.org/search.json?limit=6&fields=title,author_name,publisher,first_publish_year,number_of_pages_median,cover_i,subject&" +
     (isbn ? "isbn=" + isbn : "q=" + enc(q)),
   amazonCover: (isbn: string) => {
     const i10 = isbn10(isbn);
@@ -58,6 +59,7 @@ export function fromGoogle(d: Json): LookupResult[] {
       source: "Google Livros",
       title: v.title || "",
       author: (v.authors || []).join(", "),
+      genre: (v.categories || [])[0] || "",
       publisher: v.publisher || "",
       year: (v.publishedDate || "").slice(0, 4),
       pages: v.pageCount ? String(v.pageCount) : "",
@@ -74,6 +76,7 @@ export function fromApple(d: Json): LookupResult[] {
       source: "Apple Books",
       title: r.trackName || "",
       author: r.artistName || "",
+      genre: r.primaryGenreName === "Books" ? "" : r.primaryGenreName || "",
       publisher: "",
       year: (r.releaseDate || "").slice(0, 4),
       pages: "",
@@ -88,6 +91,7 @@ export function fromOpenLibrary(d: Json): LookupResult[] {
       source: "Open Library",
       title: x.title || "",
       author: (x.author_name || []).join(", "),
+      genre: (x.subject || [])[0] || "",
       publisher: (x.publisher || [])[0] || "",
       year: x.first_publish_year ? String(x.first_publish_year) : "",
       pages: x.number_of_pages_median ? String(x.number_of_pages_median) : "",
@@ -103,6 +107,7 @@ export function amazonResult(isbn: string, url: string): LookupResult {
     source: "Amazon (ISBN)",
     title: "Capa pelo ISBN " + isbn,
     author: "",
+    genre: "",
     publisher: "",
     year: "",
     pages: "",
