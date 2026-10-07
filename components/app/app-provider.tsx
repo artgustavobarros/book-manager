@@ -66,6 +66,7 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   modal: ModalState;
   openEdit: (id: string | null) => void;
   openView: (id: string) => void;
+  returnBook: (book: Book, returnStatus?: BookStatus) => void;
   setAccountOpen: (v: boolean) => void;
   setSheetUrl: (url: string | null) => void;
 
@@ -223,6 +224,27 @@ function AppState({
     [actions]
   );
 
+  const returnBook = useCallback(
+    (book: Book, returnStatus: BookStatus = "nao-lido") => {
+      const patch: Partial<Book> = {
+        status: returnStatus,
+        borrower: null,
+      };
+      if (returnStatus === "lido" && !book.yearRead) {
+        patch.yearRead = initial.year;
+      } else if (returnStatus === "nao-lido") {
+        patch.yearRead = null;
+      }
+      void actions.update(book.id, patch).then((ok) => {
+        if (!ok) {
+          return;
+        }
+        toast(book.title + " devolvido (" + stat(returnStatus).label + ")");
+      });
+    },
+    [actions, initial.year]
+  );
+
   const value: AppContextValue = useMemo(
     () => ({
       ...initial,
@@ -249,6 +271,7 @@ function AppState({
       lendFor,
       closeLend: () => setLendFor(null),
       setStatus,
+      returnBook,
       confirmLend: (book, borrower) => {
         setLendFor(null);
         void actions
@@ -301,6 +324,7 @@ function AppState({
       syncOpen,
       lendFor,
       setStatus,
+      returnBook,
       cycleStatus,
       undoRead,
       startReading,

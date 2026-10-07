@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { useApp } from "@/components/app/app-provider";
 import { PageMain } from "@/components/app/app-shell";
@@ -11,10 +11,12 @@ import {
   trackNarrow,
   useCarousel,
 } from "@/components/ui/carousel";
+import { Modal, ModalClose } from "@/components/ui/dialog";
 import { useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import { dashboard, type Pace } from "@/lib/domain/dashboard";
-import { fmtDate } from "@/lib/domain/text";
+import { fmtDate, lentDurationLabel } from "@/lib/domain/text";
+import type { Book } from "@/lib/domain/types";
 
 const PACE_CLASS: Record<Pace, string> = {
   done: "bg-success-bg text-success-fg",
@@ -24,10 +26,108 @@ const PACE_CLASS: Record<Pace, string> = {
 
 const card = "rounded-xl border border-line bg-card";
 
+function LentModal({
+  open,
+  onOpenChange,
+  books,
+  onReturn,
+  onGoShelf,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  books: Book[];
+  onReturn: (book: Book) => void;
+  onGoShelf: () => void;
+}) {
+  return (
+    <Modal
+      className="w-full max-w-[540px] p-6"
+      description="Livros que estão emprestados no momento"
+      onOpenChange={onOpenChange}
+      open={open}
+      title="Livros emprestados"
+    >
+      <div className="flex flex-col gap-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="m-0 font-bold font-title text-ink text-xl">
+              Livros emprestados
+            </h2>
+            <span className="rounded-full bg-lentbg px-2 py-0.5 font-semibold text-lentfg text-xs">
+              {books.length}
+            </span>
+          </div>
+          <ModalClose />
+        </div>
+
+        {books.length ? (
+          <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto pr-1">
+            {books.map((b) => (
+              <div
+                className="flex items-center gap-3 rounded-lg border border-line2 bg-card p-3"
+                key={b.id}
+              >
+                <MiniCover
+                  book={b}
+                  className="h-12 w-8 flex-none rounded text-xs"
+                />
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate font-semibold text-ink text-sm">
+                    {b.title}
+                  </span>
+                  <span className="truncate text-mute text-xs">
+                    {b.author || "Autor desconhecido"}
+                  </span>
+                  <span className="font-semibold text-lentfg text-xs">
+                    Com {b.borrower}
+                    {b.updatedAt ? (
+                      <span className="opacity-75">
+                        {" "}
+                        · {lentDurationLabel(b.updatedAt)}
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+                <button
+                  aria-label={`Devolver ${b.title}`}
+                  className="h-8 flex-none rounded-lg border border-line2 bg-card px-3 font-semibold text-ink text-xs hover:border-ink hover:text-acc active:scale-95"
+                  onClick={() => onReturn(b)}
+                  type="button"
+                >
+                  Devolver
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-6 text-center text-mute text-sm">
+            Todos os livros estão em casa! Nenhum livro emprestado no momento.
+          </div>
+        )}
+
+        <div className="flex justify-end border-line border-t pt-3">
+          <button
+            className="font-semibold text-acc text-xs hover:underline"
+            onClick={onGoShelf}
+            type="button"
+          >
+            Ver todos na Estante →
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 export function DashboardPage() {
   const app = useApp();
   const books = useBooks();
   const { goShelf } = useShelfState();
+  const [lentOpen, setLentOpen] = useState(false);
+  const lentBooks = useMemo(
+    () => books.filter((b) => b.status === "emprestado"),
+    [books]
+  );
   const d = useMemo(
     () =>
       dashboard(books, {
@@ -59,22 +159,36 @@ export function DashboardPage() {
         role="region"
         tabIndex={0}
       >
-        {d.kpis.map((k, i) => (
-          <div
-            className={cn(
-              card,
-              "flex animate-acv-in snap-start flex-col gap-3 p-5"
-            )}
-            key={k.label}
-            style={{ animationDelay: i * 50 + "ms" }}
-          >
-            <span className="font-medium text-mute text-xs">{k.label}</span>
-            <span className="font-bold font-title text-3xl tabular-nums leading-none">
-              {k.value}
-            </span>
-            <span className="text-mute text-xs">{k.sub}</span>
-          </div>
-        ))}
+        {d.kpis.map((k, i) => {
+          const isLent = k.label === "Emprestados";
+          return (
+            <div
+              className={cn(
+                card,
+                "flex animate-acv-in snap-start flex-col gap-3 p-5",
+                isLent && "cursor-pointer transition-colors hover:border-ink"
+              )}
+              key={k.label}
+              onClick={isLent ? () => setLentOpen(true) : undefined}
+              role={isLent ? "button" : undefined}
+              style={{ animationDelay: i * 50 + "ms" }}
+              tabIndex={isLent ? 0 : undefined}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-mute text-xs">{k.label}</span>
+                {isLent ? (
+                  <span className="font-semibold text-[11px] text-acc">
+                    Ver lista →
+                  </span>
+                ) : null}
+              </div>
+              <span className="font-bold font-title text-3xl tabular-nums leading-none">
+                {k.value}
+              </span>
+              <span className="text-mute text-xs">{k.sub}</span>
+            </div>
+          );
+        })}
       </div>
       <CarouselDots
         count={d.kpis.length}
@@ -317,6 +431,17 @@ export function DashboardPage() {
           onGo={listCar.go}
         />
       </div>
+
+      <LentModal
+        books={lentBooks}
+        onGoShelf={() => {
+          setLentOpen(false);
+          goShelf({ status: "emprestado" });
+        }}
+        onOpenChange={setLentOpen}
+        onReturn={(b) => app.returnBook(b)}
+        open={lentOpen}
+      />
     </PageMain>
   );
 }

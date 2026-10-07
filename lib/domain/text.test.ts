@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cmp, fmtDate, initial, nf, norm } from "./text";
+import { cmp, fmtDate, initial, lentDurationLabel, nf, norm } from "./text";
 
 describe("norm", () => {
   it("remove acentos, pontuação e caixa", () => {
@@ -43,5 +43,22 @@ describe("fmtDate", () => {
 describe("nf", () => {
   it("usa separador de milhar pt-BR", () => {
     expect(nf(12_345)).toBe("12.345");
+  });
+});
+
+describe("lentDurationLabel", () => {
+  const base = new Date("2026-06-15T12:00:00Z");
+
+  it("calcula durações em dias e meses", () => {
+    expect(lentDurationLabel("2026-06-15", base)).toBe("hoje");
+    expect(lentDurationLabel("2026-06-14", base)).toBe("há 1 dia");
+    expect(lentDurationLabel("2026-06-05", base)).toBe("há 10 dias");
+    expect(lentDurationLabel("2026-05-15", base)).toBe("há 1 mês");
+    expect(lentDurationLabel("2026-03-15", base)).toBe("há 3 meses");
+  });
+
+  it("retorna null para datas nulas ou inválidas", () => {
+    expect(lentDurationLabel(null, base)).toBeNull();
+    expect(lentDurationLabel("data-invalida", base)).toBeNull();
   });
 });

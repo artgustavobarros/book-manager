@@ -56,7 +56,12 @@ export function BookRow({
           {b.title}
         </button>
         {b.status === "emprestado" && b.borrower ? (
-          <LentBadge borrower={b.borrower} className="py-px" />
+          <LentBadge
+            borrower={b.borrower}
+            className="py-px"
+            lentAt={b.updatedAt}
+            onReturn={() => app.returnBook(b)}
+          />
         ) : null}
       </span>
       <button

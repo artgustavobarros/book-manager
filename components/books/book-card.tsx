@@ -119,7 +119,12 @@ export function BookCard({
           {[b.publisher, b.nationality, b.genre].filter(Boolean).join(" · ")}
         </span>
         {b.status === "emprestado" && b.borrower ? (
-          <LentBadge borrower={b.borrower} className="mt-0.5 py-0.5" />
+          <LentBadge
+            borrower={b.borrower}
+            className="mt-0.5 py-0.5"
+            lentAt={b.updatedAt}
+            onReturn={() => app.returnBook(b)}
+          />
         ) : null}
         <div className="mt-2 flex items-center gap-1.5 self-start">
           <StatusSelect

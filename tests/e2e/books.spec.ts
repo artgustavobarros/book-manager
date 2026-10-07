@@ -255,16 +255,20 @@ test.describe("acervo", () => {
     ).toBeVisible();
     await lend.getByLabel("Nome da pessoa").fill("Joana");
     await lend.getByRole("button", { name: "Marcar como emprestado" }).click();
-    await expect(page.getByText("Com Joana")).toBeVisible();
+    await expect(page.getByText(/Com Joana/)).toBeVisible();
     await page.reload();
-    await expect(page.getByText("Com Joana")).toBeVisible();
+    await expect(page.getByText(/Com Joana/)).toBeVisible();
 
-    // Voltar para "Não lido" limpa o "emprestado para".
-    await page
-      .getByRole("combobox", { name: "Status" })
-      .first()
-      .selectOption("nao-lido");
-    await expect(page.getByText("Com Joana")).toHaveCount(0);
+    // No Painel: o KPI de Emprestados mostra o modal com a Joana e permite devolver
+    await page.goto("/");
+    await page.getByText("Emprestados").click();
+    const modal = page.getByRole("dialog");
+    await expect(
+      modal.getByRole("heading", { name: "Livros emprestados" })
+    ).toBeVisible();
+    await expect(modal.getByText(/Com Joana/)).toBeVisible();
+    await modal.getByRole("button", { name: "Devolver" }).first().click();
+    await expect(page.getByText(/devolvido/)).toBeVisible();
   });
 
   test("filtros e ordenação ficam na URL", async ({ page }) => {
