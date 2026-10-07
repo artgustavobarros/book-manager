@@ -9,7 +9,7 @@ import { appUrl, vercelUrl } from "@/lib/app-url";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { type EmailMessage, sendEmail } from "@/lib/email";
-import { resetPasswordEmail, verificationEmail } from "@/lib/email/templates";
+import { resetPasswordEmail, verificationMessage } from "@/lib/email/templates";
 import { syncGoogleAvatar } from "@/lib/services/google-avatar";
 import { MIN_PASSWORD } from "@/lib/validation/auth";
 
@@ -66,9 +66,8 @@ export const auth = betterAuth({
     sendOnSignIn: false,
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60 * 24,
-    // Também usado na troca de e-mail: o link vai para o endereço novo.
-    sendVerificationEmail: async ({ user, url }) =>
-      deliver(verificationEmail(user.email, url)),
+    // Também usado na troca de e-mail: o link vai para o endereço novo, com o texto da troca.
+    sendVerificationEmail: async (data) => deliver(verificationMessage(data)),
   },
 
   socialProviders: googleEnabled
