@@ -822,7 +822,7 @@ function EditModal({ book }: { book: Book | null }) {
             <option key={n} value={n} />
           ))}
         </datalist>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-soft border-t pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-soft border-t pt-4 max-[640px]:sticky max-[640px]:bottom-0 max-[640px]:z-10 max-[640px]:bg-card max-[640px]:py-3 max-[640px]:shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
           <div>
             {book ? <DeleteButton onConfirm={() => del(book)} /> : null}
           </div>

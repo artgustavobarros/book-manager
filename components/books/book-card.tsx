@@ -73,7 +73,7 @@ export function BookCard({
             <button
               aria-label={label}
               className={cn(
-                "flex size-9 items-center justify-center rounded-full border-0 text-base leading-none shadow-[0_2px_8px_rgba(27,26,23,.2)] transition-[background-color,color] duration-150 active:scale-[.86]",
+                "flex size-9 items-center justify-center rounded-full border-0 text-base leading-none shadow-[0_2px_8px_rgba(27,26,23,.2)] transition-[background-color,color] duration-150 active:scale-[.86] max-[640px]:size-11",
                 on ? "bg-[#1b1a17] text-white" : "bg-white text-[#1b1a17]"
               )}
               key={label}
@@ -139,7 +139,7 @@ export function BookCard({
                   ? "Concluir leitura"
                   : "Começar a ler"
             }
-            className="flex size-7 items-center justify-center rounded-full border border-line2 bg-card text-ink text-xs transition-colors hover:border-ink hover:text-acc active:scale-95"
+            className="flex size-7 items-center justify-center rounded-full border border-line2 bg-card text-ink text-xs transition-colors hover:border-ink hover:text-acc active:scale-95 max-[640px]:size-9 max-[640px]:min-h-9 max-[640px]:min-w-9"
             onClick={(e) => {
               e.stopPropagation();
               app.cycleStatus(b);

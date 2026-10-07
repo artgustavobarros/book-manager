@@ -3,7 +3,7 @@
 import { cn } from "cn";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
@@ -158,7 +158,14 @@ function NarrowHeader() {
   const app = useApp();
   const { state, setShelf } = useShelfState();
   const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const shown = open;
+
+  useEffect(() => {
+    if (shown) {
+      inputRef.current?.focus();
+    }
+  }, [shown]);
 
   return (
     <header className="relative z-[8] hidden border-line border-b bg-hdr max-[640px]:block">
@@ -193,7 +200,6 @@ function NarrowHeader() {
           <div className="flex gap-2">
             <input
               aria-label="Buscar no acervo"
-              // Abre pelo ícone de busca: o foco vai direto para o campo.
               autoFocus
               className={cn(
                 searchClass,
@@ -201,6 +207,7 @@ function NarrowHeader() {
               )}
               onChange={(e) => setShelf({ q: e.target.value })}
               placeholder="Buscar título, autor, editora…"
+              ref={inputRef}
               value={state.q}
             />
             <button
@@ -223,7 +230,7 @@ function NarrowHeader() {
             Busca: {state.q} · editar
           </button>
         ) : null}
-        <Tabs itemClassName="h-9 min-w-0 flex-[1_1_auto] px-2 flex items-center justify-center" />
+        <Tabs itemClassName="h-11 min-w-0 flex-[1_1_auto] px-2 flex items-center justify-center" />
       </div>
     </header>
   );
