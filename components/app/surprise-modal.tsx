@@ -1,12 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
 import { Modal, ModalClose } from "@/components/ui/dialog";
 import { useBookActions, useBooks } from "@/hooks/use-books";
 import { coverColors, coverImage } from "@/lib/domain/cover";
-import { drawBook, surpriseGenres, surprisePool } from "@/lib/domain/surprise";
-import { nf } from "@/lib/domain/text";
+import {
+  drawBook,
+  type GenreOption,
+  surpriseGenres,
+  surprisePool,
+} from "@/lib/domain/surprise";
+import { nf, norm } from "@/lib/domain/text";
 
 import { useApp } from "./app-provider";
 import { toast } from "./toast";
@@ -19,7 +32,10 @@ function SurpriseBody() {
   const [pickId, setPickId] = useState<string | null>(
     () => drawBook(surprisePool(books, "todos"), null)?.id ?? null
   );
-  const { options } = useMemo(() => surpriseGenres(books), [books]);
+  const { unread, options } = useMemo(() => surpriseGenres(books), [books]);
+  const selected = options.find((o) => o.value === genre) ?? options[0];
+  const panelRef = useRef<HTMLDivElement>(null);
+  const genreInputId = useId();
   const pool = useMemo(() => surprisePool(books, genre), [books, genre]);
   const sb = books.find((b) => b.id === pickId) ?? null;
   const { coverBg, coverInk } = sb
@@ -43,7 +59,7 @@ function SurpriseBody() {
     : "";
 
   return (
-    <div className="flex flex-wrap">
+    <div className="flex flex-wrap" ref={panelRef}>
       <div className="flex max-w-full flex-[0_0_212px] items-center bg-bg p-6 max-[640px]:hidden">
         <div
           className="relative flex aspect-[2/3] w-full flex-col justify-between overflow-hidden rounded-md px-3 py-4 shadow-lift"
@@ -68,23 +84,46 @@ function SurpriseBody() {
           </span>
           <ModalClose />
         </div>
-        <label className="flex flex-col gap-2 font-medium text-mute text-xs">
-          Sortear entre
-          <select
-            className="h-9 cursor-pointer rounded-lg border border-line2 bg-card px-3 text-ink text-sm"
-            onChange={(e) => {
-              setGenre(e.target.value);
-              draw(e.target.value, pickId);
-            }}
-            value={genre}
+        <div className="flex flex-col gap-2">
+          <label
+            className="font-medium text-mute text-xs"
+            htmlFor={genreInputId}
           >
-            {options.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            Sortear entre
+          </label>
+          <Combobox<GenreOption>
+            filter={(o, query) => norm(o.label).includes(norm(query))}
+            isItemEqualToValue={(a, b) => a.value === b.value}
+            items={options}
+            itemToStringLabel={(o) => o.label}
+            onValueChange={(o) => {
+              // "Todos os gêneros" é o mínimo: limpar o campo não desfaz a seleção.
+              if (!o || o.value === genre) {
+                return;
+              }
+              setGenre(o.value);
+              draw(o.value, pickId);
+            }}
+            value={selected}
+          >
+            <ComboboxInput id={genreInputId} />
+            <ComboboxContent container={panelRef}>
+              <ComboboxEmpty>Nenhum gênero encontrado.</ComboboxEmpty>
+              <ComboboxList>
+                {(o: GenreOption) => (
+                  <ComboboxItem key={o.value} value={o}>
+                    {o.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+          {options.length === 1 && unread > 0 ? (
+            <span className="text-mute text-xs leading-[1.5]">
+              Cadastre o gênero na ficha dos livros para sortear por gênero.
+            </span>
+          ) : null}
+        </div>
         {sb ? (
           <>
             {/* Até 640px: sem a coluna da capa, o sorteado vira uma linha com capa de 84px. */}

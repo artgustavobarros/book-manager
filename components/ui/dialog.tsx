@@ -128,6 +128,16 @@ function Modal({
               )}
               data-slot="modal"
               onChangeCapture={guardChanges ? markInput : undefined}
+              // O Radix trata o Esc antes de todos (captura no document): com a lista de
+              // um combobox aberta, o Esc deve fechar só a lista, não o modal.
+              onEscapeKeyDown={(e) => {
+                const target = e.target as Element | null;
+                if (
+                  target?.closest?.('[role="combobox"][aria-expanded="true"]')
+                ) {
+                  e.preventDefault();
+                }
+              }}
               onInputCapture={guardChanges ? markInput : undefined}
               // Foca o próprio painel ao abrir (sem anel de foco num botão); Tab continua preso no modal.
               onOpenAutoFocus={(e) => {

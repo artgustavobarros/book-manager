@@ -74,6 +74,15 @@ for (const vp of VIEWPORTS) {
           .selectOption("emprestado");
         await snap(page, `emprestado-para-quem-${vp.name}`);
       });
+
+      test("lista de gêneros do Me surpreenda", async ({ page }) => {
+        await prepare(page);
+        await page.goto("/");
+        await page.evaluate(() => (Math.random = () => 0.42));
+        await page.getByRole("button", { name: "Me surpreenda" }).click();
+        await page.getByLabel("Sortear entre").click();
+        await snap(page, `surpresa-generos-${vp.name}`);
+      });
     });
   });
 }
