@@ -7,6 +7,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed-reference.ts",
+    "db:seed:personas": "tsx scripts/seed-personas.ts",
     "db:studio": "drizzle-kit studio",
     "dev": "next dev",
     "lint": "ultracite check",

@@ -54,10 +54,26 @@ Para usar um Postgres de verdade (por exemplo uma branch de desenvolvimento do N
 |---|---|
 | `pnpm db:generate` | Gera uma migration a partir de `lib/db/schema.ts` |
 | `pnpm db:migrate` | Aplica as migrations de `drizzle/` (usa `DATABASE_URL_UNPOOLED` se existir) |
-| `pnpm db:seed` | Cria o usuário de referência com o acervo do design |
+| `pnpm db:seed` | Cria o usuário de referência com o acervo do design (30 livros) |
+| `pnpm db:seed:personas` | Popula o banco com 4 personas de teste (Arthur Whale 600 livros, Mariana Empréstimos, Lucas Metas e Zero Novato) |
 | `pnpm db:studio` | Drizzle Studio (somente Postgres) |
 
 O schema das tabelas de autenticação (`lib/db/auth-schema.ts`) é gerado pelo Better Auth: `npx auth@latest generate --config lib/auth.ts --output lib/db/auth-schema.ts`.
+
+### Personas de Teste (Carga, Empréstimos e Casos Limite)
+
+Para testar o sistema com cenários realistas e estressar o desempenho da Estante e dos cálculos:
+
+```bash
+pnpm db:seed:personas
+```
+
+Todas as contas são criadas com a senha `senha-forte-123`:
+
+- **Arthur Whale** (`arthur.whale@exemplo.com`): 600 livros, múltiplos autores, gêneros, anos de leitura e 50 livros de meta. Ideal para testes de estresse de renderização, paginação e busca textual massiva.
+- **Mariana Empréstimos** (`mariana.emprestimos@exemplo.com`): 45 livros, sendo 15 emprestados para amigos variados. Ideal para testar devoluções rápidas, modal de empréstimos e alertas de atraso.
+- **Lucas Metas** (`lucas.metas@exemplo.com`): 80 livros com 35 leituras em 2026 e meta de 30 batida. Ideal para testar progresso de metas e anos de leitura no Painel.
+- **Zero Novato** (`zero.novato@exemplo.com`): 0 livros. Ideal para testar telas vazias (*empty states*), onboarding e sincronização inicial.
 
 ### E-mails em desenvolvimento
 

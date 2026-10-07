@@ -38,7 +38,13 @@ export async function waitForEmail(
     const found = content
       .split("\n")
       .filter(Boolean)
-      .map((l) => JSON.parse(l))
+      .flatMap((l) => {
+        try {
+          return [JSON.parse(l)];
+        } catch {
+          return [];
+        }
+      })
       .reverse()
       .find((m) => m.to === to && (!subject || m.subject.includes(subject)));
     if (found) {
