@@ -121,11 +121,36 @@ export function BookCard({
         {b.status === "emprestado" && b.borrower ? (
           <LentBadge borrower={b.borrower} className="mt-0.5 py-0.5" />
         ) : null}
-        <StatusSelect
-          className="mt-2 self-start"
-          onChange={(k) => app.setStatus(b, k)}
-          value={b.status}
-        />
+        <div className="mt-2 flex items-center gap-1.5 self-start">
+          <StatusSelect
+            onChange={(k) => app.setStatus(b, k)}
+            value={b.status}
+          />
+          <button
+            aria-label={
+              b.status === "lido"
+                ? "Marcar como não lido"
+                : b.status === "lendo"
+                  ? "Concluir leitura"
+                  : "Começar a ler"
+            }
+            className="flex size-7 items-center justify-center rounded-full border border-line2 bg-card text-ink text-xs transition-colors hover:border-ink hover:text-acc active:scale-95"
+            onClick={(e) => {
+              e.stopPropagation();
+              app.cycleStatus(b);
+            }}
+            title={
+              b.status === "lido"
+                ? "Marcar como não lido"
+                : b.status === "lendo"
+                  ? "Concluir leitura"
+                  : "Começar a ler"
+            }
+            type="button"
+          >
+            {b.status === "lido" ? "↺" : b.status === "lendo" ? "✓" : "▶"}
+          </button>
+        </div>
       </div>
     </div>
   );

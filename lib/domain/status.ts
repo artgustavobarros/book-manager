@@ -40,3 +40,18 @@ export function stat(k: string | null | undefined): StatusInfo {
 export function isBookStatus(k: unknown): k is BookStatus {
   return STATUS.some((s) => s.k === k);
 }
+
+/**
+ * Cicla o status de leitura para a próxima etapa:
+ * nao-lido -> lendo -> lido -> nao-lido
+ * (outros status retornam para nao-lido)
+ */
+export function nextReadingStatus(current: BookStatus): BookStatus {
+  if (current === "nao-lido") {
+    return "lendo";
+  }
+  if (current === "lendo") {
+    return "lido";
+  }
+  return "nao-lido";
+}

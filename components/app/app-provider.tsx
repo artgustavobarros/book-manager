@@ -17,7 +17,7 @@ import {
 import { BOOKS_KEY, useBookActions } from "@/hooks/use-books";
 import { api } from "@/lib/client/api";
 import { createLatestSaver } from "@/lib/client/latest-saver";
-import { stat } from "@/lib/domain/status";
+import { nextReadingStatus, stat } from "@/lib/domain/status";
 import type { Book, BookStatus } from "@/lib/domain/types";
 import type { Theme } from "@/lib/theme";
 
@@ -57,6 +57,7 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   closeLend: () => void;
   closeModal: () => void;
   confirmLend: (book: Book, borrower: string) => void;
+  cycleStatus: (book: Book) => void;
   finish: (book: Book) => void;
   goal: number;
   initials: string;
@@ -73,10 +74,12 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   setSurpriseOpen: (v: boolean) => void;
   setSyncOpen: (v: boolean) => void;
   setUser: (patch: Partial<AppUser>) => void;
+  startReading: (book: Book) => void;
   surpriseOpen: boolean;
   syncOpen: boolean;
   toggleFavorite: (book: Book) => void;
   toggleRead: (book: Book) => void;
+  undoRead: (book: Book) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -159,12 +162,65 @@ function AppState({
       const patch: Partial<Book> = { status: k, borrower: null };
       if (k === "lido" && !book.yearRead) {
         patch.yearRead = initial.year;
+      } else if (k === "nao-lido") {
+        patch.yearRead = null;
       }
       void actions
         .update(book.id, patch)
         .then((ok) => ok && toast(book.title + " → " + stat(k).label));
     },
     [actions, initial.year]
+  );
+
+  const cycleStatus = useCallback(
+    (book: Book) => {
+      const nextStatus = nextReadingStatus(book.status);
+      const patch: Partial<Book> = { status: nextStatus };
+
+      if (nextStatus === "lido") {
+        patch.yearRead = book.yearRead || initial.year;
+      } else if (nextStatus === "nao-lido") {
+        patch.yearRead = null;
+        patch.borrower = null;
+      }
+
+      void actions.update(book.id, patch).then((ok) => {
+        if (!ok) {
+          return;
+        }
+        if (nextStatus === "lido") {
+          toast(book.title + " marcado como lido");
+        } else if (nextStatus === "nao-lido") {
+          toast(book.title + " marcado como não lido");
+        } else {
+          toast("Boa leitura: " + book.title);
+        }
+      });
+    },
+    [actions, initial.year]
+  );
+
+  const undoRead = useCallback(
+    (book: Book) => {
+      void actions
+        .update(book.id, {
+          status: "nao-lido",
+          yearRead: null,
+        })
+        .then((ok) => ok && toast(book.title + " marcado como não lido"));
+    },
+    [actions]
+  );
+
+  const startReading = useCallback(
+    (book: Book) => {
+      void actions
+        .update(book.id, {
+          status: "lendo",
+        })
+        .then((ok) => ok && toast("Boa leitura: " + book.title));
+    },
+    [actions]
   );
 
   const value: AppContextValue = useMemo(
@@ -219,6 +275,9 @@ function AppState({
       },
       toggleRead: (book) =>
         setStatus(book, book.status === "lido" ? "nao-lido" : "lido"),
+      cycleStatus,
+      undoRead,
+      startReading,
       finish: (book) => {
         void actions
           .update(book.id, {
@@ -242,6 +301,9 @@ function AppState({
       syncOpen,
       lendFor,
       setStatus,
+      cycleStatus,
+      undoRead,
+      startReading,
       actions,
     ]
   );
