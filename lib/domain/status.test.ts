@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isBookStatus, STATUS, stat } from "./status";
+import { isBookStatus, nextReadingStatus, STATUS, stat } from "./status";
 
 describe("status", () => {
   it("tem os 6 status na ordem do design", () => {
@@ -20,5 +20,12 @@ describe("status", () => {
   it("valida chaves", () => {
     expect(isBookStatus("lido")).toBe(true);
     expect(isBookStatus("Lido")).toBe(false);
+  });
+  it("cicla status de leitura corretamente", () => {
+    expect(nextReadingStatus("nao-lido")).toBe("lendo");
+    expect(nextReadingStatus("lendo")).toBe("lido");
+    expect(nextReadingStatus("lido")).toBe("nao-lido");
+    expect(nextReadingStatus("abandonado")).toBe("nao-lido");
+    expect(nextReadingStatus("emprestado")).toBe("nao-lido");
   });
 });

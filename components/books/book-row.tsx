@@ -9,7 +9,7 @@ import { MiniCover } from "./mini-cover";
 import { StatusSelect } from "./status-select";
 
 export const LIST_COLUMNS =
-  "grid grid-cols-[40px_36px_minmax(0,2fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_52px_100px_128px_68px] gap-3 px-5 py-3 max-[640px]:grid-cols-[40px_minmax(0,1fr)_auto] max-[640px]:gap-x-3 max-[640px]:gap-y-1 max-[640px]:px-3";
+  "grid grid-cols-[40px_36px_minmax(0,2fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_52px_100px_128px_96px] gap-3 px-5 py-3 max-[640px]:grid-cols-[40px_minmax(0,1fr)_auto] max-[640px]:gap-x-3 max-[640px]:gap-y-1 max-[640px]:px-3";
 
 /** Linha da vista "Lista". */
 export function BookRow({
@@ -90,6 +90,30 @@ export function BookRow({
         value={b.status}
       />
       <span className="flex justify-end gap-1 max-[640px]:col-start-3 max-[640px]:row-start-3">
+        <button
+          aria-label={
+            b.status === "lido"
+              ? "Marcar como não lido"
+              : b.status === "lendo"
+                ? "Concluir leitura"
+                : "Começar a ler"
+          }
+          className="size-7 rounded-md border border-line2 bg-card text-ink text-xs hover:border-ink max-[640px]:size-9"
+          onClick={(e) => {
+            e.stopPropagation();
+            app.cycleStatus(b);
+          }}
+          title={
+            b.status === "lido"
+              ? "Marcar como não lido"
+              : b.status === "lendo"
+                ? "Concluir leitura"
+                : "Começar a ler"
+          }
+          type="button"
+        >
+          {b.status === "lido" ? "↺" : b.status === "lendo" ? "✓" : "▶"}
+        </button>
         <button
           aria-label="Editar"
           className="size-7 rounded-md border border-line2 bg-card text-ink text-sm hover:border-ink max-[640px]:size-9"

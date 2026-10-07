@@ -304,4 +304,27 @@ test.describe("acervo", () => {
     ]);
     expect(json.suggestedFilename()).toMatch(/\.json$/);
   });
+
+  test("ações rápidas de status na Estante e no Painel", async ({ page }) => {
+    // 1. No Painel: "Ler" nos últimos adicionados inicia a leitura
+    await page.goto("/");
+    const lerBtn = page
+      .getByRole("button", { name: /^Começar a ler / })
+      .first();
+    if (await lerBtn.isVisible()) {
+      await lerBtn.click();
+      await expect(page.getByText(/Boa leitura:/)).toBeVisible();
+    }
+
+    // 2. Na Estante: alternar status com botão de ciclo rápido
+    await page.goto("/estante");
+    const cycleBtn = page
+      .getByRole("button", {
+        name: /Começar a ler|Concluir leitura|Marcar como não lido/,
+      })
+      .first();
+    await expect(cycleBtn).toBeVisible();
+    await cycleBtn.click();
+    await expect(page.getByRole("status").first()).toBeVisible();
+  });
 });

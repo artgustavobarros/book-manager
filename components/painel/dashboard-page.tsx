@@ -157,14 +157,27 @@ export function DashboardPage() {
             {d.yearReads.length ? (
               <div className="flex flex-wrap gap-2">
                 {d.yearReads.map((b) => (
-                  <MiniCover
-                    as="button"
-                    book={b}
-                    className="h-14 w-9 rounded text-sm shadow-[var(--shadow-xs)] transition-transform duration-150 hover:-translate-y-[3px]"
-                    key={b.id}
-                    onClick={() => app.openView(b.id)}
-                    title={b.title}
-                  />
+                  <div className="group/item relative" key={b.id}>
+                    <MiniCover
+                      as="button"
+                      book={b}
+                      className="h-14 w-9 rounded text-sm shadow-[var(--shadow-xs)] transition-transform duration-150 hover:-translate-y-[3px]"
+                      onClick={() => app.openView(b.id)}
+                      title={b.title}
+                    />
+                    <button
+                      aria-label={`Desfazer leitura de ${b.title}`}
+                      className="absolute -top-1 -right-1 z-10 flex size-5 items-center justify-center rounded-full border border-line2 bg-card text-[10px] text-mute opacity-0 shadow transition-opacity hover:border-ink hover:text-ink group-focus-within/item:opacity-100 group-hover/item:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        app.undoRead(b);
+                      }}
+                      title="Desfazer marcação de lido"
+                      type="button"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -255,25 +268,44 @@ export function DashboardPage() {
             </div>
             <div className="flex flex-col gap-3">
               {d.recent.map((b) => (
-                <button
-                  className="-m-1 flex cursor-pointer items-center gap-3 rounded-lg border-0 bg-transparent p-1 text-left text-ink transition-[background-color] duration-150 hover:bg-hov"
+                <div
+                  className="-m-1 flex items-center gap-3 rounded-lg p-1 text-left text-ink transition-[background-color] duration-150 hover:bg-hov"
                   key={b.id}
-                  onClick={() => app.openView(b.id)}
-                  type="button"
                 >
-                  <MiniCover book={b} className="h-11 w-8 rounded text-xs" />
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate font-semibold text-sm">
-                      {b.title}
+                  <button
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left text-ink"
+                    onClick={() => app.openView(b.id)}
+                    type="button"
+                  >
+                    <MiniCover book={b} className="h-11 w-8 rounded text-xs" />
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="truncate font-semibold text-sm">
+                        {b.title}
+                      </span>
+                      <span className="truncate text-mute text-xs">
+                        {b.author || "Autor desconhecido"}
+                      </span>
                     </span>
-                    <span className="truncate text-mute text-xs">
-                      {b.author || "Autor desconhecido"}
+                  </button>
+                  {b.status === "nao-lido" ? (
+                    <button
+                      aria-label={`Começar a ler ${b.title}`}
+                      className="h-7 flex-none rounded-md border border-line2 bg-card px-2 font-semibold text-ink text-xs hover:border-ink hover:text-acc active:scale-95"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        app.startReading(b);
+                      }}
+                      title="Começar a ler"
+                      type="button"
+                    >
+                      Ler
+                    </button>
+                  ) : (
+                    <span className="flex-none text-mute text-xs tabular-nums">
+                      {fmtDate(b.acquiredOn)}
                     </span>
-                  </span>
-                  <span className="flex-none text-mute text-xs tabular-nums">
-                    {fmtDate(b.acquiredOn)}
-                  </span>
-                </button>
+                  )}
+                </div>
               ))}
             </div>
           </section>
