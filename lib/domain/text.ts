@@ -60,3 +60,39 @@ export function clean(s: string | null | undefined): string | null {
 export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+/**
+ * Rótulo de tempo decorrido desde o empréstimo (ex: "hoje", "há 5 dias", "há 2 meses").
+ * Retorna null se a data for inválida ou ausente.
+ */
+export function lentDurationLabel(
+  d: string | Date | null | undefined,
+  now: Date = new Date()
+): string | null {
+  if (!d) {
+    return null;
+  }
+  const lentDate =
+    typeof d === "string" ? new Date(d.includes("T") ? d : `${d}T00:00:00`) : d;
+  if (Number.isNaN(lentDate.getTime())) {
+    return null;
+  }
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const diffDays = Math.floor((now.getTime() - lentDate.getTime()) / msPerDay);
+
+  if (diffDays <= 0) {
+    return "hoje";
+  }
+  if (diffDays === 1) {
+    return "há 1 dia";
+  }
+  if (diffDays < 30) {
+    return `há ${diffDays} dias`;
+  }
+  const months = Math.floor(diffDays / 30);
+  if (months === 1) {
+    return "há 1 mês";
+  }
+  return `há ${months} meses`;
+}
