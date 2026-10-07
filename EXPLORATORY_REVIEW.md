@@ -99,3 +99,43 @@ As 4 propostas foram criadas no sistema OpenSpec (`openspec/changes/`) na ordem 
   - Existência do comando `pnpm db:seed:personas`.
   - Geração de perfis determinísticos (`arthur.whale`, `mariana.emprestimos`, `lucas.metas`, `zero.novato`).
   - Teste de carga no Playwright validando tempo de resposta aceitável na Estante com 500+ livros.
+
+---
+
+## 4. Status de Execução e Pull Requests Abertos
+
+Todas as 4 propostas foram implementadas e submetidas em branches individuais, mantendo a branch `main` limpa e sem commits diretos:
+
+| Proposta | Branch | Pull Request | Status |
+|---|---|---|---|
+| `quick-book-status-actions` | `quick-book-status-actions` | [#1](https://github.com/artgustavobarros/book-manager/pull/1) | Aberto & Verificado |
+| `book-lending-management` | `book-lending-management` | [#2](https://github.com/artgustavobarros/book-manager/pull/2) | Aberto & Verificado |
+| `mobile-shelf-experience` | `mobile-shelf-experience` | [#3](https://github.com/artgustavobarros/book-manager/pull/3) | Aberto & Verificado |
+| `stress-test-fixtures` | `stress-test-fixtures` | [#4](https://github.com/artgustavobarros/book-manager/pull/4) | Aberto & Verificado |
+
+### Resumo das Entregas
+
+1. **PR #1 — `quick-book-status-actions`:**
+   - Botão rápido de ciclo de status (`cycleStatus`) nos cards de capa e nas linhas da tabela.
+   - Ação rápida "Ler" no carrossel de livros recentes do Painel.
+   - Desfazer leitura no grid anual de leituras do Painel (`undoRead`).
+   - Helper de domínio `nextReadingStatus` testado com 100% de cobertura.
+
+2. **PR #2 — `book-lending-management`:**
+   - Helper de domínio `lentDurationLabel` calculando tempo relativo ("há 12 dias", "há 2 meses").
+   - Ação atômica de devolução em 1 clique (`returnBook`) no badge do card e na lista.
+   - Modal de detalhes dos empréstimos ativos acionado ao clicar no card de KPI do Painel.
+   - Testes unitários e testes E2E do fluxo de empréstimo e devolução.
+
+3. **PR #3 — `mobile-shelf-experience`:**
+   - Auto-foco imperativo no input de busca ao abrir a pesquisa no header mobile.
+   - Touch targets WCAG (mínimo 44px) nos botões de ordenação (`SortMenu`), abas e cards.
+   - Layout do diálogo modal com altura dinâmica (`dvh`) e rodapé sticky para botões "Salvar" e "Cancelar" durante a digitação no celular.
+   - Teste E2E mobile cobrindo abertura e foco automático.
+
+4. **PR #4 — `stress-test-fixtures`:**
+   - Script `pnpm db:seed:personas` (`scripts/seed-personas.ts`) com geração idempotente das 4 contas (Arthur Whale 600 livros, Mariana Empréstimos, Lucas Metas e Zero Novato).
+   - Teste E2E de estresse (`tests/e2e/stress.spec.ts`) validando tempo de renderização, paginação, filtros e busca textual com 600 livros.
+   - Tratamento de leitura concorrente no outbox de e-mails em `tests/support/db.ts` e `tests/support/e2e.ts`.
+   - Documentação de uso das personas no `README.md`.
+
