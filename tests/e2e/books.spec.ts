@@ -331,4 +331,15 @@ test.describe("acervo", () => {
     await cycleBtn.click();
     await expect(page.getByRole("status").first()).toBeVisible();
   });
+
+  test("busca mobile auto-foca input ao abrir", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/estante");
+    const openSearchBtn = page.getByRole("button", { name: "Abrir busca" });
+    await expect(openSearchBtn).toBeVisible();
+    await openSearchBtn.click();
+    const searchInput = page.getByRole("textbox", { name: "Buscar no acervo" });
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toBeFocused();
+  });
 });

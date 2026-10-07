@@ -116,14 +116,14 @@ function Modal({
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay
             className={cn(
-              "fixed inset-0 z-30 flex animate-acv-fade items-start justify-center overflow-y-auto bg-black/45 px-5 py-10",
+              "fixed inset-0 z-30 flex animate-acv-fade items-start justify-center overflow-y-auto bg-black/45 px-5 py-10 max-[640px]:p-2",
               veilClassName
             )}
             data-slot="modal-veil"
           >
             <DialogPrimitive.Content
               className={cn(
-                "w-full animate-acv-rise overflow-hidden rounded-2xl bg-card text-ink shadow-modal outline-none",
+                "w-full animate-acv-rise overflow-hidden rounded-2xl bg-card text-ink shadow-modal outline-none max-[640px]:max-h-[calc(100dvh-16px)] max-[640px]:overflow-y-auto",
                 className
               )}
               data-slot="modal"

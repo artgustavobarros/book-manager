@@ -45,7 +45,7 @@ function SortMenu({
     <Popover.Root onOpenChange={setOpen} open={open}>
       <Popover.Trigger asChild>
         <button
-          className="flex h-9 items-center gap-2 rounded-full border border-line2 bg-card pr-3 pl-4 text-ink text-sm transition-[border-color] duration-200 hover:border-ink"
+          className="flex h-9 items-center gap-2 rounded-full border border-line2 bg-card pr-3 pl-4 text-ink text-sm transition-[border-color] duration-200 hover:border-ink max-[640px]:min-h-11"
           type="button"
         >
           <span className="text-mute">Ordenar</span>
@@ -214,7 +214,7 @@ export function ShelfPage() {
               <button
                 aria-pressed={on}
                 className={cn(
-                  "flex h-8 items-center gap-2 rounded-full border px-3 font-medium text-sm transition-[background-color,color,border-color] duration-200 active:scale-95",
+                  "flex h-8 items-center gap-2 rounded-full border px-3 font-medium text-sm transition-[background-color,color,border-color] duration-200 active:scale-95 max-[640px]:min-h-10",
                   on
                     ? "border-ink bg-ink text-card"
                     : "border-line2 bg-card text-ink"
