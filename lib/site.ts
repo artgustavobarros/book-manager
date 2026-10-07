@@ -7,6 +7,6 @@ export const SITE_DESCRIPTION =
 
 /** Fundo da página em cada tema (`--bg` em app/styles/tokens/colors.css). */
 export const THEME_COLOR: Record<Theme, string> = {
-  light: "#f4f2ee",
-  dark: "#161513",
+  light: "#f4eee3",
+  dark: "#171312",
 };

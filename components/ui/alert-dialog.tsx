@@ -45,7 +45,7 @@ export function ConfirmDialog({
                 : undefined
             }
           >
-            <AlertDialogPrimitive.Title className="m-0 font-bold text-xl">
+            <AlertDialogPrimitive.Title className="m-0 font-bold font-title text-xl">
               {title}
             </AlertDialogPrimitive.Title>
             <AlertDialogPrimitive.Description className="m-0 text-mute text-sm leading-[1.5]">
@@ -57,7 +57,7 @@ export function ConfirmDialog({
               </AlertDialogPrimitive.Cancel>
               <AlertDialogPrimitive.Action asChild>
                 <Button
-                  className={destructive ? "bg-acc hover:bg-ink" : undefined}
+                  className={destructive ? "bg-acc hover:bg-acc2" : undefined}
                   onClick={onConfirm}
                   variant="primary"
                 >

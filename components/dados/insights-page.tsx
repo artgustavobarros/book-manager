@@ -119,9 +119,7 @@ function EmptyInsights() {
   const backup = useBackup();
   return (
     <PageMain>
-      <h1 className="m-0 font-bold text-3xl tracking-[-.025em]">
-        Dados do acervo
-      </h1>
+      <h1 className="m-0 font-bold font-title text-3xl">Dados do acervo</h1>
       <div className="flex min-h-[360px] flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-line bg-card px-5 py-16 text-center">
         <span aria-hidden="true" className="mb-2 flex h-11 items-end gap-1">
           <span className="h-5 w-3 rounded-[2px] bg-line2" />
@@ -137,7 +135,7 @@ function EmptyInsights() {
         </span>
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           <button
-            className="h-10 rounded-lg border-0 bg-ink px-5 font-semibold text-card text-sm hover:bg-acc"
+            className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
             onClick={() => app.openEdit(null)}
             type="button"
           >
@@ -207,9 +205,7 @@ function FullInsights() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-mute text-sm">{d.scopeCaption}</span>
-          <h1 className="m-0 font-bold text-3xl tracking-[-.025em]">
-            Dados do acervo
-          </h1>
+          <h1 className="m-0 font-bold font-title text-3xl">Dados do acervo</h1>
         </div>
         <Segmented<InsightScope>
           className="rounded-lg p-1"
@@ -242,7 +238,7 @@ function FullInsights() {
             style={{ animationDelay: i * 50 + "ms" }}
           >
             <span className="font-medium text-mute text-xs">{k.label}</span>
-            <span className="font-bold text-3xl tabular-nums leading-none tracking-[-.025em]">
+            <span className="font-bold font-title text-3xl tabular-nums leading-none">
               {k.value}
             </span>
             <span className="text-mute text-xs leading-[1.4]">{k.sub}</span>
@@ -323,7 +319,7 @@ function FullInsights() {
               }}
             >
               <div className="absolute inset-6 flex flex-col items-center justify-center rounded-full bg-card">
-                <span className="font-bold text-2xl tabular-nums tracking-[-.025em]">
+                <span className="font-bold font-title text-2xl tabular-nums">
                   {d.donutTotal}
                 </span>
                 <span className="text-mute text-xs">livros</span>

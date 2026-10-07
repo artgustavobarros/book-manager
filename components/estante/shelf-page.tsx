@@ -176,7 +176,7 @@ export function ShelfPage() {
               : nf(list.length) + " de " + nf(books.length)) +
               (books.length === 1 ? " livro" : " livros")}
           </span>
-          <h1 className="m-0 font-bold text-3xl tracking-[-.025em]">Estante</h1>
+          <h1 className="m-0 font-bold font-title text-3xl">Estante</h1>
         </div>
         {shelfEmpty ? null : (
           <div className="flex flex-wrap items-center gap-2">
@@ -244,7 +244,7 @@ export function ShelfPage() {
         >
           <div className="mt-3 flex flex-wrap justify-center gap-2">
             <button
-              className="h-10 rounded-lg border-0 bg-ink px-5 font-semibold text-card text-sm hover:bg-acc"
+              className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
               onClick={() => app.openEdit(null)}
               type="button"
             >
@@ -435,7 +435,9 @@ export function ShelfPage() {
         onConfirm={() => {
           const b = toDelete!;
           setToDelete(null);
-          void remove(b.id).then((ok) => ok && toast("Livro excluído"));
+          void remove(b.id).then(
+            (ok) => ok && toast("Livro excluído", { type: "info" })
+          );
         }}
         onOpenChange={(o) => !o && setToDelete(null)}
         open={!!toDelete}

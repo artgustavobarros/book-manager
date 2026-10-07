@@ -31,7 +31,7 @@ test.describe("acervo", () => {
       dialog.getByRole("heading", { name: "Registrar livro" })
     ).toBeVisible();
     await dialog.getByLabel("Título *").fill("Livro de Teste E2E");
-    await dialog.getByLabel("Autor(a) *").fill("Autora Teste");
+    await dialog.getByLabel("Autor(a) (opcional)").fill("Autora Teste");
     await dialog.getByLabel("Páginas").fill("123");
     await dialog.getByLabel("Data de aquisição").fill("2026-06-14");
     await dialog.getByRole("button", { name: "Salvar" }).click();
@@ -104,6 +104,120 @@ test.describe("acervo", () => {
     await expect(dialog.getByLabel("Gênero da obra")).toHaveValue("Romance");
     await expect(dialog.getByLabel("Ano de lançamento")).toHaveValue("2019");
     await expect(dialog.getByLabel("Páginas")).toHaveValue("264");
+  });
+
+  test("Gênero da obra sugere, filtra sem acento e aceita gênero novo", async ({
+    page,
+  }) => {
+    await page.goto("/estante?ordem=recentes");
+    await page.getByRole("button", { name: "+ Registrar livro" }).click();
+    const dialog = page.getByRole("dialog");
+    const genre = dialog.getByLabel("Gênero da obra");
+
+    await genre.click();
+    await page.getByRole("option", { name: "Fantasia", exact: true }).click();
+    await expect(page.getByRole("listbox")).toHaveCount(0);
+    await expect(genre).toHaveValue("Fantasia");
+
+    await genre.fill("ficcao");
+    await expect(
+      page.getByRole("option", { name: "Ficção científica e distopia" })
+    ).toBeVisible();
+    for (const text of await page.getByRole("option").allInnerTexts()) {
+      expect(text).toMatch(/ficção/i);
+    }
+
+    // Esc fecha só a lista, não o modal.
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("listbox")).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+    await expect(genre).toBeFocused();
+
+    await genre.fill("Cordel");
+    await expect(
+      page.getByText("Nenhuma sugestão. O gênero fica como digitado.")
+    ).toBeVisible();
+    await dialog.getByLabel("Título *").fill("Livro Gênero E2E");
+    await dialog.getByLabel("Data de aquisição").fill("2026-06-14");
+    await dialog.getByRole("button", { name: "Salvar" }).click();
+    await expect(page.getByText("Livro registrado no acervo")).toBeVisible();
+
+    await page.reload();
+    await page.getByText("Livro Gênero E2E", { exact: true }).nth(1).click();
+    const ficha = page.getByRole("dialog");
+    await expect(ficha.getByText("Cordel", { exact: true })).toBeVisible();
+    await ficha.getByRole("button", { name: "Excluir livro" }).click();
+    await ficha.getByRole("button", { name: "Confirmar exclusão" }).click();
+    await expect(page.getByText("Livro excluído")).toBeVisible();
+  });
+
+  test("Gênero do autor(a) e Nacionalidade usam combobox; toast fecha", async ({
+    page,
+  }) => {
+    await page.goto("/estante?ordem=recentes");
+    await page.getByRole("button", { name: "+ Registrar livro" }).click();
+    const dialog = page.getByRole("dialog");
+
+    const gender = dialog.getByRole("combobox", { name: /Gênero do autor/ });
+    await gender.click();
+    await page.getByRole("option", { name: "Mulher", exact: true }).click();
+    await expect(page.getByRole("listbox")).toHaveCount(0);
+    await expect(gender).toContainText("Mulher");
+
+    const nationality = dialog.getByLabel("Nacionalidade do autor");
+    await nationality.fill("nige");
+    await expect(
+      page.getByRole("option", { name: "nigeriana", exact: true })
+    ).toBeVisible();
+    await nationality.fill("cabo-verdiana");
+    await page
+      .getByRole("option", { name: "Adicionar “cabo-verdiana”" })
+      .click();
+    await expect(page.getByRole("listbox")).toHaveCount(0);
+    await expect(nationality).toHaveValue("cabo-verdiana");
+
+    await dialog.getByLabel("Título *").fill("Livro Combobox E2E");
+    await dialog.getByLabel("Data de aquisição").fill("2026-06-14");
+    await dialog.getByRole("button", { name: "Salvar" }).click();
+    await expect(page.getByText("Livro registrado no acervo")).toBeVisible();
+    await page.getByRole("button", { name: "Fechar notificação" }).click();
+    await expect(page.getByText("Livro registrado no acervo")).toHaveCount(0);
+
+    await page.reload();
+    await page.getByText("Livro Combobox E2E", { exact: true }).nth(1).click();
+    const ficha = page.getByRole("dialog");
+    await expect(ficha.getByText("Mulher", { exact: true })).toBeVisible();
+    await expect(
+      ficha.getByText("Cabo-verdiana", { exact: true })
+    ).toBeVisible();
+    await ficha.getByRole("button", { name: "Excluir livro" }).click();
+    await ficha.getByRole("button", { name: "Confirmar exclusão" }).click();
+    await expect(page.getByText("Livro excluído")).toBeVisible();
+  });
+
+  test("restaurar arquivo inválido mostra toast de erro com nota", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const [chooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Restaurar backup" }).click(),
+    ]);
+    await chooser.setFiles({
+      name: "backup.json",
+      mimeType: "application/json",
+      buffer: Buffer.from("isto não é json"),
+    });
+    // O toast de erro fica na região `alert` (as outras ficam em `status`).
+    const alert = page.getByRole("alert");
+    await expect(
+      alert.getByText("Não foi possível restaurar o backup")
+    ).toBeVisible();
+    await expect(
+      alert.getByText(
+        "O arquivo escolhido não é um backup válido da Bodega Literária."
+      )
+    ).toBeVisible();
   });
 
   test("Salvar fica inativo sem título e números são validados", async ({

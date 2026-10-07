@@ -111,14 +111,14 @@ export async function openApp(
 }
 
 /**
- * Casos que divergem de propósito do standalone em design/handoff (change
- * fix-bugs-seo-mobile, layout do design de 2026-10-02): saem do oráculo e passam a ter
- * baselines próprias em diverged.spec.ts.
- * - mobile: header compacto não fixo, botões flutuantes e Estante em 1 coluna.
- * - estante/desktop: sem o selo de status sobre a capa.
+ * Casos que divergem de propósito do standalone em design/handoff: saem do oráculo e
+ * passam a ter baselines próprias em diverged.spec.ts. O standalone da identidade bordô
+ * (change nova-identidade-visual) já tem header compacto, botões flutuantes e Estante em
+ * 1 coluna; no mobile continuam diferentes os ajustes do app: pontos do carrossel maiores
+ * (alvo de toque), contadores dos chips com mais contraste, selo da meta na linha do
+ * título, lista responsiva, "Cor/etnia do autor(a)" na ficha e o rodapé.
  */
 export const DIVERGED = new Set([
-  "estante/desktop",
   "painel/mobile",
   "estante/mobile",
   "estante-lista/mobile",

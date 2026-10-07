@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Fonte: os mesmos arquivos do handoff (métricas idênticas ao design). */
+/* Fontes: os mesmos arquivos do handoff (métricas idênticas ao design). */
 @import "./styles/fonts.css";
 
 /* Tokens do design handoff (design/handoff/tokens), copiados sem alteração. */
@@ -33,8 +33,8 @@
 }
 
 @theme inline {
-  --font-sans: "Hanken Grotesk", system-ui, sans-serif;
-  --font-heading: "Hanken Grotesk", system-ui, sans-serif;
+  --font-sans: "Instrument Sans", "Helvetica Neue", sans-serif;
+  --font-heading: "Fraunces", Georgia, serif;
 
   /* Paleta da Bodega */
   --color-bg: var(--bg);
@@ -49,6 +49,9 @@
   --color-row: var(--row);
   --color-hdr: var(--hdr);
   --color-acc: var(--acc);
+  --color-acc2: var(--acc2);
+  --color-onacc: var(--onacc);
+  --color-ouro: var(--ouro);
   --color-lentbg: var(--lentbg);
   --color-lentfg: var(--lentfg);
 
@@ -64,6 +67,12 @@
   --color-warning-bg: var(--warning-bg);
   --color-warning-fg: var(--warning-fg);
 
+  --color-toast-success: var(--toast-success);
+  --color-toast-error: var(--toast-error);
+  --color-toast-warning: var(--toast-warning);
+  --color-toast-warning-tint: var(--toast-warning-tint);
+  --color-toast-info: var(--toast-info);
+
   /*
    * Variáveis semânticas do shadcn/ui apontando para os tokens da Bodega.
    * Mapeadas direto aqui (e não redefinindo --card/--ring/--radius em :root)
@@ -75,15 +84,15 @@
   --color-card-foreground: var(--ink);
   --color-popover: var(--card);
   --color-popover-foreground: var(--ink);
-  --color-primary: var(--ink);
-  --color-primary-foreground: var(--card);
+  --color-primary: var(--acc);
+  --color-primary-foreground: var(--onacc);
   --color-secondary: var(--soft);
   --color-secondary-foreground: var(--ink);
   --color-muted: var(--soft);
   --color-muted-foreground: var(--mute);
   --color-accent: var(--hov);
   --color-accent-foreground: var(--ink);
-  --color-destructive: var(--acc);
+  --color-destructive: var(--toast-error);
   --color-border: var(--line2);
   --color-input: var(--line2);
   --color-ring: var(--focus-ring);
@@ -103,6 +112,7 @@
   --animate-acv-fade: acv-fade 0.2s ease both;
   --animate-acv-rise: acv-rise 0.3s var(--ease-emphasized) both;
   --animate-acv-toast: acv-toast 0.3s var(--ease-emphasized) both;
+  --animate-acv-toast-in: acv-toast-in 320ms var(--ease-emphasized) both;
   --animate-acv-dot: acv-dot 1s infinite ease-in-out;
   --animate-acv-grow-x: acv-grow-x 0.7s var(--ease-emphasized) both;
   --animate-acv-grow-y: acv-grow-y 0.7s var(--ease-emphasized) both;
@@ -130,11 +140,11 @@
   }
 
   a {
-    color: var(--ink);
+    color: var(--acc);
   }
 
   a:hover {
-    color: var(--acc);
+    color: var(--acc2);
   }
 
   button:not(:disabled),
@@ -166,6 +176,12 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Títulos em Fraunces: o design aplica letter-spacing -0.01em junto com a fonte. */
+@utility font-title {
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
 }
 
 @utility scrollbar-none {

@@ -31,10 +31,11 @@ const MAX_DIFF = 0.01;
 /**
  * Desvios intencionais em relação ao standalone, com o motivo. Fora destes, vale 1%.
  * - edicao/mobile: o campo novo "Cor/etnia do autor(a)" divide a linha da Editora
- *   (no grid de 2 colunas isso desloca os campos seguintes).
+ *   (no grid de 2 colunas isso desloca os campos seguintes) e os combobox usam a seta
+ *   do app em vez do chevron desenhado com bordas do standalone.
  */
 const KNOWN_DEVIATIONS: Record<string, number> = {
-  "edicao/mobile": 0.02,
+  "edicao/mobile": 0.025,
 };
 
 async function openOracle(
@@ -107,7 +108,11 @@ for (const vp of VIEWPORTS) {
   for (const theme of THEMES) {
     for (const c of CASES) {
       // Divergências intencionais têm baseline própria (diverged.spec.ts).
-      if (DIVERGED.has(`${c.name}/${vp.name}`)) {
+      // VISUAL_ORACLE_ALL=1 compara também essas com o standalone (para reavaliar a lista).
+      if (
+        DIVERGED.has(`${c.name}/${vp.name}`) &&
+        !process.env.VISUAL_ORACLE_ALL
+      ) {
         continue;
       }
       test(`${c.name} · ${vp.name} · ${theme}`, async ({ browser }, info) => {

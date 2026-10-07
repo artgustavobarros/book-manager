@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useBooks } from "@/hooks/use-books";
 
 import { useApp } from "./app-provider";
+import { useToastVisible } from "./toast";
 
 /** Abaixo disso os botões sempre aparecem; acima, rolar para baixo os esconde. */
 const TOP_ZONE = 80;
@@ -43,7 +44,9 @@ function useHideOnScroll() {
 export function MobileFabs() {
   const app = useApp();
   const books = useBooks();
-  const hidden = useHideOnScroll();
+  // Com um toast na tela os botões ficam visíveis: o toast se alinha ao lado deles.
+  const toastVisible = useToastVisible();
+  const hidden = useHideOnScroll() && !toastVisible;
   const canSurprise = books.some((b) => b.status === "nao-lido");
 
   return (
@@ -80,7 +83,7 @@ export function MobileFabs() {
       )}
       <button
         aria-label="Registrar livro"
-        className="flex size-14 items-center justify-center rounded-full border-0 bg-ink font-normal text-[28px] text-card leading-none shadow-[0_8px_20px_-6px_rgba(27,26,23,.5)] transition-[background-color,transform] duration-200 active:scale-[.92] active:bg-acc"
+        className="flex size-14 items-center justify-center rounded-full border-0 bg-acc font-normal text-[28px] text-onacc leading-none shadow-[0_8px_20px_-6px_rgba(27,26,23,.5)] transition-[background-color,transform] duration-200 active:scale-[.92] active:bg-acc"
         onClick={() => app.openEdit(null)}
         title="Registrar livro"
         type="button"

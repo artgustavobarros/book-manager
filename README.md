@@ -127,4 +127,4 @@ A opção **Desativar** para as novas cópias não apaga as abas antigas. Exclui
 
 ## Licenças
 
-O código é deste projeto. A fonte Hanken Grotesk é distribuída sob a SIL Open Font License 1.1 (ver [`public/fonts/hanken-grotesk/README.md`](public/fonts/hanken-grotesk/README.md)).
+O código é deste projeto. As fontes Instrument Sans e Fraunces são distribuídas sob a SIL Open Font License 1.1 (ver [`public/fonts/instrument-sans/README.md`](public/fonts/instrument-sans/README.md) e [`public/fonts/fraunces/README.md`](public/fonts/fraunces/README.md)).

@@ -27,7 +27,9 @@ export function useBookActions() {
     qc.setQueryData<Book[]>(BOOKS_KEY, (old) => fn(old ?? []));
   const fail = (prev: Book[]) => (error: Error) => {
     qc.setQueryData(BOOKS_KEY, prev);
-    toast(error.message || "Não foi possível salvar. Tente de novo.");
+    toast(error.message || "Não foi possível salvar. Tente de novo.", {
+      type: "error",
+    });
   };
 
   const update = useMutation({
@@ -59,7 +61,7 @@ export function useBookActions() {
     mutationFn: (fields: Patch & { title: string }) =>
       api.post<{ book: Book }>("/api/books", fields),
     onSuccess: ({ book }) => setBooks((bs) => [book, ...bs]),
-    onError: (e) => toast(e.message),
+    onError: (e) => toast(e.message, { type: "error" }),
   });
 
   const remove = useMutation({

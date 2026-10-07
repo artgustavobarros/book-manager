@@ -122,7 +122,7 @@ function ProfileSection() {
       ) : null}
       <div className="flex justify-end">
         <button
-          className="h-10 rounded-lg border-0 bg-ink px-5 font-semibold text-card text-sm hover:bg-acc"
+          className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
           disabled={form.formState.isSubmitting}
           type="submit"
         >
@@ -397,7 +397,7 @@ function AccountBody() {
             initials={app.initials}
           />
           <div className="flex min-w-0 flex-col gap-0.5">
-            <h2 className="m-0 font-bold text-xl">Minha conta</h2>
+            <h2 className="m-0 font-bold font-title text-xl">Minha conta</h2>
             <span className="truncate text-mute text-sm">
               {app.user.email || "Sem e-mail cadastrado"}
             </span>
@@ -423,7 +423,7 @@ function AccountBody() {
           const { error } = await authClient.signOut();
           if (error) {
             setLeaving(false);
-            return toast(authErrorMessage(error));
+            return toast(authErrorMessage(error), { type: "error" });
           }
           router.replace("/entrar");
           router.refresh();

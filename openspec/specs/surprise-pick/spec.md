@@ -38,11 +38,11 @@ O modal SHALL oferecer "Sortear entre" como um combobox pesquisável, com "Todos
 - **THEN** aparece "Não há livros “Não lido” nesta seleção."
 
 ### Requirement: Ações do sorteio
-O modal SHALL oferecer "📖 Começar a ler agora", que muda o status para `lendo`, fecha o modal e mostra o toast "📖 Boa leitura: <título>", e "Editar ficha", que abre a edição do livro sorteado.
+O modal SHALL oferecer "📖 Começar a ler agora (mudar para “Lendo”)", que muda o status para `lendo`, fecha o modal e mostra o toast de sucesso "Boa leitura: <título>", sem emoji, e "Editar ficha", que abre a edição do livro sorteado.
 
 #### Scenario: Começar a ler
-- **WHEN** o usuário clica em "📖 Começar a ler agora"
-- **THEN** o livro passa a aparecer em "Lendo agora" no Painel
+- **WHEN** o usuário clica em "📖 Começar a ler agora (mudar para “Lendo”)"
+- **THEN** o livro passa a aparecer em "Lendo agora" no Painel e aparece o toast "Boa leitura: <título>"
 
 ### Requirement: Botão desabilitado sem candidatos
 O botão "Me surpreenda" do header SHALL ficar desabilitado, com o título "Nenhum livro não lido para sortear", quando não houver livros `nao-lido`.

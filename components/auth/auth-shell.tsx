@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import { BrandMark } from "@/components/brand/brand-mark";
+import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 
@@ -12,7 +12,7 @@ export async function AuthShell({ children }: { children: React.ReactNode }) {
       <ThemeToggle className="absolute top-4 right-4" initial={theme} />
       <div className="flex items-center gap-3">
         <BrandMark size="lg" />
-        <span className="font-bold text-xl">Bodega Literária</span>
+        <BrandWordmark size="lg" />
       </div>
       {children}
     </div>

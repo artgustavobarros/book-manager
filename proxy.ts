@@ -32,6 +32,6 @@ export const config = {
   // Tudo menos API, arquivos do Next, arquivos estáticos e as imagens de metadados
   // geradas (sem extensão no caminho), que robôs de preview buscam sem cookie.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|apple-icon|opengraph-image|twitter-image|.*\\.[a-zA-Z0-9]+$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|opengraph-image|twitter-image|.*\\.[a-zA-Z0-9]+$).*)",
   ],
 };

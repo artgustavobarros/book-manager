@@ -45,7 +45,14 @@ export default async function RootLayout({
         <link
           as="font"
           crossOrigin=""
-          href="/fonts/hanken-grotesk/latin.woff2"
+          href="/fonts/instrument-sans/latin.woff2"
+          rel="preload"
+          type="font/woff2"
+        />
+        <link
+          as="font"
+          crossOrigin=""
+          href="/fonts/fraunces/latin.woff2"
           rel="preload"
           type="font/woff2"
         />

@@ -5,7 +5,7 @@ import type * as React from "react";
 
 /**
  * Botões do Design System (seção "Botões"):
- * primário (tinta → terracota), contorno (inverte no hover), neutro (borda → tinta),
+ * primário (bordô → bordô-escuro), contorno (inverte no hover), neutro (borda → tinta),
  * ghost e link. Pressão encolhe para 97%; desabilitado 60%; formulário incompleto 40%
  * (use `aria-disabled`).
  */
@@ -15,7 +15,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "border-0 bg-ink text-card hover:bg-acc active:scale-[.97] aria-disabled:hover:bg-ink",
+          "border-0 bg-acc text-onacc hover:bg-acc2 active:scale-[.97] aria-disabled:hover:bg-acc",
         outline:
           "border border-ink bg-transparent text-ink hover:bg-ink hover:text-card active:scale-[.97]",
         neutral:

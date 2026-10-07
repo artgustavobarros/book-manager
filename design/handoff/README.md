@@ -7,8 +7,8 @@ Catálogo pessoal de livros físicos: Painel (indicadores, meta, leituras), Esta
 - `Bodega Literária.html` — app completo, arquivo único, abre offline no navegador.
 - `Bodega Literária – Design System.html` — referência visual: cores, tipografia, espaço, movimento, componentes e microinterações (interativo, tema claro/escuro).
 - `styles.css` — ponto de entrada dos tokens (só `@import`).
-- `tokens/colors.css` — paleta clara em `:root`, escura em `:root[data-theme="dark"]`, status e aliases semânticos.
-- `tokens/typography.css` — Hanken Grotesk (Google Fonts) e escala Tailwind (`--text-xs` 12px … `--text-5xl` 48px), pesos e tracking.
+- `tokens/colors.css` — paleta bordô/papel/ouro: clara em `:root`, escura em `:root[data-theme="dark"]`, status e aliases semânticos.
+- `tokens/typography.css` — Instrument Sans (interface) e Fraunces (títulos), Google Fonts, e escala Tailwind (`--text-xs` 12px … `--text-5xl` 48px), pesos e tracking.
 - `tokens/spacing.css` — espaçamento base 4px, alturas de controle, raios, sombras, container 1440px, breakpoint 640px.
 - `tokens/motion.css` — durações Tailwind, curvas e todos os `@keyframes` do app.
 - `source/` — código-fonte dos dois arquivos (abra com `support.js` na mesma pasta).

@@ -75,6 +75,52 @@ for (const vp of VIEWPORTS) {
         await snap(page, `emprestado-para-quem-${vp.name}`);
       });
 
+      test("toast de sucesso", async ({ page }) => {
+        await prepare(page);
+        await page.goto("/");
+        await Promise.all([
+          page.waitForEvent("download"),
+          page.getByRole("button", { name: "Exportar Excel (CSV)" }).click(),
+        ]);
+        await expect(page.getByText("Planilha CSV exportada")).toBeVisible();
+        await snap(page, `toast-sucesso-${vp.name}`);
+      });
+
+      test("toast de erro", async ({ page }) => {
+        await prepare(page);
+        await page.goto("/");
+        const [chooser] = await Promise.all([
+          page.waitForEvent("filechooser"),
+          page.getByRole("button", { name: "Restaurar backup" }).click(),
+        ]);
+        await chooser.setFiles({
+          name: "backup.json",
+          mimeType: "application/json",
+          buffer: Buffer.from("isto não é json"),
+        });
+        await expect(
+          page.getByText("Não foi possível restaurar o backup")
+        ).toBeVisible();
+        await snap(page, `toast-erro-${vp.name}`);
+      });
+
+      test("lista de nacionalidades da ficha", async ({ page }) => {
+        await prepare(page);
+        await page.goto("/estante");
+        await page
+          .getByRole("button", { name: "Registrar livro" })
+          .last()
+          .click();
+        await page
+          .getByRole("dialog")
+          .getByLabel("Nacionalidade do autor")
+          .click();
+        await expect(
+          page.getByRole("option", { name: "brasileira", exact: true })
+        ).toBeVisible();
+        await snap(page, `nacionalidades-${vp.name}`);
+      });
+
       test("lista de gêneros do Me surpreenda", async ({ page }) => {
         await prepare(page);
         await page.goto("/");

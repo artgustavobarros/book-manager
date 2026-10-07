@@ -3,16 +3,35 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "cn";
 import { useMemo, useRef, useState } from "react";
-import { type UseFormReturn, useForm, useWatch } from "react-hook-form";
+import {
+  Controller,
+  type UseFormReturn,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 
 import { useApp } from "@/components/app/app-provider";
 import { toast } from "@/components/app/toast";
+import {
+  Autocomplete,
+  AutocompleteContent,
+  AutocompleteEmpty,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@/components/ui/autocomplete";
 import {
   Modal,
   ModalClose,
   useModalClose,
   useModalDraft,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { useBookActions, useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import { useSingleFlight } from "@/hooks/use-single-flight";
@@ -21,7 +40,7 @@ import { coverColors, coverImage } from "@/lib/domain/cover";
 import { GENRES, suggestions } from "@/lib/domain/genres";
 import type { LookupResult } from "@/lib/domain/lookup";
 import { STATUS, stat } from "@/lib/domain/status";
-import { capitalize, fmtDate, nf } from "@/lib/domain/text";
+import { capitalize, fmtDate, nf, norm } from "@/lib/domain/text";
 import { BOOK_STATUSES, type Book, type BookStatus } from "@/lib/domain/types";
 import {
   type BookFormOutput,
@@ -108,7 +127,9 @@ function useDelete() {
   const { remove } = useBookActions();
   return (book: Book) => {
     app.closeModal();
-    void remove(book.id).then((ok) => ok && toast("Livro excluído"));
+    void remove(book.id).then(
+      (ok) => ok && toast("Livro excluído", { type: "info" })
+    );
   };
 }
 
@@ -153,7 +174,7 @@ function ViewModal({ book }: { book: Book }) {
             <span className="font-semibold text-mute text-xs tabular-nums">
               {book.orderNo ? "Nº " + book.orderNo + " do acervo" : ""}
             </span>
-            <h2 className="m-0 text-balance font-bold text-2xl leading-[1.15] tracking-[-.025em]">
+            <h2 className="m-0 text-balance font-bold font-title text-2xl leading-[1.15]">
               {book.title}
             </h2>
             <button
@@ -212,7 +233,7 @@ function ViewModal({ book }: { book: Book }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <DeleteButton onConfirm={() => del(book)} />
           <button
-            className="h-10 rounded-lg border-0 bg-ink px-5 font-semibold text-card text-sm hover:bg-acc"
+            className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
             onClick={() => app.openEdit(book.id)}
             type="button"
           >
@@ -248,6 +269,35 @@ function toFormValues(b: Book | null, orderNo: number): BookFormValues {
     notes: str(b?.notes),
     coverUrl: str(b?.coverUrl),
   };
+}
+
+/** Opções de "Gênero do autor(a)"; `null` é o "—" (campo vazio). */
+const AUTHOR_GENDERS = [
+  { value: null, label: "—" },
+  { value: "Homem", label: "Homem" },
+  { value: "Mulher", label: "Mulher" },
+  { value: "Não definido", label: "Não definido" },
+];
+
+/** Sugestão de autocomplete; `create` é o item "Adicionar “texto”" para um valor novo. */
+interface CreatableOption {
+  create?: boolean;
+  label: string;
+  value: string;
+}
+
+/** Sugestões + "Adicionar “texto”" quando o texto digitado ainda não está na lista. */
+function withCreate(options: string[], text: string): CreatableOption[] {
+  const items: CreatableOption[] = options.map((o) => ({ value: o, label: o }));
+  const typed = text.trim();
+  if (typed && !options.some((o) => norm(o) === norm(typed))) {
+    items.push({
+      value: typed,
+      label: "Adicionar “" + typed + "”",
+      create: true,
+    });
+  }
+  return items;
 }
 
 const fieldInput =
@@ -362,7 +412,7 @@ function OnlineSearch({
           value={sq}
         />
         <button
-          className="h-10 flex-none rounded-lg border-0 bg-ink px-4 font-semibold text-card text-sm hover:bg-acc disabled:cursor-wait disabled:opacity-60"
+          className="h-10 flex-none rounded-lg border-0 bg-acc px-4 font-semibold text-onacc text-sm hover:bg-acc2 disabled:cursor-wait disabled:opacity-60"
           disabled={loading}
           onClick={() => void run()}
           type="button"
@@ -445,6 +495,7 @@ function EditModal({ book }: { book: Book | null }) {
     }),
     [books]
   );
+  const formRef = useRef<HTMLFormElement>(null);
   const modalTitle = book ? "Editar ficha" : "Registrar livro";
   const err = (k: keyof BookFormValues) => formState.errors[k]?.message;
 
@@ -469,14 +520,19 @@ function EditModal({ book }: { book: Book | null }) {
   );
 
   return (
-    <form className="flex flex-wrap" noValidate onSubmit={onSubmit}>
+    <form
+      className="flex flex-wrap"
+      noValidate
+      onSubmit={onSubmit}
+      ref={formRef}
+    >
       <div
         className={cn(
           "hidden flex-[1_1_100%] items-center justify-between gap-3 px-5 pt-5 pb-4",
           "max-[640px]:flex"
         )}
       >
-        <h2 className="m-0 font-bold text-xl">{modalTitle}</h2>
+        <h2 className="m-0 font-bold font-title text-xl">{modalTitle}</h2>
         <ModalClose />
       </div>
       <CoverPanel
@@ -502,7 +558,7 @@ function EditModal({ book }: { book: Book | null }) {
             "max-[640px]:hidden"
           )}
         >
-          <h2 className="m-0 font-bold text-xl">{modalTitle}</h2>
+          <h2 className="m-0 font-bold font-title text-xl">{modalTitle}</h2>
           <ModalClose />
         </div>
 
@@ -530,25 +586,76 @@ function EditModal({ book }: { book: Book | null }) {
             <input {...register("author")} className={fieldInput} />
           </Field>
           <Field label="Gênero do autor(a)">
-            <select
-              {...register("authorGender")}
-              className={cn(fieldInput, "px-3")}
-            >
-              <option value="">—</option>
-              <option value="Homem">Homem</option>
-              <option value="Mulher">Mulher</option>
-              <option value="Não definido">Não definido</option>
-            </select>
+            <Controller
+              control={form.control}
+              name="authorGender"
+              render={({ field }) => (
+                <Select
+                  items={AUTHOR_GENDERS}
+                  onValueChange={(v) => field.onChange(v ?? "")}
+                  value={field.value || null}
+                >
+                  <SelectTrigger name={field.name} ref={field.ref} />
+                  <SelectContent container={formRef}>
+                    {AUTHOR_GENDERS.map((o) => (
+                      <SelectItem key={o.label} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </Field>
           <Field error={err("publisher")} label="Editora">
             <input {...register("publisher")} className={fieldInput} />
           </Field>
           <Field error={err("nationality")} label="Nacionalidade do autor">
-            <input
-              {...register("nationality")}
-              className={fieldInput}
-              list="nacionalidades"
-              placeholder="ex.: brasileira"
+            <Controller
+              control={form.control}
+              name="nationality"
+              render={({ field }) => (
+                <Autocomplete
+                  filter={(o: CreatableOption, query) =>
+                    o.create || norm(o.label).includes(norm(query))
+                  }
+                  items={withCreate(lists.nationalities, field.value)}
+                  itemToStringValue={(o: CreatableOption) => o.value}
+                  onValueChange={field.onChange}
+                  openOnInputClick
+                  value={field.value}
+                >
+                  <AutocompleteInput
+                    aria-invalid={!!err("nationality")}
+                    className="h-10 has-aria-invalid:border-acc"
+                    name={field.name}
+                    onBlur={field.onBlur}
+                    placeholder="ex.: brasileira"
+                    ref={field.ref}
+                  />
+                  <AutocompleteContent
+                    className="w-max min-w-(--anchor-width)"
+                    container={formRef}
+                  >
+                    <AutocompleteEmpty>
+                      Digite para adicionar uma nacionalidade.
+                    </AutocompleteEmpty>
+                    <AutocompleteList>
+                      {(o: CreatableOption) => (
+                        <AutocompleteItem
+                          className={cn(
+                            o.create && "border-soft border-t first:border-t-0"
+                          )}
+                          key={o.create ? "+" + o.value : o.value}
+                          value={o}
+                        >
+                          {o.label}
+                        </AutocompleteItem>
+                      )}
+                    </AutocompleteList>
+                  </AutocompleteContent>
+                </Autocomplete>
+              )}
             />
           </Field>
           <Field error={err("authorEthnicity")} label="Cor/etnia do autor(a)">
@@ -560,11 +667,43 @@ function EditModal({ book }: { book: Book | null }) {
             />
           </Field>
           <Field error={err("genre")} label="Gênero da obra">
-            <input
-              {...register("genre")}
-              className={fieldInput}
-              list="generos"
-              placeholder="ex.: Romance"
+            <Controller
+              control={form.control}
+              name="genre"
+              render={({ field }) => (
+                <Autocomplete
+                  filter={(g: string, query) => norm(g).includes(norm(query))}
+                  items={lists.genres}
+                  onValueChange={field.onChange}
+                  openOnInputClick
+                  value={field.value}
+                >
+                  <AutocompleteInput
+                    aria-invalid={!!err("genre")}
+                    className="h-10 has-aria-invalid:border-acc"
+                    name={field.name}
+                    onBlur={field.onBlur}
+                    placeholder="ex.: Romance"
+                    ref={field.ref}
+                  />
+                  {/* Mais larga que o campo quando preciso: a meia coluna do mobile quebrava os gêneros longos. */}
+                  <AutocompleteContent
+                    className="w-max min-w-(--anchor-width)"
+                    container={formRef}
+                  >
+                    <AutocompleteEmpty>
+                      Nenhuma sugestão. O gênero fica como digitado.
+                    </AutocompleteEmpty>
+                    <AutocompleteList>
+                      {(g: string) => (
+                        <AutocompleteItem key={g} value={g}>
+                          {g}
+                        </AutocompleteItem>
+                      )}
+                    </AutocompleteList>
+                  </AutocompleteContent>
+                </Autocomplete>
+              )}
             />
           </Field>
           <Field error={err("yearPublished")} label="Ano de lançamento">
@@ -678,16 +817,6 @@ function EditModal({ book }: { book: Book | null }) {
             />
           </Field>
         </div>
-        <datalist id="generos">
-          {lists.genres.map((g) => (
-            <option key={g} value={g} />
-          ))}
-        </datalist>
-        <datalist id="nacionalidades">
-          {lists.nationalities.map((n) => (
-            <option key={n} value={n} />
-          ))}
-        </datalist>
         <datalist id="etnias">
           {lists.ethnicities.map((n) => (
             <option key={n} value={n} />
@@ -706,7 +835,7 @@ function EditModal({ book }: { book: Book | null }) {
               Cancelar
             </button>
             <button
-              className="h-10 rounded-lg border-0 bg-ink px-5 font-semibold text-card text-sm hover:bg-acc active:scale-[.97]"
+              className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2 active:scale-[.97]"
               disabled={formState.isSubmitting}
               type="submit"
             >
@@ -744,7 +873,9 @@ function LendDialog() {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
-              <h2 className="m-0 font-bold text-xl">Emprestado para quem?</h2>
+              <h2 className="m-0 font-bold font-title text-xl">
+                Emprestado para quem?
+              </h2>
               <span className="truncate text-mute text-sm">{book.title}</span>
             </div>
             <ModalClose />
@@ -767,7 +898,7 @@ function LendDialog() {
               Cancelar
             </button>
             <button
-              className="h-10 rounded-lg border-0 bg-ink px-5 font-semibold text-card text-sm hover:bg-acc"
+              className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
               type="submit"
             >
               Marcar como emprestado

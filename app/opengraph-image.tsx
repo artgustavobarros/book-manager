@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 
 import {
+  BRAND_ACC,
   BRAND_BG,
   BRAND_INK,
   BRAND_MUTE,
@@ -12,7 +13,10 @@ export const alt = SITE_NAME + " · " + SITE_DESCRIPTION;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** Preview de compartilhamento (gerado no build). Fonte padrão do next/og: ele não lê woff2. */
+/**
+ * Preview de compartilhamento (gerado no build). Fonte padrão do next/og: ele não lê woff2
+ * e trata mal fontes variáveis, então o wordmark aqui não usa Fraunces.
+ */
 export default function OpenGraphImage() {
   return new ImageResponse(
     <div
@@ -29,12 +33,21 @@ export default function OpenGraphImage() {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
-        <BrandImage unit={36} />
-        <span
-          style={{ fontSize: 88, fontWeight: 700, letterSpacing: "-0.025em" }}
+        <BrandImage scale={5} />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            fontSize: 88,
+            lineHeight: 1,
+            letterSpacing: "-0.01em",
+          }}
         >
-          {SITE_NAME}
-        </span>
+          <span style={{ fontWeight: 700 }}>Bodega</span>
+          <span style={{ fontStyle: "italic", color: BRAND_ACC }}>
+            Literária
+          </span>
+        </div>
       </div>
       <span
         style={{

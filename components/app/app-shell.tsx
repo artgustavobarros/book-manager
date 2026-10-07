@@ -37,6 +37,7 @@ function SheetExportReturn() {
 /** Estrutura das páginas autenticadas (Acervo.dc.html, bloco `authed`). */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useApp();
   return (
     <div className="flex min-h-screen flex-col bg-bg text-ink transition-[background-color,color] duration-300">
       <a
@@ -55,7 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className="hidden h-24 flex-none max-[640px]:block"
       />
       <MobileFabs />
-      <Toaster />
+      <Toaster pendingVerification={!user.emailVerified} />
       <RestoreHost />
       <AppModals />
       <SheetExportReturn />

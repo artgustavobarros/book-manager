@@ -45,9 +45,7 @@ export function DashboardPage() {
     <PageMain>
       <div className="flex flex-col gap-1">
         <span className="text-mute text-sm">{d.todayLabel}</span>
-        <h1 className="m-0 font-bold text-3xl tracking-[-.025em]">
-          {d.greeting}
-        </h1>
+        <h1 className="m-0 font-bold font-title text-3xl">{d.greeting}</h1>
       </div>
 
       <div
@@ -71,7 +69,7 @@ export function DashboardPage() {
             style={{ animationDelay: i * 50 + "ms" }}
           >
             <span className="font-medium text-mute text-xs">{k.label}</span>
-            <span className="font-bold text-3xl tabular-nums leading-none tracking-[-.025em]">
+            <span className="font-bold font-title text-3xl tabular-nums leading-none">
               {k.value}
             </span>
             <span className="text-mute text-xs">{k.sub}</span>
@@ -107,7 +105,7 @@ export function DashboardPage() {
             ) : null}
           </div>
           <div className="flex flex-wrap items-baseline gap-3">
-            <span className="font-bold text-5xl tabular-nums leading-none tracking-[-.05em]">
+            <span className="font-bold font-title text-5xl tabular-nums leading-none">
               {d.goalDone}
             </span>
             <span className="text-base text-mute">

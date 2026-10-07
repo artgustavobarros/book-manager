@@ -39,11 +39,12 @@ function SyncBody() {
       setMsg(res.message);
       toast("Planilha sincronizada");
     } catch (e) {
-      setMsg(
+      const message =
         e instanceof ApiError
           ? e.message
-          : "Não foi possível sincronizar agora."
-      );
+          : "Não foi possível sincronizar agora.";
+      setMsg(message);
+      toast("Não foi possível sincronizar", { type: "error", note: message });
     } finally {
       setSyncing(false);
     }
@@ -52,7 +53,9 @@ function SyncBody() {
   return (
     <div className="flex flex-col gap-4 px-7 py-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="m-0 font-bold text-xl">Sincronizar planilha</h2>
+        <h2 className="m-0 font-bold font-title text-xl">
+          Sincronizar planilha
+        </h2>
         <ModalClose />
       </div>
       <span className="text-mute text-sm leading-[1.55]">
@@ -80,7 +83,7 @@ function SyncBody() {
           Fechar
         </button>
         <button
-          className="h-10 rounded-lg border-0 bg-ink px-5 font-semibold text-card text-sm hover:bg-acc"
+          className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
           disabled={syncing}
           onClick={() => void submitOnce(run)}
           type="button"

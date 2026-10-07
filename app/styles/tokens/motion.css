@@ -55,6 +55,26 @@
     transform: translate(-50%, 0);
   }
 }
+/* Toast tipado: --tx centraliza no desktop (-50%) e vale 0 no mobile. */
+@keyframes acv-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--tx, 0), 12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(var(--tx, 0), 0);
+  }
+}
+/* Barra de tempo restante do toast (a duração vem do próprio toast). */
+@keyframes acv-toast-bar {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
 @keyframes acv-dot {
   0%,
   80%,

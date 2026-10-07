@@ -137,7 +137,7 @@ function AppState({
         initial: initial.goal,
         onFail: (lastSaved, e) => {
           qc.setQueryData(["goal", initial.year], lastSaved);
-          toast(e.message);
+          toast(e.message, { type: "error" });
         },
       }
     )
@@ -213,7 +213,7 @@ function AppState({
               toast(
                 book.favorite
                   ? "Removido dos favoritos"
-                  : "♥ Adicionado aos favoritos"
+                  : "Adicionado aos favoritos"
               )
           );
       },
@@ -226,7 +226,7 @@ function AppState({
             borrower: null,
             yearRead: book.yearRead || initial.year,
           })
-          .then((ok) => ok && toast("✓ " + book.title + " marcado como lido"));
+          .then((ok) => ok && toast(book.title + " marcado como lido"));
       },
     }),
     [

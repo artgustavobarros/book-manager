@@ -10,6 +10,9 @@ import type { Book } from "@/lib/domain/types";
 
 import { toast } from "./toast";
 
+const INVALID_BACKUP =
+  "O arquivo escolhido não é um backup válido da Bodega Literária.";
+
 /**
  * "Restaurar backup": seletor de arquivo + confirmação quando o acervo não está vazio
  * (a restauração substitui tudo). Erros aparecem como toast, nunca `alert`.
@@ -35,7 +38,10 @@ export function RestoreHost() {
       replaceAll(res.books);
       toast("Backup restaurado · " + res.count + " livros");
     } catch (e) {
-      toast((e as Error).message || "Arquivo inválido.");
+      toast("Não foi possível restaurar o backup", {
+        type: "error",
+        note: (e as Error).message || INVALID_BACKUP,
+      });
     }
   }
 
@@ -58,7 +64,10 @@ export function RestoreHost() {
             data = null;
           }
           if (!Array.isArray(data)) {
-            return toast("Arquivo inválido.");
+            return toast("Não foi possível restaurar o backup", {
+              type: "error",
+              note: INVALID_BACKUP,
+            });
           }
           if (books.length) {
             setPending(data);

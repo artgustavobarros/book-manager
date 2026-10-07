@@ -9,6 +9,17 @@ import { AUTH_STATE } from "../support/e2e";
  * Inclui contraste de cores para impedir regressões nos dois temas.
  */
 async function audit(page: Page) {
+  // Contraste medido no fim das animações (modais entram com fade sobre o véu).
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter(
+          (a) => a.effect?.getTiming().iterations !== Number.POSITIVE_INFINITY
+        )
+        .map((a) => a.finished)
+    )
+  );
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

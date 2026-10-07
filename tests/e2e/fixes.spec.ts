@@ -120,7 +120,8 @@ test.describe("SEO (sem sessão)", () => {
       "/robots.txt",
       "/sitemap.xml",
       "/icon.svg",
-      "/apple-icon",
+      "/icon.png",
+      "/apple-icon.png",
       "/opengraph-image",
       "/manifest.webmanifest",
     ]) {
@@ -149,10 +150,10 @@ test.describe("SEO (sem sessão)", () => {
       "content",
       "summary_large_image"
     );
-    await expect(page.locator('link[rel="icon"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="icon"]')).toHaveCount(2);
     await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
       "content",
-      "#f4f2ee"
+      "#f4eee3"
     );
   });
 

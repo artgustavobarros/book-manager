@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { BrandMark } from "@/components/brand/brand-mark";
+import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
@@ -64,7 +64,7 @@ function Brand({ className }: { className?: string }) {
       href="/"
     >
       <BrandMark />
-      <span className="truncate font-bold text-lg">Bodega Literária</span>
+      <BrandWordmark />
     </Link>
   );
 }
@@ -137,7 +137,7 @@ function WideHeader() {
           </button>
         )}
         <button
-          className="h-10 whitespace-nowrap rounded-lg border-0 bg-ink px-4 font-semibold text-card text-sm transition-[background-color,transform] duration-200 hover:bg-acc active:scale-[.97]"
+          className="h-10 whitespace-nowrap rounded-lg border-0 bg-acc px-4 font-semibold text-onacc text-sm transition-[background-color,transform] duration-200 hover:bg-acc2 active:scale-[.97]"
           onClick={() => app.openEdit(null)}
           type="button"
         >

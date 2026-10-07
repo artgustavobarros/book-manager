@@ -9,16 +9,18 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..600&family=Instrument+Sans:wght@400..700&display=swap">
 <style>
-:root{--bg:#f4f2ee;--card:#fff;--ink:#1b1a17;--mute:#6f695f;--line:#e6e1d8;--line2:#e0dbd1;--soft:#efebe4;--seg:#ebe7df;--hov:#f7f5f1;--row:#f0ece5;--hdr:rgba(244,242,238,.92);--acc:oklch(0.52 0.15 30);--lentbg:oklch(0.94 0.05 75);--lentfg:oklch(0.42 0.1 60);color-scheme:light}
-:root[data-theme="dark"]{--bg:#161513;--card:#211f1c;--ink:#ece7de;--mute:#a39c90;--line:#34302a;--line2:#3f3a33;--soft:#2e2a26;--seg:#2a2723;--hov:#2a2724;--row:#2c2925;--hdr:rgba(22,21,19,.9);--acc:oklch(0.68 0.14 35);--lentbg:oklch(0.34 0.06 70);--lentfg:oklch(0.9 0.08 80);color-scheme:dark}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
-a{color:var(--ink)}a:hover{color:var(--acc)}
+:root{--bg:#F4EEE3;--card:#FBF8F2;--ink:#1F1B18;--mute:#5E554C;--line:#E2D8C8;--line2:#D8CCB8;--soft:#EEE6D8;--seg:#ECE3D3;--hov:#F8F3EA;--row:#EFE7DA;--hdr:rgba(244,238,227,.92);--acc:#7A2232;--acc2:#5A1724;--onacc:#FBF8F2;--ouro:#B08A3E;--lentbg:oklch(0.94 0.045 80);--lentfg:oklch(0.42 0.09 65);--font-titulo:"Fraunces",Georgia,serif;--font-ui:"Instrument Sans","Helvetica Neue",sans-serif;color-scheme:light}
+:root[data-theme="dark"]{--bg:#171312;--card:#221C1A;--ink:#F1E9DC;--mute:#B3A897;--line:#3A302B;--line2:#463A33;--soft:#2E2623;--seg:#2B2320;--hov:#2A2320;--row:#2D2522;--hdr:rgba(23,19,18,.9);--acc:#D0778A;--acc2:#E096A5;--onacc:#1F1B18;--ouro:#C9A35A;--lentbg:oklch(0.34 0.05 70);--lentfg:oklch(0.9 0.07 80);color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+a{color:var(--acc)}a:hover{color:var(--acc2)}
 *{box-sizing:border-box}
 @keyframes acv-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes acv-dot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 @keyframes acv-toast{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes acv-toast-in{from{opacity:0;transform:translate(var(--tx,0),12px) scale(.97)}to{opacity:1;transform:translate(var(--tx,0),0)}}
+@keyframes acv-toast-bar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @keyframes acv-fade{from{opacity:0}to{opacity:1}}
 @keyframes acv-rise{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes acv-grow-x{from{transform:scaleX(0)}to{transform:none}}
@@ -29,12 +31,12 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
 <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px 20px;background:var(--bg);color:var(--ink);position:relative">
   <button onClick="{{ toggleTheme }}" title="{{ themeLabel }}" aria-label="{{ themeLabel }}" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--ink);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--ink)">{{ themeGlyph }}</button>
   <div style="display:flex;align-items:center;gap:12px">
-    <span aria-hidden="true" style="display:flex;align-items:flex-end;gap:2px;height:32px">
-      <span style="width:8px;height:24px;border-radius:2px;background:var(--ink)"></span>
-      <span style="width:8px;height:20px;border-radius:2px;border:1.5px solid var(--ink)"></span>
-      <span style="width:8px;height:32px;border-radius:2px;background:var(--acc)"></span>
-    </span>
-    <span style="font-weight:700;font-size:20px;letter-spacing:0em">Bodega Literária</span>
+    <span aria-hidden="true" style="position:relative;flex:none;display:inline-flex;align-items:flex-end;gap:3px;height:36px;padding:0 1px 3px 1px">
+          <span style="display:flex;flex-direction:column;align-items:flex-start;gap:1px"><span style="width:15px;height:5px;border-radius:1px;background:var(--ink)"></span><span style="width:18px;height:6px;border-radius:1px;background:var(--ink)"></span></span>
+          <span style="position:relative;width:9px;height:26px;border-radius:4px 4px 1px 1px;background:var(--acc)"><span style="position:absolute;left:3px;top:-6px;width:3px;height:7px;border-radius:1px 1px 0 0;background:var(--acc)"></span><span style="position:absolute;left:2px;right:2px;top:10px;height:5px;border-radius:1px;background:var(--card)"></span></span>
+          <span style="position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:1px;background:var(--ink)"></span>
+        </span>
+        <span style="display:flex;flex-direction:column;font-family:var(--font-titulo);font-size:24px;line-height:23px;letter-spacing:-0.01em;text-align:left"><span style="font-weight:700;color:var(--ink)">Bodega</span><span style="font-style:italic;font-weight:500;color:var(--acc)">Literária</span></span>
   </div>
   <form onSubmit="{{ authSubmit }}" style="width:100%;max-width:400px;padding:28px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 10px 40px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:20px;animation:acv-rise 300ms both">
     <div style="display:flex;gap:2px;background:var(--seg);padding:4px;border-radius:12px">
@@ -43,7 +45,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
       </sc-for>
     </div>
     <div style="display:flex;flex-direction:column;gap:4px">
-      <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.025em">{{ authTitle }}</h1>
+      <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.025em;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ authTitle }}</h1>
       <span style="font-size:14px;color:var(--mute);text-wrap:pretty">{{ authSub }}</span>
     </div>
     <button type="button" onClick="{{ authGoogle }}" style="height:44px;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:border-color 200ms" style-hover="border-color:var(--ink)">
@@ -71,21 +73,22 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
         </label>
       </sc-if>
     </div>
-    <button type="submit" style="height:44px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 200ms,transform 100ms" style-hover="background:var(--acc)" style-active="transform:scale(.98)">{{ authBtn }}</button>
+    <button type="submit" style="height:44px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 200ms,transform 100ms" style-hover="background:var(--acc2)" style-active="transform:scale(.98)">{{ authBtn }}</button>
   </form>
 </div>
 </sc-if>
 <sc-if value="{{ authed }}" hint-placeholder-val="{{ true }}">
 <div style="min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);transition:background 300ms,color 300ms">
+  <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
   <header style="position:sticky;top:0;z-index:8;background:var(--hdr);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)">
     <div style="max-width:1440px;margin:0 auto;padding:12px 28px;min-height:64px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <button onClick="{{ goPainel }}" style="display:flex;align-items:center;gap:12px;background:none;border:none;padding:0;cursor:pointer;font:inherit;color:var(--ink)">
-        <span aria-hidden="true" style="display:flex;align-items:flex-end;gap:2px;height:28px">
-          <span style="width:8px;height:24px;border-radius:2px;background:var(--ink)"></span>
-          <span style="width:8px;height:20px;border-radius:2px;border:1.5px solid var(--ink)"></span>
-          <span style="width:8px;height:28px;border-radius:2px;background:var(--acc)"></span>
+        <span aria-hidden="true" style="position:relative;flex:none;display:inline-flex;align-items:flex-end;gap:3px;height:30px;padding:0 1px 3px 1px">
+          <span style="display:flex;flex-direction:column;align-items:flex-start;gap:1px"><span style="width:15px;height:5px;border-radius:1px;background:var(--ink)"></span><span style="width:18px;height:6px;border-radius:1px;background:var(--ink)"></span></span>
+          <span style="position:relative;width:9px;height:20px;border-radius:4px 4px 1px 1px;background:var(--acc)"><span style="position:absolute;left:3px;top:-6px;width:3px;height:7px;border-radius:1px 1px 0 0;background:var(--acc)"></span><span style="position:absolute;left:2px;right:2px;top:8px;height:5px;border-radius:1px;background:var(--card)"></span></span>
+          <span style="position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:1px;background:var(--ink)"></span>
         </span>
-        <span style="font-weight:700;font-size:18px;letter-spacing:0em">Bodega Literária</span>
+        <span style="display:flex;flex-direction:column;font-family:var(--font-titulo);font-size:18px;line-height:17px;letter-spacing:-0.01em;text-align:left"><span style="font-weight:700;color:var(--ink)">Bodega</span><span style="font-style:italic;font-weight:500;color:var(--acc)">Literária</span></span>
       </button>
       <div style="flex:1 1 200px;min-width:0;display:flex">
         <input value="{{ q }}" onChange="{{ onSearch }}" placeholder="Buscar título, autor, editora, empréstimo, anotações…" style="width:100%;max-width:360px;height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none;transition:border-color 150ms,box-shadow 150ms" style-focus="border-color:var(--ink);box-shadow:0 0 0 3px rgba(127,120,110,.18)"></input>
@@ -101,23 +104,76 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
       <sc-if value="{{ noSurprise }}" hint-placeholder-val="{{ false }}">
         <button disabled="{{ true }}" title="Nenhum livro não lido para sortear" style="height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:8px;background:transparent;color:var(--mute);font:inherit;font-size:14px;font-weight:600;cursor:not-allowed;white-space:nowrap;opacity:.6">Me surpreenda</button>
       </sc-if>
-      <button onClick="{{ openNew }}" style="height:40px;padding:0 16px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background 200ms,transform 100ms" style-hover="background:var(--acc)" style-active="transform:scale(.97)">+ Registrar livro</button>
+      <button onClick="{{ openNew }}" style="height:40px;padding:0 16px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background 200ms,transform 100ms" style-hover="background:var(--acc2)" style-active="transform:scale(.97)">+ Registrar livro</button>
       <button onClick="{{ toggleTheme }}" title="{{ themeLabel }}" aria-label="{{ themeLabel }}" style="width:40px;height:40px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--ink);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--ink)">{{ themeGlyph }}</button>
       <button onClick="{{ openAcct }}" title="Minha conta" aria-label="Minha conta" style="width:40px;height:40px;border:none;border-radius:50%;background:var(--acc);color:#fff;font:inherit;font-size:14px;font-weight:700;letter-spacing:.025em;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 100ms" style-active="transform:scale(.95)">{{ userInitials }}</button>
     </div>
   </header>
+  </sc-if>
+  <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+  <header style="position:relative;z-index:8;background:var(--hdr);border-bottom:1px solid var(--line)">
+    <div style="padding:12px 16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onClick="{{ goPainel }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:none;padding:0;cursor:pointer;font:inherit;color:var(--ink)">
+          <span aria-hidden="true" style="position:relative;flex:none;display:inline-flex;align-items:flex-end;gap:3px;height:30px;padding:0 1px 3px 1px">
+          <span style="display:flex;flex-direction:column;align-items:flex-start;gap:1px"><span style="width:15px;height:5px;border-radius:1px;background:var(--ink)"></span><span style="width:18px;height:6px;border-radius:1px;background:var(--ink)"></span></span>
+          <span style="position:relative;width:9px;height:20px;border-radius:4px 4px 1px 1px;background:var(--acc)"><span style="position:absolute;left:3px;top:-6px;width:3px;height:7px;border-radius:1px 1px 0 0;background:var(--acc)"></span><span style="position:absolute;left:2px;right:2px;top:8px;height:5px;border-radius:1px;background:var(--card)"></span></span>
+          <span style="position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:1px;background:var(--ink)"></span>
+        </span>
+        <span style="display:flex;flex-direction:column;font-family:var(--font-titulo);font-size:18px;line-height:17px;letter-spacing:-0.01em;text-align:left;white-space:nowrap;min-width:0"><span style="font-weight:700;color:var(--ink)">Bodega</span><span style="font-style:italic;font-weight:500;color:var(--acc)">Literária</span></span>
+        </button>
+        <button onClick="{{ toggleSearch }}" title="Buscar" aria-label="Buscar" style="flex:none;width:44px;height:44px;border:1px solid {{ searchBtnBorder }};border-radius:8px;background:var(--card);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color 150ms">
+          <span aria-hidden="true" style="position:relative;width:16px;height:16px;display:block"><span style="position:absolute;left:0;top:0;width:11px;height:11px;border:2px solid currentColor;border-radius:50%;box-sizing:border-box"></span><span style="position:absolute;left:11px;top:9px;width:2px;height:7px;background:currentColor;border-radius:1px;transform:rotate(-45deg)"></span></span>
+        </button>
+        <button onClick="{{ toggleTheme }}" title="{{ themeLabel }}" aria-label="{{ themeLabel }}" style="flex:none;width:44px;height:44px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--ink);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">{{ themeGlyph }}</button>
+        <button onClick="{{ openAcct }}" title="Minha conta" aria-label="Minha conta" style="flex:none;width:44px;height:44px;border:none;border-radius:50%;background:var(--acc);color:#fff;font:inherit;font-size:14px;font-weight:700;letter-spacing:.025em;cursor:pointer;display:flex;align-items:center;justify-content:center" style-active="transform:scale(.95)">{{ userInitials }}</button>
+      </div>
+      <sc-if value="{{ searchShown }}" hint-placeholder-val="{{ false }}">
+        <input value="{{ q }}" onChange="{{ onSearch }}" autoFocus="{{ true }}" placeholder="Buscar título, autor, editora…" style="width:100%;height:44px;padding:0 16px;border:1px solid var(--ink);border-radius:8px;background:var(--card);font:inherit;font-size:16px;color:var(--ink);outline:none;box-shadow:0 0 0 3px rgba(127,120,110,.18);animation:acv-fade 200ms both"></input>
+      </sc-if>
+      <nav style="display:flex;gap:2px;background:var(--seg);padding:4px;border-radius:8px">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+          <button onClick="{{ t.onClick }}" style="flex:1 1 auto;min-width:0;height:36px;padding:0 8px;border:none;border-radius:8px;background:{{ t.bg }};color:{{ t.fg }};box-shadow:{{ t.shadow }};font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background 200ms,color 200ms">{{ t.label }}</button>
+        </sc-for>
+      </nav>
+    </div>
+  </header>
+  <div style="position:fixed;right:16px;bottom:16px;z-index:20;display:flex;flex-direction:column;align-items:center;gap:12px;transform:translateY({{ fabY }});transition:transform 300ms cubic-bezier(.2,.7,.2,1)">
+    <sc-if value="{{ canSurprise }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ openSurprise }}" title="Me surpreenda" aria-label="Me surpreenda" style="width:48px;height:48px;border:1px solid var(--ink);border-radius:50%;background:var(--card);color:var(--ink);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(27,26,23,.18);transition:transform 100ms" style-active="transform:scale(.92)">🎲</button>
+    </sc-if>
+    <sc-if value="{{ noSurprise }}" hint-placeholder-val="{{ false }}">
+      <button disabled="{{ true }}" title="Nenhum livro não lido para sortear" aria-label="Me surpreenda (indisponível)" style="width:48px;height:48px;border:1px solid var(--line2);border-radius:50%;background:var(--card);font-size:20px;cursor:not-allowed;opacity:.5;display:flex;align-items:center;justify-content:center;filter:grayscale(1)">🎲</button>
+    </sc-if>
+    <button onClick="{{ openNew }}" title="Registrar livro" aria-label="Registrar livro" style="width:56px;height:56px;border:none;border-radius:50%;background:var(--acc);color:var(--onacc);font:inherit;font-size:28px;font-weight:400;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -6px rgba(27,26,23,.5);transition:background 200ms,transform 100ms" style-active="transform:scale(.92);background:var(--acc)">+</button>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ showVerify }}" hint-placeholder-val="{{ false }}">
+  <div role="status" style="background:var(--card);border-bottom:1px solid var(--line);animation:acv-fade 300ms ease both">
+    <div style="max-width:1440px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap">
+      <span aria-hidden="true" style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--acc)"></span>
+      <span style="flex:1 1 320px;min-width:0;font-size:14px;line-height:20px;text-wrap:pretty"><strong style="font-weight:600">Falta confirmar seu e-mail.</strong> Enviamos um link para {{ verifyEmail }}. Você já pode usar o acervo normalmente, e tudo o que fizer fica salvo, mas o cadastro só fica completo após a confirmação.</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onClick="{{ resendVerify }}" style="height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:12px;font-weight:600;cursor:pointer" style-hover="background:var(--seg)">Reenviar e-mail</button>
+        <button onClick="{{ confirmVerify }}" style="height:36px;padding:0 12px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:12px;font-weight:600;cursor:pointer">Já confirmei</button>
+        <button onClick="{{ hideVerify }}" aria-label="Fechar aviso" title="Fechar aviso" style="width:36px;height:36px;border:none;border-radius:8px;background:transparent;color:var(--mute);font:inherit;font-size:16px;cursor:pointer" style-hover="background:var(--seg)">✕</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
 
   <sc-if value="{{ isPainel }}" hint-placeholder-val="{{ true }}">
     <main style="max-width:1440px;width:100%;margin:0 auto;padding:28px 28px 56px;display:flex;flex-direction:column;gap:16px;flex:1">
       <div style="display:flex;flex-direction:column;gap:4px">
         <span style="font-size:14px;color:var(--mute)">{{ todayLabel }}</span>
-        <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.025em">{{ greeting }}</h1>
+        <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.025em;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ greeting }}</h1>
       </div>
       <div ref="{{ car.ref }}" onScroll="{{ car.onScroll }}" onPointerDown="{{ car.onDown }}" onClickCapture="{{ car.onClickCap }}" style="cursor:{{ car.cursor }};touch-action:pan-x pan-y;user-select:{{ car.select }};display:grid;grid-template-columns:{{ car.cols }};grid-auto-flow:{{ car.flow }};grid-auto-columns:{{ car.autoCols }};overflow-x:{{ car.ox }};scroll-snap-type:{{ car.snap }};margin:{{ car.margin }};padding:{{ car.pad }};scroll-padding:{{ car.spad }};scrollbar-width:none;gap:12px">
         <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="5">
           <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 20px;display:flex;flex-direction:column;gap:12px;scroll-snap-align:start;animation:acv-in 500ms cubic-bezier(.2,.7,.2,1) both;animation-delay:{{ k.delay }}">
             <span style="font-size:12px;font-weight:500;color:var(--mute)">{{ k.label }}</span>
-            <span style="font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums">{{ k.value }}</span>
+            <span style="font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ k.value }}</span>
             <span style="font-size:12px;color:var(--mute)">{{ k.sub }}</span>
           </div>
         </sc-for>
@@ -138,7 +194,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
             </sc-if>
           </div>
           <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
-            <span style="font-size:48px;font-weight:700;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums">{{ goalDone }}</span>
+            <span style="font-size:48px;font-weight:700;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ goalDone }}</span>
             <span style="font-size:16px;color:var(--mute)">de {{ goal }} livros lidos</span>
             <div style="margin-left:auto;display:flex;align-items:center;gap:4px;border:1px solid var(--line2);border-radius:8px;padding:4px">
               <button onClick="{{ goalMinus }}" aria-label="Diminuir meta" style="width:28px;height:28px;border:none;border-radius:6px;background:transparent;font:inherit;font-size:16px;cursor:pointer;color:var(--ink)" style-hover="background:var(--hov)">−</button>
@@ -226,7 +282,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
 
   <sc-if value="{{ isDadosEmpty }}" hint-placeholder-val="{{ false }}">
     <main style="max-width:1440px;width:100%;margin:0 auto;padding:28px 28px 56px;display:flex;flex-direction:column;gap:16px;flex:1">
-      <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.025em">Dados do acervo</h1>
+      <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.025em;font-family:var(--font-titulo);letter-spacing:-0.01em">Dados do acervo</h1>
       <div style="flex:1;min-height:360px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:64px 20px;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;text-align:center">
         <span aria-hidden="true" style="display:flex;align-items:flex-end;gap:4px;height:44px;margin-bottom:8px">
           <span style="width:12px;height:20px;border-radius:2px;background:var(--line2)"></span>
@@ -236,7 +292,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
         <span style="font-size:18px;font-weight:600">Ainda não há dados para mostrar</span>
         <span style="max-width:380px;font-size:14px;color:var(--mute);line-height:1.5;text-wrap:pretty">Os gráficos aparecem assim que você registrar o primeiro livro ou sincronizar sua planilha.</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px">
-          <button onClick="{{ openNew }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc)">+ Registrar livro</button>
+          <button onClick="{{ openNew }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc2)">+ Registrar livro</button>
           <button onClick="{{ openSync }}" style="height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:var(--ink)">Sincronizar planilha</button>
         </div>
       </div>
@@ -248,7 +304,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
       <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div style="display:flex;flex-direction:column;gap:4px">
           <span style="font-size:14px;color:var(--mute)">{{ scopeCaption }}</span>
-          <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.025em">Dados do acervo</h1>
+          <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.025em;font-family:var(--font-titulo);letter-spacing:-0.01em">Dados do acervo</h1>
         </div>
         <div style="display:flex;gap:2px;background:var(--seg);padding:4px;border-radius:8px">
           <sc-for list="{{ scopeOpts }}" as="v" hint-placeholder-count="2">
@@ -260,7 +316,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
         <sc-for list="{{ dataKpis }}" as="k" hint-placeholder-count="4">
           <div style="scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 20px;display:flex;flex-direction:column;gap:12px;animation:acv-in 500ms cubic-bezier(.2,.7,.2,1) both;animation-delay:{{ k.delay }}">
             <span style="font-size:12px;font-weight:500;color:var(--mute)">{{ k.label }}</span>
-            <span style="font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums">{{ k.value }}</span>
+            <span style="font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ k.value }}</span>
             <span style="font-size:12px;color:var(--mute);line-height:1.4">{{ k.sub }}</span>
           </div>
         </sc-for>
@@ -307,7 +363,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
           <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
             <div style="position:relative;flex:none;width:152px;height:152px;border-radius:50%;background:{{ donutBg }};animation:acv-fade 700ms both">
               <div style="position:absolute;inset:24px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center">
-                <span style="font-size:24px;font-weight:700;letter-spacing:-.025em;font-variant-numeric:tabular-nums">{{ donutTotal }}</span>
+                <span style="font-size:24px;font-weight:700;letter-spacing:-.025em;font-variant-numeric:tabular-nums;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ donutTotal }}</span>
                 <span style="font-size:12px;color:var(--mute)">livros</span>
               </div>
             </div>
@@ -448,7 +504,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
       <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div style="display:flex;flex-direction:column;gap:4px">
           <span style="font-size:14px;color:var(--mute)">{{ shelfCount }}</span>
-          <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.025em">Estante</h1>
+          <h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.025em;font-family:var(--font-titulo);letter-spacing:-0.01em">Estante</h1>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <div style="position:relative">
@@ -499,7 +555,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
           <span style="font-size:18px;font-weight:600">Sua estante está vazia</span>
           <span style="max-width:380px;font-size:14px;color:var(--mute);line-height:1.5;text-wrap:pretty">Registre o primeiro livro ou traga o acervo da sua planilha.</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px">
-            <button onClick="{{ openNew }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc)">+ Registrar livro</button>
+            <button onClick="{{ openNew }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc2)">+ Registrar livro</button>
             <button onClick="{{ openSync }}" style="height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:var(--ink)">Sincronizar planilha</button>
           </div>
         </div>
@@ -518,9 +574,8 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
             <div onClick="{{ b.open }}" onMouseEnter="{{ b.enter }}" onMouseLeave="{{ b.leave }}" style="cursor:pointer;display:flex;flex-direction:column;gap:12px;animation:acv-in 500ms cubic-bezier(.2,.7,.2,1) both;animation-delay:{{ b.delay }}">
               <div ref="{{ b.coverRef }}" style="position:relative;aspect-ratio:2/3;border-radius:6px;background:{{ b.coverBg }};color:{{ b.coverInk }};padding:16px 12px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:inset 3px 0 4px -2px rgba(0,0,0,.2),0 1px 2px rgba(27,26,23,.1),0 10px 22px -14px rgba(27,26,23,.5)">
                 <span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.8">{{ b.author }}</span>
-                <span style="font-size:20px;font-weight:700;line-height:1.08;letter-spacing:0em;text-wrap:balance">{{ b.title }}</span>
+                <span style="font-size:20px;font-weight:700;line-height:1.08;letter-spacing:0em;text-wrap:balance;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ b.title }}</span>
                 <span style="position:absolute;inset:0;background-image:{{ b.coverImg }};background-size:cover;background-position:center"></span>
-                <span style="position:absolute;top:8px;left:8px;padding:4px 8px;border-radius:9999px;background:rgba(20,19,17,.72);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:{{ b.statusDot }}"></span>{{ b.statusLabel }}</span>
                 <span style="display:{{ b.favBadge }};position:absolute;top:8px;right:8px;font-size:14px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)">♥</span>
                 <div style="position:absolute;top:8px;right:8px;z-index:2;display:flex;flex-direction:column;gap:8px;opacity:{{ b.actOpacity }};transform:translateX({{ b.actX }});pointer-events:{{ b.actPe }};transition:opacity 200ms ease,transform 300ms ease">
                   <sc-for list="{{ b.actions }}" as="a" hint-placeholder-count="0">
@@ -539,14 +594,14 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
                 <span onClick="{{ stopProp }}" style="position:relative;align-self:flex-start;margin-top:8px;display:flex;align-items:center">
                 <span style="position:absolute;left:12px;width:8px;height:8px;border-radius:50%;background:{{ b.statusDot }};pointer-events:none"></span>
                 <span style="position:absolute;right:12px;top:8px;width:4px;height:4px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:rotate(45deg);opacity:.55;pointer-events:none"></span>
-                <select value="{{ b.status }}" onChange="{{ b.onStatus }}" style="appearance:none;-webkit-appearance:none;height:28px;padding:0 28px 0 24px;border:1px solid transparent;border-radius:9999px;background:color-mix(in oklch, {{ b.statusDot }} 16%, var(--card));font:inherit;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;outline:none;transition:border-color 150ms,background 200ms" style-hover="border-color:var(--line2)" style-focus="border-color:var(--ink)">
+                <sc-raw-select value="{{ b.status }}" onChange="{{ b.onStatus }}" style="appearance:none;-webkit-appearance:none;height:28px;padding:0 28px 0 24px;border:1px solid transparent;border-radius:9999px;background:color-mix(in oklch, {{ b.statusDot }} 16%, var(--card));font:inherit;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;outline:none;transition:border-color 150ms,background 200ms" style-hover="border-color:var(--line2)" style-focus="border-color:var(--ink)">
                   <option value="nao-lido">Não lido</option>
                   <option value="lendo">Lendo</option>
                   <option value="lido">Lido</option>
                   <option value="emprestado">Emprestado</option>
                   <option value="abandonado">Abandonado</option>
                   <option value="doado">Doado</option>
-                </select>
+                </sc-raw-select>
                 </span>
               </div>
             </div>
@@ -578,14 +633,14 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
                 <span onClick="{{ stopProp }}" style="position:relative;display:flex;align-items:center;min-width:0">
                   <span style="position:absolute;left:12px;width:8px;height:8px;border-radius:50%;background:{{ b.statusDot }};pointer-events:none"></span>
                   <span style="position:absolute;right:12px;top:8px;width:4px;height:4px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:rotate(45deg);opacity:.55;pointer-events:none"></span>
-                  <select value="{{ b.status }}" onChange="{{ b.onStatus }}" style="appearance:none;-webkit-appearance:none;flex:1;min-width:0;height:28px;padding:0 28px 0 24px;border:1px solid transparent;border-radius:9999px;background:color-mix(in oklch, {{ b.statusDot }} 16%, var(--card));font:inherit;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;outline:none;transition:border-color 150ms,background 200ms" style-hover="border-color:var(--line2)" style-focus="border-color:var(--ink)">
+                  <sc-raw-select value="{{ b.status }}" onChange="{{ b.onStatus }}" style="appearance:none;-webkit-appearance:none;flex:1;min-width:0;height:28px;padding:0 28px 0 24px;border:1px solid transparent;border-radius:9999px;background:color-mix(in oklch, {{ b.statusDot }} 16%, var(--card));font:inherit;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;outline:none;transition:border-color 150ms,background 200ms" style-hover="border-color:var(--line2)" style-focus="border-color:var(--ink)">
                     <option value="nao-lido">Não lido</option>
                     <option value="lendo">Lendo</option>
                     <option value="lido">Lido</option>
                     <option value="emprestado">Emprestado</option>
                     <option value="abandonado">Abandonado</option>
                     <option value="doado">Doado</option>
-                  </select>
+                  </sc-raw-select>
                 </span>
                 <span style="display:flex;gap:4px;justify-content:flex-end">
                   <button onClick="{{ b.edit }}" title="Editar" aria-label="Editar" style="width:28px;height:28px;border:1px solid var(--line2);border-radius:6px;background:var(--card);color:var(--ink);font-size:14px;cursor:pointer" style-hover="border-color:var(--ink)">✎</button>
@@ -630,7 +685,28 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
   </footer>
 
   <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed;left:50%;bottom:28px;z-index:50;transform:translateX(-50%);background:var(--ink);color:var(--card);padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.3);animation:acv-toast 300ms cubic-bezier(.2,.7,.2,1) both">{{ toastMsg }}</div>
+    <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+    <div role="{{ toastRole }}" aria-live="polite" style="position:fixed;left:50%;bottom:28px;--tx:-50%;transform:translateX(-50%);width:min(440px,calc(100vw - 40px));z-index:50;display:flex;align-items:flex-start;gap:12px;padding:14px 12px 16px 14px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.14),0 2px 6px rgba(0,0,0,.06);overflow:hidden;animation:acv-toast-in 320ms cubic-bezier(.2,.7,.2,1) both">
+      <span aria-hidden="true" style="flex:none;width:28px;height:28px;border-radius:50%;background:{{ toastTint }};color:{{ toastColor }};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;line-height:1">{{ toastIcon }}</span>
+      <div style="flex:1;min-width:0;padding-top:4px">
+        <div style="font-size:14px;line-height:20px;font-weight:600;text-wrap:pretty">{{ toastMsg }}</div>
+        <sc-if value="{{ hasToastNote }}" hint-placeholder-val="{{ false }}"><div style="margin-top:2px;font-size:13px;line-height:18px;color:var(--mute);text-wrap:pretty">{{ toastNote }}</div></sc-if>
+      </div>
+      <button onClick="{{ closeToast }}" aria-label="Fechar notificação" title="Fechar" style="flex:none;width:28px;height:28px;border:none;border-radius:8px;background:transparent;color:var(--mute);font:inherit;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--seg);color:var(--ink)">✕</button>
+      {{ toastBar }}
+    </div>
+    </sc-if>
+    <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+    <div role="{{ toastRole }}" aria-live="polite" style="position:fixed;left:16px;right:88px;bottom:16px;z-index:50;display:flex;align-items:flex-start;gap:12px;padding:14px 12px 16px 14px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.14),0 2px 6px rgba(0,0,0,.06);overflow:hidden;animation:acv-toast-in 320ms cubic-bezier(.2,.7,.2,1) both">
+      <span aria-hidden="true" style="flex:none;width:28px;height:28px;border-radius:50%;background:{{ toastTint }};color:{{ toastColor }};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;line-height:1">{{ toastIcon }}</span>
+      <div style="flex:1;min-width:0;padding-top:4px">
+        <div style="font-size:14px;line-height:20px;font-weight:600;text-wrap:pretty">{{ toastMsg }}</div>
+        <sc-if value="{{ hasToastNote }}" hint-placeholder-val="{{ false }}"><div style="margin-top:2px;font-size:13px;line-height:18px;color:var(--mute);text-wrap:pretty">{{ toastNote }}</div></sc-if>
+      </div>
+      <button onClick="{{ closeToast }}" aria-label="Fechar notificação" title="Fechar" style="flex:none;width:28px;height:28px;border:none;border-radius:8px;background:transparent;color:var(--mute);font:inherit;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--seg);color:var(--ink)">✕</button>
+      {{ toastBar }}
+    </div>
+    </sc-if>
   </sc-if>
 
   <sc-if value="{{ isView }}" hint-placeholder-val="{{ false }}">
@@ -648,20 +724,20 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
             <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
               <span style="font-size:12px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums">{{ fichaOrder }}</span>
-              <h2 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.025em;line-height:1.15;text-wrap:balance">{{ f.title }}</h2>
+              <h2 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.025em;line-height:1.15;text-wrap:balance;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ f.title }}</h2>
               <button onClick="{{ fichaByAuthor }}" title="Ver todos os livros deste autor" style="align-self:flex-start;background:none;border:none;padding:0;font:inherit;font-size:16px;color:var(--mute);cursor:pointer" style-hover="color:var(--acc);text-decoration:underline">{{ fichaAuthor }}</button>
             </div>
             <button onClick="{{ closeModal }}" aria-label="Fechar" style="flex:none;width:32px;height:32px;border:none;border-radius:8px;background:transparent;font-size:16px;color:var(--mute);cursor:pointer" style-hover="background:var(--hov);color:var(--ink)">✕</button>
           </div>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <select value="{{ f.status }}" onChange="{{ fichaOnStatus }}" style="height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer">
+            <sc-raw-select value="{{ f.status }}" onChange="{{ fichaOnStatus }}" style="height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer">
               <option value="nao-lido">Não lido</option>
               <option value="lendo">Lendo</option>
               <option value="lido">Lido</option>
               <option value="emprestado">Emprestado</option>
               <option value="abandonado">Abandonado</option>
               <option value="doado">Doado</option>
-            </select>
+            </sc-raw-select>
             <sc-if value="{{ fichaLent }}" hint-placeholder-val="{{ false }}">
               <span style="font-size:14px;font-weight:600;padding:4px 12px;border-radius:9999px;background:var(--lentbg);color:var(--lentfg)">Emprestado para {{ fichaBorrower }}</span>
             </sc-if>
@@ -680,7 +756,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <button onClick="{{ removeBook }}" style="height:36px;padding:0 12px;margin-left:-12px;border:none;border-radius:8px;background:transparent;font:inherit;font-size:14px;font-weight:600;color:var(--acc);cursor:pointer" style-hover="background:var(--hov)">{{ removeLabel }}</button>
-            <button onClick="{{ editFromView }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc)">Editar ficha</button>
+            <button onClick="{{ editFromView }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc2)">Editar ficha</button>
           </div>
         </div>
       </div>
@@ -692,7 +768,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
       <div onClick="{{ stop }}" style="background:var(--card);width:100%;max-width:920px;border-radius:16px;overflow:hidden;display:flex;flex-wrap:wrap;box-shadow:0 30px 80px -20px rgba(0,0,0,.4);animation:acv-rise 300ms cubic-bezier(.2,.7,.2,1) both">
         <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
           <div style="flex:1 1 100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 20px 16px">
-            <h2 style="margin:0;font-size:20px;font-weight:700;letter-spacing:0em">{{ modalTitle }}</h2>
+            <h2 style="margin:0;font-size:20px;font-weight:700;letter-spacing:0em;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ modalTitle }}</h2>
             <button onClick="{{ closeModal }}" aria-label="Fechar" style="width:32px;height:32px;border:none;border-radius:8px;background:transparent;font-size:16px;color:var(--mute);cursor:pointer" style-hover="background:var(--hov);color:var(--ink)">✕</button>
           </div>
         </sc-if>
@@ -706,7 +782,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
         </div>
         <div style="flex:1 1 420px;min-width:0;padding:{{ mp.bodyPad }};display:flex;flex-direction:column;gap:20px">
           <div style="display:{{ mp.headDisplay }};justify-content:space-between;align-items:center;gap:12px">
-            <h2 style="margin:0;font-size:20px;font-weight:700;letter-spacing:0em">{{ modalTitle }}</h2>
+            <h2 style="margin:0;font-size:20px;font-weight:700;letter-spacing:0em;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ modalTitle }}</h2>
             <button onClick="{{ closeModal }}" aria-label="Fechar" style="width:32px;height:32px;border:none;border-radius:8px;background:transparent;font-size:16px;color:var(--mute);cursor:pointer" style-hover="background:var(--hov);color:var(--ink)">✕</button>
           </div>
 
@@ -714,7 +790,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
             <span style="font-size:12px;font-weight:600;color:var(--mute)">Buscar online por título ou ISBN · Google Livros, Apple Books, Open Library e Amazon (ISBN)</span>
             <div style="display:flex;gap:8px">
               <input value="{{ sq }}" onChange="{{ onSq }}" onKeyDown="{{ onSqKey }}" placeholder="ex.: Torto arado ou 9788554512348" style="flex:1;min-width:0;height:40px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none" style-focus="border-color:var(--ink)"></input>
-              <button onClick="{{ runSearch }}" style="flex:none;height:40px;padding:0 16px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc)">{{ searchBtn }}</button>
+              <button onClick="{{ runSearch }}" style="flex:none;height:40px;padding:0 16px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc2)">{{ searchBtn }}</button>
             </div>
             <sc-if value="{{ hasSearchMsg }}" hint-placeholder-val="{{ false }}">
               <span style="font-size:12px;color:var(--mute)">{{ searchMsg }}</span>
@@ -742,23 +818,63 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
             <label style="grid-column:span 2;display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Autor(a) *
               <input value="{{ form.author }}" onChange="{{ on.author }}" style="height:40px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none" style-focus="border-color:var(--ink)"></input>
             </label>
-            <label style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Gênero do autor(a)
-              <select value="{{ form.authorGender }}" onChange="{{ on.authorGender }}" style="height:40px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink)">
-                <option value="">—</option>
-                <option value="Homem">Homem</option>
-                <option value="Mulher">Mulher</option>
-                <option value="Não definido">Não definido</option>
-              </select>
-            </label>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Gênero do autor(a)
+              <div style="position:relative">
+                <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="{{ cbAuthorG.expanded }}" onClick="{{ cbAuthorG.toggle }}" onKeyDown="{{ cbAuthorG.onKey }}" style="width:100%;height:40px;padding:0 36px 0 12px;border:1px solid {{ cbAuthorG.border }};border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:{{ cbAuthorG.fg }};text-align:left;cursor:pointer;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-focus="border-color:var(--ink)">{{ cbAuthorG.display }}</button>
+                <span aria-hidden="true" style="position:absolute;right:16px;top:16px;width:5px;height:5px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:{{ cbAuthorG.chevron }};opacity:.6;pointer-events:none;transition:transform 200ms"></span>
+                <sc-if value="{{ cbAuthorG.open }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ cbAuthorG.close }}" style="position:fixed;inset:0;z-index:40"></div>
+                  <div role="listbox" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:41;min-width:180px;max-height:248px;overflow-y:auto;padding:6px;border:1px solid var(--line2);border-radius:12px;background:var(--card);box-shadow:0 14px 40px rgba(0,0,0,.16);display:flex;flex-direction:column;gap:2px;animation:acv-fade 160ms both">
+                    <sc-for list="{{ cbAuthorG.items }}" as="o" hint-placeholder-count="0">
+                      <button type="button" role="option" aria-selected="{{ o.selected }}" onClick="{{ o.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:0 12px;border:none;border-radius:8px;background:{{ o.bg }};font:inherit;font-size:14px;font-weight:{{ o.weight }};color:var(--ink);text-align:left;cursor:pointer" style-hover="background:var(--seg)"><span>{{ o.label }}</span><span style="color:var(--acc);font-weight:700">{{ o.check }}</span></button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
             <label style="grid-column:span 2;display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Editora
               <input value="{{ form.publisher }}" onChange="{{ on.publisher }}" style="height:40px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none" style-focus="border-color:var(--ink)"></input>
             </label>
-            <label style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Nacionalidade do autor
-              <input value="{{ form.nationality }}" onChange="{{ on.nationality }}" list="nacionalidades" placeholder="ex.: brasileira" style="height:40px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none" style-focus="border-color:var(--ink)"></input>
-            </label>
-            <label style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Gênero da obra
-              <input value="{{ form.genre }}" onChange="{{ on.genre }}" list="generos" placeholder="ex.: Romance" style="height:40px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none" style-focus="border-color:var(--ink)"></input>
-            </label>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Nacionalidade do autor
+              <div style="position:relative">
+                <input role="combobox" aria-autocomplete="list" aria-expanded="{{ cbNat.expanded }}" autocomplete="off" value="{{ cbNat.text }}" onChange="{{ cbNat.onInput }}" onFocus="{{ cbNat.onFocus }}" onKeyDown="{{ cbNat.onKey }}" placeholder="ex.: brasileira" style="width:100%;height:40px;padding:0 36px 0 12px;border:1px solid {{ cbNat.border }};border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none" style-focus="border-color:var(--ink)"></input>
+                <button type="button" tabindex="-1" aria-label="Mostrar opções" onClick="{{ cbNat.toggle }}" style="position:absolute;right:2px;top:2px;width:36px;height:36px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:5px;height:5px;margin-top:-3px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:{{ cbNat.chevron }};opacity:.6;transition:transform 200ms"></span></button>
+                <sc-if value="{{ cbNat.open }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ cbNat.close }}" style="position:fixed;inset:0;z-index:40"></div>
+                  <div role="listbox" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:41;min-width:200px;max-height:248px;overflow-y:auto;padding:6px;border:1px solid var(--line2);border-radius:12px;background:var(--card);box-shadow:0 14px 40px rgba(0,0,0,.16);display:flex;flex-direction:column;gap:2px;animation:acv-fade 160ms both">
+                    <sc-for list="{{ cbNat.items }}" as="o" hint-placeholder-count="0">
+                      <button type="button" role="option" aria-selected="{{ o.selected }}" onClick="{{ o.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:0 12px;border:none;border-radius:8px;background:{{ o.bg }};font:inherit;font-size:14px;font-weight:{{ o.weight }};color:var(--ink);text-align:left;cursor:pointer" style-hover="background:var(--seg)"><span>{{ o.label }}</span><span style="color:var(--acc);font-weight:700">{{ o.check }}</span></button>
+                    </sc-for>
+                    <sc-if value="{{ cbNat.hasCreate }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" onClick="{{ cbNat.create }}" style="display:flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border:none;border-top:{{ cbNat.createSep }};border-radius:8px;background:{{ cbNat.createBg }};font:inherit;font-size:14px;color:var(--ink);text-align:left;cursor:pointer" style-hover="background:var(--seg)"><span style="color:var(--acc);font-weight:700">+</span><span>{{ cbNat.createLabel }}</span></button>
+                    </sc-if>
+                    <sc-if value="{{ cbNat.empty }}" hint-placeholder-val="{{ false }}">
+                      <span style="padding:8px 12px;font-size:13px;color:var(--mute)">Digite para adicionar uma nacionalidade.</span>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Gênero da obra
+              <div style="position:relative">
+                <input role="combobox" aria-autocomplete="list" aria-expanded="{{ cbGenre.expanded }}" autocomplete="off" value="{{ cbGenre.text }}" onChange="{{ cbGenre.onInput }}" onFocus="{{ cbGenre.onFocus }}" onKeyDown="{{ cbGenre.onKey }}" placeholder="ex.: Romance" style="width:100%;height:40px;padding:0 36px 0 12px;border:1px solid {{ cbGenre.border }};border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none" style-focus="border-color:var(--ink)"></input>
+                <button type="button" tabindex="-1" aria-label="Mostrar opções" onClick="{{ cbGenre.toggle }}" style="position:absolute;right:2px;top:2px;width:36px;height:36px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:5px;height:5px;margin-top:-3px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:{{ cbGenre.chevron }};opacity:.6;transition:transform 200ms"></span></button>
+                <sc-if value="{{ cbGenre.open }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ cbGenre.close }}" style="position:fixed;inset:0;z-index:40"></div>
+                  <div role="listbox" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:41;min-width:200px;max-height:248px;overflow-y:auto;padding:6px;border:1px solid var(--line2);border-radius:12px;background:var(--card);box-shadow:0 14px 40px rgba(0,0,0,.16);display:flex;flex-direction:column;gap:2px;animation:acv-fade 160ms both">
+                    <sc-for list="{{ cbGenre.items }}" as="o" hint-placeholder-count="0">
+                      <button type="button" role="option" aria-selected="{{ o.selected }}" onClick="{{ o.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:0 12px;border:none;border-radius:8px;background:{{ o.bg }};font:inherit;font-size:14px;font-weight:{{ o.weight }};color:var(--ink);text-align:left;cursor:pointer" style-hover="background:var(--seg)"><span>{{ o.label }}</span><span style="color:var(--acc);font-weight:700">{{ o.check }}</span></button>
+                    </sc-for>
+                    <sc-if value="{{ cbGenre.hasCreate }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" onClick="{{ cbGenre.create }}" style="display:flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border:none;border-top:{{ cbGenre.createSep }};border-radius:8px;background:{{ cbGenre.createBg }};font:inherit;font-size:14px;color:var(--ink);text-align:left;cursor:pointer" style-hover="background:var(--seg)"><span style="color:var(--acc);font-weight:700">+</span><span>{{ cbGenre.createLabel }}</span></button>
+                    </sc-if>
+                    <sc-if value="{{ cbGenre.empty }}" hint-placeholder-val="{{ false }}">
+                      <span style="padding:8px 12px;font-size:13px;color:var(--mute)">Nenhum gênero encontrado.</span>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
             <label style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Ano de lançamento
               <input type="number" value="{{ form.year }}" onChange="{{ on.year }}" placeholder="ex.: 1949" style="height:40px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);outline:none" style-focus="border-color:var(--ink)"></input>
             </label>
@@ -793,8 +909,6 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
               <textarea value="{{ form.notes }}" onChange="{{ on.notes }}" rows="4" placeholder="Resenha, citações favoritas, dedicatória, estado de conservação…" style="padding:12px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;line-height:1.5;color:var(--ink);outline:none;resize:vertical" style-focus="border-color:var(--ink)"></textarea>
             </label>
           </div>
-          <datalist id="generos"><sc-for list="{{ genres }}" as="g" hint-placeholder-count="0"><option value="{{ g }}"></option></sc-for></datalist>
-          <datalist id="nacionalidades"><sc-for list="{{ nationalities }}" as="n" hint-placeholder-count="0"><option value="{{ n }}"></option></sc-for></datalist>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--soft);flex-wrap:wrap">
             <div>
               <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
@@ -803,7 +917,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
             </div>
             <div style="display:flex;gap:8px">
               <button onClick="{{ closeModal }}" style="height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer" style-hover="border-color:var(--ink)">Cancelar</button>
-              <button onClick="{{ save }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer;opacity:{{ saveOpacity }}" style-hover="background:var(--acc)" style-active="transform:scale(.97)">Salvar</button>
+              <button onClick="{{ save }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer;opacity:{{ saveOpacity }}" style-hover="background:var(--acc2)" style-active="transform:scale(.97)">Salvar</button>
             </div>
           </div>
         </div>
@@ -811,35 +925,65 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
     </div>
   </sc-if>
 
+  <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="height:96px;flex:none"></div></sc-if>
+
   <sc-if value="{{ surpriseOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeSurprise }}" style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:60px 20px;overflow-y:auto;z-index:35;animation:acv-fade 200ms ease both">
       <div onClick="{{ stop }}" style="background:var(--card);width:100%;max-width:680px;border-radius:16px;overflow:hidden;display:flex;flex-wrap:wrap;box-shadow:0 30px 80px -20px rgba(0,0,0,.4);animation:acv-rise 300ms cubic-bezier(.2,.7,.2,1) both">
+        <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
         <div style="flex:0 0 212px;max-width:100%;padding:24px;background:var(--bg);display:flex;align-items:center">
           <div style="position:relative;width:100%;aspect-ratio:2/3;border-radius:6px;background:{{ sp.coverBg }};color:{{ sp.coverInk }};padding:16px 12px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:0 10px 24px -12px rgba(27,26,23,.45)">
             <span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.8">{{ sp.author }}</span>
-            <span style="font-size:20px;font-weight:700;line-height:1.08">{{ sp.title }}</span>
+            <span style="font-size:20px;font-weight:700;line-height:1.08;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ sp.title }}</span>
             <span style="position:absolute;inset:0;background-image:{{ sp.coverImg }};background-size:cover;background-position:center"></span>
           </div>
         </div>
-        <div style="flex:1 1 320px;min-width:0;padding:24px 28px;display:flex;flex-direction:column;gap:16px">
+        </sc-if>
+        <div style="flex:1 1 280px;min-width:0;padding:{{ spPad }};display:flex;flex-direction:column;gap:16px">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
             <span style="font-size:12px;font-weight:600;color:var(--acc);text-transform:uppercase;letter-spacing:.1em">Me surpreenda</span>
             <button onClick="{{ closeSurprise }}" aria-label="Fechar" style="width:32px;height:32px;border:none;border-radius:8px;background:transparent;font-size:16px;color:var(--mute);cursor:pointer" style-hover="background:var(--hov);color:var(--ink)">✕</button>
           </div>
-          <label style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Sortear entre
-            <select value="{{ spGenre }}" onChange="{{ onSpGenre }}" style="height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);cursor:pointer">
-              <sc-for list="{{ spGenreOpts }}" as="o" hint-placeholder-count="0"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
-            </select>
-          </label>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;color:var(--mute)">Sortear entre
+            <div style="position:relative">
+              <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="{{ cbSp.expanded }}" onClick="{{ cbSp.toggle }}" onKeyDown="{{ cbSp.onKey }}" style="width:100%;height:40px;padding:0 36px 0 12px;border:1px solid {{ cbSp.border }};border-radius:8px;background:var(--card);font:inherit;font-size:14px;color:var(--ink);text-align:left;cursor:pointer;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-focus="border-color:var(--ink)">{{ cbSp.display }}</button>
+              <span aria-hidden="true" style="position:absolute;right:16px;top:16px;width:5px;height:5px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:{{ cbSp.chevron }};opacity:.6;pointer-events:none;transition:transform 200ms"></span>
+              <sc-if value="{{ cbSp.open }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ cbSp.close }}" style="position:fixed;inset:0;z-index:40"></div>
+                <div role="listbox" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:41;max-height:248px;overflow-y:auto;padding:6px;border:1px solid var(--line2);border-radius:12px;background:var(--card);box-shadow:0 14px 40px rgba(0,0,0,.16);display:flex;flex-direction:column;gap:2px;animation:acv-fade 160ms both">
+                  <sc-for list="{{ cbSp.items }}" as="o" hint-placeholder-count="0">
+                    <button type="button" role="option" aria-selected="{{ o.selected }}" onClick="{{ o.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:0 12px;border:none;border-radius:8px;background:{{ o.bg }};font:inherit;font-size:14px;font-weight:{{ o.weight }};color:var(--ink);text-align:left;cursor:pointer" style-hover="background:var(--seg)"><span>{{ o.label }}</span><span style="color:var(--acc);font-weight:700">{{ o.check }}</span></button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </div>
           <sc-if value="{{ spHas }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:16px;animation:acv-fade 300ms both">
+              <div style="position:relative;flex:none;width:84px;aspect-ratio:2/3;border-radius:4px;background:{{ sp.coverBg }};color:{{ sp.coverInk }};padding:8px 7px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:0 6px 14px -8px rgba(27,26,23,.45)">
+                <span style="font-size:6px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.8">{{ sp.author }}</span>
+                <span style="font-size:12px;font-weight:700;line-height:1.08">{{ sp.title }}</span>
+                <span style="position:absolute;inset:0;background-image:{{ sp.coverImg }};background-size:cover;background-position:center"></span>
+              </div>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:12px;color:var(--mute)">{{ spPool }}</span>
+                <h2 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-.025em;line-height:1.15;text-wrap:balance;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ sp.title }}</h2>
+                <span style="font-size:14px;color:var(--mute)">{{ sp.author }}</span>
+                <span style="font-size:12px;color:var(--mute)">{{ spMeta }}</span>
+              </div>
+            </div>
+            </sc-if>
+            <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
             <div style="display:flex;flex-direction:column;gap:8px;animation:acv-fade 300ms both">
               <span style="font-size:12px;color:var(--mute)">{{ spPool }}</span>
-              <h2 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.025em;line-height:1.15;text-wrap:balance">{{ sp.title }}</h2>
+              <h2 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.025em;line-height:1.15;text-wrap:balance;font-family:var(--font-titulo);letter-spacing:-0.01em">{{ sp.title }}</h2>
               <span style="font-size:16px;color:var(--mute)">{{ sp.author }}</span>
               <span style="font-size:14px;color:var(--mute)">{{ spMeta }}</span>
             </div>
+            </sc-if>
             <div style="display:flex;flex-direction:column;gap:8px;padding-top:8px">
-              <button onClick="{{ spStart }}" style="height:44px;padding:0 16px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc)" style-active="transform:scale(.98)">📖 Começar a ler agora (mudar para “Lendo”)</button>
+              <button onClick="{{ spStart }}" style="height:44px;padding:0 16px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc2)" style-active="transform:scale(.98)">📖 Começar a ler agora (mudar para “Lendo”)</button>
               <div style="display:flex;gap:8px">
                 <button onClick="{{ spAgain }}" style="flex:1;height:40px;padding:0 12px;border:1px solid var(--ink);border-radius:8px;background:transparent;color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--hov)" style-active="transform:scale(.98)">🎲 Sortear outro livro</button>
                 <button onClick="{{ spEdit }}" style="flex:none;height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:var(--ink)">Editar ficha</button>
@@ -861,7 +1005,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
           <div style="display:flex;align-items:center;gap:12px;min-width:0">
             <span style="flex:none;width:44px;height:44px;border-radius:50%;background:var(--acc);color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ userInitials }}</span>
             <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
-              <h2 style="margin:0;font-size:20px;font-weight:700">Minha conta</h2>
+              <h2 style="margin:0;font-size:20px;font-weight:700;font-family:var(--font-titulo);letter-spacing:-0.01em">Minha conta</h2>
               <span style="font-size:14px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ userEmail }}</span>
             </div>
           </div>
@@ -880,7 +1024,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
             <span style="font-size:14px;color:var(--acc)">{{ profMsg }}</span>
           </sc-if>
           <div style="display:flex;justify-content:flex-end">
-            <button onClick="{{ saveProfile }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc)">Salvar perfil</button>
+            <button onClick="{{ saveProfile }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc2)">Salvar perfil</button>
           </div>
         </div>
 
@@ -917,7 +1061,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
     <div onClick="{{ closeSync }}" style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:80px 20px;overflow-y:auto;z-index:35;animation:acv-fade 200ms ease both">
       <div onClick="{{ stop }}" style="background:var(--card);width:100%;max-width:560px;border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:16px;box-shadow:0 30px 80px -20px rgba(0,0,0,.4);animation:acv-rise 300ms cubic-bezier(.2,.7,.2,1) both">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <h2 style="margin:0;font-size:20px;font-weight:700">Sincronizar planilha</h2>
+          <h2 style="margin:0;font-size:20px;font-weight:700;font-family:var(--font-titulo);letter-spacing:-0.01em">Sincronizar planilha</h2>
           <button onClick="{{ closeSync }}" aria-label="Fechar" style="width:32px;height:32px;border:none;border-radius:8px;background:transparent;font-size:16px;color:var(--mute);cursor:pointer" style-hover="background:var(--hov);color:var(--ink)">✕</button>
         </div>
         <span style="font-size:14px;color:var(--mute);line-height:1.55">Cole o link da planilha do Google Sheets (compartilhada como “Qualquer pessoa com o link pode ver”). Livros novos são adicionados e os existentes atualizados; anotações, capas, páginas e anos de leitura registrados aqui são preservados.</span>
@@ -927,7 +1071,7 @@ a{color:var(--ink)}a:hover{color:var(--acc)}
         </sc-if>
         <div style="display:flex;justify-content:flex-end;gap:8px">
           <button onClick="{{ closeSync }}" style="height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer" style-hover="border-color:var(--ink)">Fechar</button>
-          <button onClick="{{ runSync }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--ink);color:var(--card);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc)">{{ syncBtn }}</button>
+          <button onClick="{{ runSync }}" style="height:40px;padding:0 20px;border:none;border-radius:8px;background:var(--acc);color:var(--onacc);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--acc2)">{{ syncBtn }}</button>
         </div>
       </div>
     </div>
@@ -1223,6 +1367,17 @@ class Component extends DCLogic {
     document.documentElement.dataset.theme = this.state.theme;
     this.onResize = () => { const n = window.innerWidth <= 640; if (n !== this.state.narrow) this.setState({ narrow: n }); };
     window.addEventListener('resize', this.onResize); this.onResize();
+    this.lastY = 0;
+    this.onScroll = e => {
+      const t = e && e.target, el = !t || t === document || t === document.body || t === document.documentElement ? null : t;
+      if (el && el.scrollHeight - el.clientHeight < 200) return;
+      const y = el ? el.scrollTop : (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0), d = y - this.lastY;
+      if (Math.abs(d) < 8) return;
+      this.lastY = y;
+      const h = d > 0 && y > 80;
+      if (h !== !!this.state.fabHidden) this.setState({ fabHidden: h });
+    };
+    document.addEventListener('scroll', this.onScroll, { passive: true, capture: true });
     this.onKey = e => { if (e.key === 'Escape') this.setState({ modal: null, surprise: null, syncOpen: false, acctOpen: false }); };
     window.addEventListener('keydown', this.onKey);
   }
@@ -1230,12 +1385,46 @@ class Component extends DCLogic {
     if (ps.theme !== this.state.theme) document.documentElement.dataset.theme = this.state.theme;
     if (ps.loading && !this.state.loading && this.sentinel && this.sentinel.getBoundingClientRect().top < window.innerHeight + 300) this.more();
   }
-  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); window.removeEventListener('resize', this.onResize); if (this.io) this.io.disconnect(); if (this.cio) this.cio.disconnect(); clearTimeout(this.mt); clearTimeout(this.tt); }
+  componentWillUnmount() { document.removeEventListener('scroll', this.onScroll, { capture: true }); window.removeEventListener('keydown', this.onKey); window.removeEventListener('resize', this.onResize); if (this.io) this.io.disconnect(); if (this.cio) this.cio.disconnect(); clearTimeout(this.mt); clearTimeout(this.tt); }
 
-  toast(msg) {
+  combo(id, value, opts, free, set) {
+    const c = this.state.combo && this.state.combo.id === id ? this.state.combo : null;
+    const open = !!c, q = free && c && c.typed ? norm(value.trim()) : '';
+    const list = opts.filter(o => !q || norm(o.label).includes(q));
+    const hi = c ? Math.min(c.hi || 0, list.length) : -1;
+    const exact = opts.some(o => norm(o.label) === norm(value.trim()));
+    const hasCreate = free && open && !!value.trim() && !exact;
+    const n = list.length + (hasCreate ? 1 : 0);
+    const pick = v => { set(v); this.setState({ combo: null }); };
+    const selIdx = Math.max(0, list.findIndex(o => o.value === value));
+    return { open, text: value, expanded: open ? 'true' : 'false', chevron: open ? 'rotate(-135deg) translate(-2px,-2px)' : 'rotate(45deg)',
+      border: open ? 'var(--ink)' : 'var(--line2)', fg: value ? 'var(--ink)' : 'var(--mute)',
+      display: (opts.find(o => o.value === value) || opts[0] || {}).label || '',
+      items: list.map((o, i) => { const s = o.value === value; return { label: o.label, selected: s ? 'true' : 'false', check: s ? '✓' : '', weight: s ? 600 : 400, bg: i === hi ? 'var(--seg)' : 'transparent', onClick: () => pick(o.value) }; }),
+      hasCreate, createLabel: 'Adicionar “' + value.trim() + '”', create: () => pick(value.trim()),
+      createBg: hi === list.length ? 'var(--seg)' : 'transparent', createSep: list.length ? '1px solid var(--soft)' : 'none',
+      empty: open && !n,
+      onInput: e => { set(e.target.value); this.setState({ combo: { id, typed: true, hi: 0 } }); },
+      onFocus: () => { if (!open) this.setState({ combo: { id, hi: selIdx } }); },
+      toggle: () => this.setState({ combo: open ? null : { id, hi: selIdx } }),
+      close: () => this.setState({ combo: null }),
+      onKey: e => {
+        const k = e.key;
+        if (!open) { if (k === 'ArrowDown' || k === 'ArrowUp' || (!free && (k === 'Enter' || k === ' '))) { e.preventDefault(); this.setState({ combo: { id, hi: selIdx } }); } return; }
+        if (k === 'ArrowDown' || k === 'ArrowUp') { e.preventDefault(); if (n) this.setState({ combo: { ...c, hi: (hi + (k === 'ArrowDown' ? 1 : -1) + n) % n } }); }
+        else if (k === 'Enter' || (!free && k === ' ')) { e.preventDefault(); if (list[hi]) pick(list[hi].value); else if (hasCreate) pick(value.trim()); }
+        else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.setState({ combo: null }); }
+        else if (k === 'Tab') this.setState({ combo: null });
+      } };
+  }
+  toast(msg, type, detail) {
     clearTimeout(this.tt);
-    this.setState({ toast: null }, () => this.setState({ toast: msg }));
-    this.tt = setTimeout(() => this.setState({ toast: null }), 2400);
+    type = type || 'success';
+    const pend = type === 'success' && this.user().pending ? 'Seus dados foram salvos, mas o cadastro ainda não está completo: confirme seu e-mail.' : '';
+    const note = detail || pend;
+    const ms = type === 'error' ? 6000 : note ? 4800 : 3000;
+    this.setState({ toast: null }, () => this.setState({ toast: msg, toastType: type, toastNote: note, toastMs: ms, toastKey: Date.now() }));
+    this.tt = setTimeout(() => this.setState({ toast: null }), ms);
   }
   nav(page, patch) { this.setState({ page, limit: PAGE, ...(patch || {}) }); window.scrollTo({ top: 0 }); }
   go(patch) { this.nav('estante', { status: 'todos', facet: null, q: '', modal: null, ...patch }); }
@@ -1244,7 +1433,7 @@ class Component extends DCLogic {
   view(book) { this.setState({ modal: { mode: 'view', id: book.id, form: { ...EMPTY, ...book } }, confirmDel: false }); }
   edit(book) {
     this.setState({ modal: book ? { mode: 'edit', id: book.id, form: { ...EMPTY, ...book } } : { mode: 'edit', id: null, form: { ...EMPTY, order: this.nextOrder() } },
-      confirmDel: false, sq: book ? '' : '', sResults: null, sMsg: '', surprise: null });
+      confirmDel: false, sq: book ? '' : '', sResults: null, sMsg: '', surprise: null, combo: null });
   }
   setField(k, v) {
     this.setState(s => {
@@ -1270,7 +1459,7 @@ class Component extends DCLogic {
     this.update(bs => m.id ? bs.map(b => b.id === m.id ? { ...b, ...rec } : b) : [{ id: 'b' + Date.now(), ...rec }, ...bs]);
     this.setState({ modal: null }); this.toast(m.id ? 'Alterações salvas' : 'Livro registrado no acervo');
   }
-  removeId(id) { this.update(bs => bs.filter(b => b.id !== id)); this.toast('Livro excluído'); }
+  removeId(id) { this.update(bs => bs.filter(b => b.id !== id)); this.toast('Livro excluído', 'info'); }
   remove() {
     if (!this.state.confirmDel) return this.setState({ confirmDel: true });
     const id = this.state.modal.id; this.setState({ modal: null }); this.removeId(id);
@@ -1324,7 +1513,7 @@ class Component extends DCLogic {
         const v = JSON.parse(r.result); if (!Array.isArray(v)) throw 0;
         const books = withOrders(v.filter(b => b && b.title).map((b, i) => ({ ...EMPTY, id: b.id || 'i' + Date.now() + i, ...b })));
         this.update(() => books); this.toast('Backup restaurado · ' + books.length + ' livros');
-      } catch (err) { alert('Arquivo inválido.'); }
+      } catch (err) { this.toast('Não foi possível restaurar o backup', 'error', 'O arquivo escolhido não é um backup válido da Bodega Literária.'); }
       e.target.value = '';
     };
     r.readAsText(f);
@@ -1379,6 +1568,7 @@ class Component extends DCLogic {
       this.setState({ syncing: false, syncMsg: 'Sincronizado: ' + upd + ' livros atualizados e ' + add + ' novos.' });
       this.toast('Planilha sincronizada');
     } catch (err) {
+      this.toast('Não foi possível sincronizar', 'error', 'Verifique o compartilhamento da planilha em Minha conta.');
       this.setState({ syncing: false, syncMsg: 'Não foi possível ler a planilha. Confirme que ela está compartilhada como “Qualquer pessoa com o link” e que a primeira linha tem os nomes das colunas (Título, Autor, Status…).' });
     }
   }
@@ -1484,7 +1674,7 @@ class Component extends DCLogic {
       paceBg: onPace ? 'oklch(0.95 0.04 150)' : 'oklch(0.95 0.035 60)', paceFg: onPace ? 'oklch(0.42 0.1 150)' : 'oklch(0.45 0.1 50)',
       goalMinus: () => this.setGoal(-1), goalPlus: () => this.setGoal(1),
       yearReads: yr.map(b => this.mini(b)), hasYearReads: yr.length > 0, noYearReads: yr.length === 0,
-      reading: reading.map(b => ({ ...this.mini(b), finish: () => { this.patch(b.id, { status: 'lido', yearRead: b.yearRead || String(Y) }); this.toast('✓ ' + b.title + ' marcado como lido'); } })),
+      reading: reading.map(b => ({ ...this.mini(b), finish: () => { this.patch(b.id, { status: 'lido', yearRead: b.yearRead || String(Y) }); this.toast(b.title + ' marcado como lido'); } })),
       hasReading: reading.length > 0, noReading: reading.length === 0,
       readingCount: reading.length ? reading.length + (reading.length === 1 ? ' livro' : ' livros') : '',
       recent: recent.map(b => ({ ...this.mini(b), date: fmtDate(b.acquired) })),
@@ -1605,7 +1795,7 @@ class Component extends DCLogic {
       hasFacet: !!facet, facetLabel: facet ? facet.label : '', clearFacet: () => this.setState({ facet: null, limit: PAGE }),
       shelfEmpty: books.length === 0, noMatch: books.length > 0 && list.length === 0,
       clearFilters: () => this.setState({ q: '', status: 'todos', facet: null, limit: PAGE }), isGrid: view === 'grid' && list.length > 0, isList: view === 'list' && list.length > 0,
-      cardMin: (this.props.cardSize ?? 160) + 'px',
+      cardMin: this.state.narrow ? '100%' : (this.props.cardSize ?? 160) + 'px',
       books: list.slice(0, this.state.limit).map((b, i) => {
         const h = hoverId === b.id;
         return {
@@ -1620,9 +1810,9 @@ class Component extends DCLogic {
           edit: e => { e.stopPropagation(); this.edit(b); },
           del: e => { e.stopPropagation(); if (window.confirm('Excluir “' + b.title + '” do acervo?')) this.removeId(b.id); },
           enter: () => this.setState({ hoverId: b.id }), leave: () => this.setState({ hoverId: null }),
-          actOpacity: h ? 1 : 0, actX: h ? '0px' : '10px', actPe: h ? 'auto' : 'none', favBadge: b.fav && !h ? 'block' : 'none',
+          actOpacity: h || this.state.narrow ? 1 : 0, actX: h || this.state.narrow ? '0px' : '10px', actPe: h || this.state.narrow ? 'auto' : 'none', favBadge: b.fav && !h && !this.state.narrow ? 'block' : 'none',
           actions: [
-            [b.fav ? '♥' : '♡', b.fav ? 'Remover dos favoritos' : 'Adicionar aos favoritos', () => { this.patch(b.id, { fav: !b.fav }); this.toast(b.fav ? 'Removido dos favoritos' : '♥ Adicionado aos favoritos'); }, b.fav],
+            [b.fav ? '♥' : '♡', b.fav ? 'Remover dos favoritos' : 'Adicionar aos favoritos', () => { this.patch(b.id, { fav: !b.fav }); this.toast(b.fav ? 'Removido dos favoritos' : 'Adicionado aos favoritos'); }, b.fav],
             ['✓', b.status === 'lido' ? 'Marcar como não lido' : 'Marcar como lido', () => this.setStatus(b, b.status === 'lido' ? 'nao-lido' : 'lido'), b.status === 'lido'],
             ['✎', 'Editar', () => this.edit(b), false],
           ].map(([glyph, label, fn, on]) => ({ glyph, label, bg: on ? '#1b1a17' : '#fff', fg: on ? '#fff' : '#1b1a17', onClick: e => { e.stopPropagation(); fn(); } })),
@@ -1652,7 +1842,7 @@ class Component extends DCLogic {
         const name = (ac.name || '').trim(), email = (ac.email || '').trim();
         if (!name) return this.setState({ acct: { ...ac, profMsg: 'Informe seu nome.' } });
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return this.setState({ acct: { ...ac, profMsg: 'Informe um e-mail válido.' } });
-        this.setUser({ name, email }); this.setState({ acct: { ...ac, profMsg: '' } }); this.toast('Perfil atualizado');
+        const changed = email !== (u.email || ''); this.setUser(changed ? { name, email, pending: true } : { name, email }); this.setState({ acct: { ...ac, profMsg: '' }, verifyHidden: false }); this.toast('Perfil atualizado');
       },
       savePw: () => {
         const m = !ac.pwCur ? 'Informe a senha atual.' : (ac.pwNew || '').length < 6 ? 'A nova senha precisa ter pelo menos 6 caracteres.' : ac.pwNew !== ac.pwNew2 ? 'As senhas não conferem.' : '';
@@ -1663,13 +1853,17 @@ class Component extends DCLogic {
     };
     return {
       authed, notAuthed: !authed, isSignup: signup,
+      showVerify: authed && !!u.pending && !this.state.verifyHidden, verifyEmail: u.email || 'seu e-mail',
+      resendVerify: () => this.toast('Enviamos um novo link', 'info', 'Confira a caixa de entrada de ' + (u.email || 'seu e-mail') + '.'),
+      confirmVerify: () => { this.setUser({ pending: false }); this.toast('E-mail confirmado. Cadastro completo!'); },
+      hideVerify: () => this.setState({ verifyHidden: true }),
       authTabs: [['login', 'Entrar'], ['signup', 'Criar conta']].map(([k, label]) => ({ label, ...seg((this.state.authMode || 'login') === k), onClick: () => this.setState({ authMode: k }) })),
       authTitle: signup ? 'Crie sua conta' : 'Bem-vindo de volta',
       authSub: signup ? 'Comece a catalogar os livros da sua estante.' : 'Entre para acessar seu acervo.',
       authBtn: signup ? 'Criar conta' : 'Entrar',
       pwdAuto: signup ? 'new-password' : 'current-password',
-      authSubmit: e => { e.preventDefault(); const el = e.target.elements; const email = el.email ? el.email.value.trim() : ''; const name = el.nome ? el.nome.value.trim() : ''; enter(signup ? { name, email } : email ? { email } : null); },
-      authGoogle: () => enter(),
+      authSubmit: e => { e.preventDefault(); const el = e.target.elements; const email = el.email ? el.email.value.trim() : ''; const name = el.nome ? el.nome.value.trim() : ''; enter(signup ? { name, email, pending: !!email } : email ? { email } : null); this.setState({ verifyHidden: false }); },
+      authGoogle: () => enter({ pending: false }),
       ...acctVals,
     };
   }
@@ -1697,6 +1891,9 @@ class Component extends DCLogic {
     return {
       tabs: [['painel', 'Painel'], ['estante', 'Estante'], ['dados', 'Dados do acervo']].map(([k, label]) => ({ label, ...seg(page === k), onClick: () => this.nav(k) })),
       q, onSearch: e => this.setState({ q: e.target.value, page: 'estante', limit: PAGE }),
+      narrow: !!this.state.narrow, wide: !this.state.narrow, fabY: this.state.fabHidden && !this.state.toast ? '160px' : '0px', spPad: this.state.narrow ? '20px' : '24px 28px',
+      searchShown: !!(this.state.searchOpen || q), searchBtnBorder: this.state.searchOpen || q ? 'var(--ink)' : 'var(--line2)',
+      toggleSearch: () => this.setState(s => s.searchOpen || s.q ? { searchOpen: false, q: '' } : { searchOpen: true }),
       goPainel: () => this.nav('painel'), goEstante: () => this.go({}),
       openNew: () => this.edit(null), openSurprise: () => this.draw('todos', true),
       themeGlyph: theme === 'dark' ? '☀' : '☾', themeLabel: theme === 'dark' ? 'Modo claro' : 'Modo escuro',
@@ -1726,6 +1923,9 @@ class Component extends DCLogic {
       isLentForm: f.status === 'emprestado',
       genres: [...new Set([...GENRES, ...books.map(b => b.genre).filter(Boolean)])].sort(cmp),
       nationalities: [...new Set(books.map(b => b.nationality).filter(Boolean))].sort(cmp),
+      cbGenre: this.combo('genre', f.genre || '', [...new Set([...GENRES, ...books.map(b => b.genre).filter(Boolean)])].sort(cmp).map(g => ({ value: g, label: g })), true, v => this.setField('genre', v)),
+      cbNat: this.combo('nat', f.nationality || '', [...new Set(books.map(b => b.nationality).filter(Boolean))].sort(cmp).map(g => ({ value: g, label: g })), true, v => this.setField('nationality', v)),
+      cbAuthorG: this.combo('ag', f.authorGender || '', [['', '—'], ['Homem', 'Homem'], ['Mulher', 'Mulher'], ['Não definido', 'Não definido']].map(([value, label]) => ({ value, label })), false, v => this.setField('authorGender', v)),
       saveOpacity: f.title.trim() ? 1 : 0.4, save: () => this.saveForm(), removeBook: () => this.remove(),
       removeLabel: this.state.confirmDel ? 'Confirmar exclusão' : 'Excluir livro',
       closeModal: () => this.setState({ modal: null }),
@@ -1744,15 +1944,20 @@ class Component extends DCLogic {
       spPool: 'Sorteado entre ' + poolN + (poolN === 1 ? ' livro não lido' : ' livros não lidos'),
       spGenre, onSpGenre: e => this.draw(e.target.value, true),
       spGenreOpts: [{ value: 'todos', label: 'Todos os gêneros (' + unread.length + ')' }, ...Object.entries(gm).sort((a, b) => b[1].n - a[1].n).map(([k, v]) => ({ value: k, label: v.label + ' (' + v.n + ')' }))],
+      cbSp: this.combo('sp', spGenre, [{ value: 'todos', label: 'Todos os gêneros (' + unread.length + ')' }, ...Object.entries(gm).sort((a, b) => b[1].n - a[1].n).map(([k, v]) => ({ value: k, label: v.label + ' (' + v.n + ')' }))], false, v => this.draw(v, true)),
       spAgain: () => this.draw(spGenre),
-      spStart: () => { if (!sb) return; this.patch(sb.id, { status: 'lendo', borrower: '' }); this.setState({ surprise: null }); this.toast('📖 Boa leitura: ' + sb.title); },
+      spStart: () => { if (!sb) return; this.patch(sb.id, { status: 'lendo', borrower: '' }); this.setState({ surprise: null }); this.toast('Boa leitura: ' + sb.title); },
       spEdit: () => { if (sb) this.edit(sb); },
 
       syncOpen: this.state.syncOpen, openSync: () => this.setState({ syncOpen: true, syncMsg: '' }), closeSync: () => this.setState({ syncOpen: false }),
       sheetUrl: this.state.sheetUrl, onSheetUrl: e => this.setState({ sheetUrl: e.target.value }),
       runSync: () => this.runSync(), syncBtn: this.state.syncing ? 'Sincronizando…' : 'Sincronizar', hasSyncMsg: !!this.state.syncMsg, syncMsg: this.state.syncMsg,
 
-      hasToast: !!this.state.toast, toastMsg: this.state.toast,
+      hasToast: !!this.state.toast, toastMsg: this.state.toast, hasToastNote: !!this.state.toastNote, toastNote: this.state.toastNote || '',
+      ...(() => { const T = { success: ['✓', 'oklch(0.5 0.11 150)', 'oklch(0.5 0.11 150 / .14)'], error: ['!', 'oklch(0.55 0.18 27)', 'oklch(0.55 0.18 27 / .14)'], warning: ['!', 'oklch(0.6 0.13 70)', 'oklch(0.7 0.13 75 / .2)'], info: ['i', 'oklch(0.52 0.09 245)', 'oklch(0.52 0.09 245 / .14)'] }[this.state.toastType || 'success'];
+        return { toastIcon: T[0], toastColor: T[1], toastTint: T[2], toastRole: this.state.toastType === 'error' ? 'alert' : 'status',
+          closeToast: () => { clearTimeout(this.tt); this.setState({ toast: null }); },
+          toastBar: React.createElement('span', { key: this.state.toastKey, 'aria-hidden': true, style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: T[1], opacity: .55, transformOrigin: 'left', animation: 'acv-toast-bar ' + (this.state.toastMs || 3000) + 'ms linear both' } }) }; })(),
       exportJson: () => this.exportJson(), exportCsv: () => this.exportCsv(),
       pickImport: () => this.fileRef.current && this.fileRef.current.click(),
       onImport: e => this.importJson(e), fileRef: this.fileRef,

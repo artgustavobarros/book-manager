@@ -54,7 +54,7 @@ export function BookCard({
         <span className="font-semibold text-xs uppercase tracking-[.1em] opacity-80">
           {author}
         </span>
-        <span className="text-balance font-bold text-xl leading-[1.08]">
+        <span className="text-balance font-bold font-title text-xl leading-[1.08]">
           {b.title}
         </span>
         <span

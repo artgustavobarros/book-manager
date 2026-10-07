@@ -20,7 +20,7 @@ import {
  * - só as partes usadas (sem chips, grupos e clear), no visual do Design System.
  */
 
-function ChevronDownIcon(props: React.ComponentProps<"svg">) {
+export function ChevronDownIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
       aria-hidden="true"
@@ -37,7 +37,7 @@ function ChevronDownIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
-function CheckIcon(props: React.ComponentProps<"svg">) {
+export function CheckIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
       aria-hidden="true"
@@ -159,6 +159,10 @@ function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
   );
 }
 
+/** Visual do item, compartilhado com o autocomplete (que não tem o check à direita). */
+export const comboboxItemClass =
+  "relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md py-2 pr-2.5 pl-2.5 text-ink text-sm outline-hidden data-disabled:pointer-events-none data-highlighted:bg-hov data-disabled:opacity-50";
+
 function ComboboxItem({
   className,
   children,
@@ -166,10 +170,7 @@ function ComboboxItem({
 }: ComboboxPrimitive.Item.Props) {
   return (
     <ComboboxPrimitive.Item
-      className={cn(
-        "relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md py-2 pr-8 pl-2.5 text-ink text-sm outline-hidden data-disabled:pointer-events-none data-highlighted:bg-hov data-disabled:opacity-50",
-        className
-      )}
+      className={cn(comboboxItemClass, "pr-8", className)}
       data-slot="combobox-item"
       {...props}
     >

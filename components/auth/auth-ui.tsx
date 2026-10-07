@@ -12,7 +12,7 @@ export function AuthHeading({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="m-0 font-bold text-2xl tracking-[-.025em]">{title}</h1>
+      <h1 className="m-0 font-bold font-title text-2xl">{title}</h1>
       <span className="text-pretty text-mute text-sm">{sub}</span>
     </div>
   );

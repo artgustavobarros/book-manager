@@ -68,7 +68,7 @@ function SurpriseBody() {
           <span className="font-semibold text-xs uppercase tracking-[.1em] opacity-80">
             {sb?.author ?? ""}
           </span>
-          <span className="font-bold text-xl leading-[1.08]">
+          <span className="font-bold font-title text-xl leading-[1.08]">
             {sb?.title ?? "?"}
           </span>
           <span
@@ -106,7 +106,7 @@ function SurpriseBody() {
             }}
             value={selected}
           >
-            <ComboboxInput id={genreInputId} />
+            <ComboboxInput className="h-10" id={genreInputId} />
             <ComboboxContent container={panelRef}>
               <ComboboxEmpty>Nenhum gênero encontrado.</ComboboxEmpty>
               <ComboboxList>
@@ -148,7 +148,7 @@ function SurpriseBody() {
               </div>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="text-mute text-xs">{poolLabel}</span>
-                <h2 className="m-0 text-balance font-bold text-xl leading-[1.15] tracking-[-.025em]">
+                <h2 className="m-0 text-balance font-bold font-title text-xl leading-[1.15]">
                   {sb.title}
                 </h2>
                 <span className="text-mute text-sm">{sb.author}</span>
@@ -160,7 +160,7 @@ function SurpriseBody() {
               key={sb.id}
             >
               <span className="text-mute text-xs">{poolLabel}</span>
-              <h2 className="m-0 text-balance font-bold text-2xl leading-[1.15] tracking-[-.025em]">
+              <h2 className="m-0 text-balance font-bold font-title text-2xl leading-[1.15]">
                 {sb.title}
               </h2>
               <span className="text-base text-mute">{sb.author}</span>
@@ -168,11 +168,11 @@ function SurpriseBody() {
             </div>
             <div className="flex flex-col gap-2 pt-2">
               <button
-                className="h-11 rounded-lg border-0 bg-ink px-4 font-semibold text-card text-sm hover:bg-acc active:scale-[.98]"
+                className="h-11 rounded-lg border-0 bg-acc px-4 font-semibold text-onacc text-sm hover:bg-acc2 active:scale-[.98]"
                 onClick={() => {
                   app.setSurpriseOpen(false);
                   void update(sb.id, { status: "lendo", borrower: null }).then(
-                    (ok) => ok && toast("📖 Boa leitura: " + sb.title)
+                    (ok) => ok && toast("Boa leitura: " + sb.title)
                   );
                 }}
                 type="button"

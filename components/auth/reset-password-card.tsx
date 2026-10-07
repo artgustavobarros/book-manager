@@ -34,7 +34,7 @@ export function ResetPasswordCard({ token }: { token: string | null }) {
         />
         <Button asChild size="lg">
           <Link
-            className="text-card no-underline hover:text-card"
+            className="text-onacc no-underline hover:text-onacc"
             href="/esqueci-senha"
           >
             Pedir um novo link

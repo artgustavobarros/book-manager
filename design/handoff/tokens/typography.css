@@ -1,7 +1,8 @@
-/* Escala tipográfica Tailwind. Fonte: Hanken Grotesk (Google Fonts). */
-@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+/* Escala tipográfica Tailwind. Fontes: Instrument Sans (interface) e Fraunces (títulos), Google Fonts. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..600&family=Instrument+Sans:wght@400..700&display=swap');
 :root {
-  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-ui: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+  --font-titulo: 'Fraunces', Georgia, serif; /* títulos: letter-spacing -0.01em */
   --text-xs: 12px;   --leading-xs: 16px;   /* labels, metadados, badges */
   --text-sm: 14px;   --leading-sm: 20px;   /* corpo de UI, botões, inputs */
   --text-base: 16px; --leading-base: 24px; /* títulos de card */
