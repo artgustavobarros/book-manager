@@ -24,7 +24,9 @@ export async function waitForEmail(
       .filter(Boolean)
       .flatMap((l) => {
         try {
-          return [JSON.parse(l) as { to: string; subject: string; text: string }];
+          return [
+            JSON.parse(l) as { to: string; subject: string; text: string },
+          ];
         } catch {
           return [];
         }
