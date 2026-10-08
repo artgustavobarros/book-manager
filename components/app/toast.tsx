@@ -3,6 +3,8 @@
 import { cn } from "cn";
 import { useEffect, useSyncExternalStore } from "react";
 
+import { IconButton } from "@/components/ui/button";
+
 /**
  * Toast do design: um por vez, card com ícone do tipo, mensagem, nota opcional,
  * botão de fechar e barra de tempo restante.
@@ -137,15 +139,14 @@ function ToastCard({ t }: { t: ToastState }) {
           </div>
         ) : null}
       </div>
-      <button
+      <IconButton
         aria-label="Fechar notificação"
-        className="flex size-7 flex-none items-center justify-center rounded-lg border-0 bg-transparent text-mute text-sm hover:bg-seg hover:text-ink"
+        className="size-7 rounded-lg text-sm"
         onClick={dismissToast}
         title="Fechar"
-        type="button"
       >
         ✕
-      </button>
+      </IconButton>
       <span
         aria-hidden="true"
         className={cn(

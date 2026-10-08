@@ -59,4 +59,28 @@ function Button({
   );
 }
 
-export { Button, buttonVariants };
+type IconButtonProps = React.ComponentProps<"button"> & {
+  "aria-label": string;
+};
+
+function IconButton({
+  children,
+  className,
+  type = "button",
+  ...props
+}: IconButtonProps) {
+  return (
+    <button
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center border-0 bg-transparent text-mute transition-colors duration-200 hover:bg-acc/10 hover:text-acc focus-visible:shadow-ring [&>span]:inline-block [&>span]:transition-transform [&>span]:duration-200 hover:[&>span]:scale-110",
+        className
+      )}
+      type={type}
+      {...props}
+    >
+      <span aria-hidden="true">{children}</span>
+    </button>
+  );
+}
+
+export { Button, buttonVariants, IconButton };

@@ -41,7 +41,7 @@ import { GENRES, suggestions } from "@/lib/domain/genres";
 import type { LookupResult } from "@/lib/domain/lookup";
 import { STATUS, stat } from "@/lib/domain/status";
 import { capitalize, fmtDate, nf, norm } from "@/lib/domain/text";
-import { BOOK_STATUSES, type Book, type BookStatus } from "@/lib/domain/types";
+import { BOOK_STATUSES, type Book } from "@/lib/domain/types";
 import {
   type BookFormOutput,
   type BookFormValues,
@@ -49,6 +49,8 @@ import {
 } from "@/lib/validation/book";
 
 // --- Peças compartilhadas ----------------------------------------------------
+
+const STATUS_OPTIONS = STATUS.map((s) => ({ label: s.label, value: s.k }));
 
 /** Painel da capa (esquerda no desktop, linha no topo abaixo de 640px). */
 function CoverPanel({
@@ -139,6 +141,7 @@ function ViewModal({ book }: { book: Book }) {
   const app = useApp();
   const { goShelf } = useShelfState();
   const del = useDelete();
+  const contentRef = useRef<HTMLDivElement>(null);
   const author = book.author || "Autor desconhecido";
   const rows: [string, string | number | null][] = [
     ["Editora", book.publisher],
@@ -152,7 +155,7 @@ function ViewModal({ book }: { book: Book }) {
     ["Ano em que foi lido", book.yearRead],
   ];
   return (
-    <div className="flex flex-wrap">
+    <div className="flex flex-wrap" ref={contentRef}>
       <CoverPanel
         author={author}
         coverUrl={book.coverUrl}
@@ -192,18 +195,27 @@ function ViewModal({ book }: { book: Book }) {
           <ModalClose />
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            aria-label="Status"
-            className="h-9 cursor-pointer rounded-lg border border-line2 bg-card px-3 font-semibold text-ink text-sm"
-            onChange={(e) => app.setStatus(book, e.target.value as BookStatus)}
+          <Select
+            items={STATUS_OPTIONS}
+            onValueChange={(value) => {
+              if (value) {
+                app.setStatus(book, value);
+              }
+            }}
             value={book.status}
           >
-            {STATUS.map((s) => (
-              <option key={s.k} value={s.k}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              aria-label="Status"
+              className="h-9 w-auto min-w-36 font-semibold"
+            />
+            <SelectContent container={contentRef}>
+              {STATUS.map((s) => (
+                <SelectItem key={s.k} value={s.k}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {book.status === "emprestado" && book.borrower ? (
             <span className="rounded-full bg-lentbg px-3 py-1 font-semibold text-lentfg text-sm">
               Emprestado para {book.borrower}
