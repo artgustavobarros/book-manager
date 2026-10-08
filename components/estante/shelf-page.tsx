@@ -30,7 +30,7 @@ import type { Book } from "@/lib/domain/types";
 import { toast } from "../app/toast";
 
 const PAGE = 18;
-/** Largura mínima do card de capa (prop `cardSize` do design: 160px). Até 640px, 1 coluna. */
+/** Largura mínima do card de capa fora da faixa mobile (160px). */
 const CARD_MIN = 160;
 
 function SortMenu({
@@ -284,7 +284,7 @@ export function ShelfPage() {
 
       {state.view === "grid" && list.length > 0 ? (
         <div
-          className="grid grid-cols-[repeat(auto-fill,minmax(var(--card-min),1fr))] gap-x-5 gap-y-7 pt-2 max-[640px]:grid-cols-1"
+          className="grid grid-cols-[repeat(auto-fill,minmax(var(--card-min),1fr))] gap-x-5 gap-y-7 pt-2 max-[641px]:grid-cols-2 max-[641px]:gap-x-3"
           style={{ "--card-min": CARD_MIN + "px" } as React.CSSProperties}
         >
           {visible.map((b, i) => (

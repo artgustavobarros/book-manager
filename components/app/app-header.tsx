@@ -94,7 +94,7 @@ function AccountButton({ className }: { className?: string }) {
 const searchClass =
   "w-full rounded-lg border bg-card text-ink outline-none placeholder:text-[light-dark(#757575,#a9a9a9)]";
 
-/** Header largo (acima de 640px): fixo, translúcido, com todas as ações. */
+/** Header largo (acima de 1024px): fixo, translúcido, com todas as ações. */
 function WideHeader() {
   const app = useApp();
   const books = useBooks();
@@ -102,7 +102,7 @@ function WideHeader() {
   const canSurprise = books.some((b) => b.status === "nao-lido");
 
   return (
-    <header className="sticky top-0 z-[8] border-line border-b bg-hdr backdrop-blur-[10px] max-[640px]:hidden">
+    <header className="sticky top-0 z-[8] border-line border-b bg-hdr backdrop-blur-[10px] max-[1025px]:hidden">
       <div className="mx-auto flex min-h-16 max-w-[1440px] flex-wrap items-center gap-4 px-7 py-3">
         <Brand />
         <div className="flex min-w-0 flex-[1_1_200px]">
@@ -151,7 +151,7 @@ function WideHeader() {
 }
 
 /**
- * Header estreito (até 640px), do design de 2026-10-02: compacto e não fixo. A busca
+ * Header compacto (até 1024px), do design de 2026-10-02: não fixo. A busca
  * abre pelo ícone; "Registrar" e "Me surpreenda" ficam nos botões flutuantes.
  */
 function NarrowHeader() {
@@ -168,7 +168,7 @@ function NarrowHeader() {
   }, [shown]);
 
   return (
-    <header className="relative z-[8] hidden border-line border-b bg-hdr max-[640px]:block">
+    <header className="relative z-[8] hidden border-line border-b bg-hdr max-[1025px]:block">
       <div className="flex flex-col gap-3 px-4 py-3">
         <div className="flex items-center gap-2">
           <Brand className="min-w-0 flex-1" />
