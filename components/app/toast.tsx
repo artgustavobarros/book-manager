@@ -1,13 +1,14 @@
 "use client";
 
 import { cn } from "cn";
-import { useEffect, useSyncExternalStore } from "react";
+import { type CSSProperties, useEffect } from "react";
+import { toast as sonnerToast, useSonner } from "sonner";
 
-import { IconButton } from "@/components/ui/button";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
 /**
- * Toast do design: um por vez, card com ícone do tipo, mensagem, nota opcional,
- * botão de fechar e barra de tempo restante.
+ * Toast do design sobre o Sonner: um por vez, card com ícone do tipo, mensagem,
+ * nota opcional, botão de fechar e barra de tempo restante.
  */
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -17,23 +18,11 @@ interface ToastOptions {
   type?: ToastType;
 }
 
-interface ToastState {
-  id: number;
-  ms: number;
-  msg: string;
-  note: string;
-  type: ToastType;
-}
-
 const PENDING_NOTE =
   "Seus dados foram salvos, mas o cadastro ainda não está completo: confirme seu e-mail.";
 
-let current: ToastState | null = null;
-let timer: ReturnType<typeof setTimeout> | undefined;
 /** Atualizado pelo <Toaster>: e-mail da conta ainda não confirmado. */
 let pendingVerification = false;
-const listeners = new Set<() => void>();
-const emit = () => listeners.forEach((l) => l());
 
 function duration(type: ToastType, note: string) {
   if (type === "error") {
@@ -43,121 +32,65 @@ function duration(type: ToastType, note: string) {
 }
 
 export function toast(msg: string, options: ToastOptions = {}) {
-  clearTimeout(timer);
   const type = options.type ?? "success";
   const note =
     options.note ??
     (type === "success" && pendingVerification ? PENDING_NOTE : "");
   const ms = duration(type, note);
-  // Novo id reinicia a animação e a barra mesmo com a mesma mensagem.
-  current = { id: (current?.id ?? 0) + 1, msg, note, type, ms };
-  emit();
-  timer = setTimeout(dismissToast, ms);
-}
-
-export function dismissToast() {
-  clearTimeout(timer);
-  current = null;
-  emit();
-}
-
-function subscribe(l: () => void) {
-  listeners.add(l);
-  return () => listeners.delete(l);
+  // Um por vez: o novo substitui o atual.
+  sonnerToast.dismiss();
+  sonnerToast[type](msg, {
+    description: note || undefined,
+    duration: ms,
+    // Duração da barra de tempo restante (o ::after do card).
+    style: { "--toast-ms": `${ms}ms` } as CSSProperties,
+  });
 }
 
 /** Há um toast visível (os botões flutuantes não se escondem enquanto isso). */
 export function useToastVisible() {
-  return useSyncExternalStore(
-    subscribe,
-    () => current !== null,
-    () => false
-  );
+  return useSonner().toasts.length > 0;
 }
 
-/** Ícone e cor de cada tipo (`--toast-*` em app/styles/tokens/colors.css). */
-const TYPES: Record<
-  ToastType,
-  { icon: string; fg: string; tint: string; bar: string }
-> = {
-  success: {
-    icon: "✓",
-    fg: "text-toast-success",
-    tint: "bg-toast-success/14",
-    bar: "bg-toast-success",
-  },
-  error: {
-    icon: "!",
-    fg: "text-toast-error",
-    tint: "bg-toast-error/14",
-    bar: "bg-toast-error",
-  },
-  warning: {
-    icon: "!",
-    fg: "text-toast-warning",
-    tint: "bg-toast-warning-tint/20",
-    bar: "bg-toast-warning",
-  },
-  info: {
-    icon: "i",
-    fg: "text-toast-info",
-    tint: "bg-toast-info/14",
-    bar: "bg-toast-info",
-  },
-};
+const iconClass =
+  "flex size-7 flex-none items-center justify-center rounded-full font-bold text-sm leading-none";
 
-function ToastCard({ t }: { t: ToastState }) {
-  const s = TYPES[t.type];
-  return (
-    <div
-      className={cn(
-        "fixed z-50 flex animate-acv-toast-in items-start gap-3 overflow-hidden rounded-xl border border-line bg-card py-3.5 pr-3 pb-4 pl-3.5 text-ink shadow-[0_12px_32px_rgba(0,0,0,.14),0_2px_6px_rgba(0,0,0,.06)]",
-        // Desktop: centralizado. --tx é o deslocamento horizontal, usado também pela animação
-        // (que define `transform`; por isso não usar os utilitários translate-*).
-        "bottom-7 left-1/2 w-[min(440px,calc(100vw-40px))] [--tx:-50%] [transform:translateX(var(--tx))]",
-        // Até 640px: à esquerda da coluna de botões flutuantes.
-        "max-[640px]:right-[88px] max-[640px]:bottom-4 max-[640px]:left-4 max-[640px]:w-auto max-[640px]:[--tx:0px]"
-      )}
+/** Ícone de cada tipo (`--toast-*` em app/styles/tokens/colors.css). */
+const ICONS = {
+  success: (
+    <span
+      aria-hidden="true"
+      className={cn(iconClass, "bg-toast-success/14 text-toast-success")}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "flex size-7 flex-none items-center justify-center rounded-full font-bold text-sm leading-none",
-          s.fg,
-          s.tint
-        )}
-      >
-        {s.icon}
-      </span>
-      <div className="min-w-0 flex-1 pt-1">
-        <div className="text-pretty font-semibold text-sm leading-5">
-          {t.msg}
-        </div>
-        {t.note ? (
-          <div className="mt-0.5 text-pretty text-[13px] text-mute leading-[18px]">
-            {t.note}
-          </div>
-        ) : null}
-      </div>
-      <IconButton
-        aria-label="Fechar notificação"
-        className="size-7 rounded-lg text-sm"
-        onClick={dismissToast}
-        title="Fechar"
-      >
-        ✕
-      </IconButton>
-      <span
-        aria-hidden="true"
-        className={cn(
-          "absolute inset-x-0 bottom-0 h-[3px] origin-left opacity-55",
-          s.bar
-        )}
-        style={{ animation: `acv-toast-bar ${t.ms}ms linear both` }}
-      />
-    </div>
-  );
-}
+      ✓
+    </span>
+  ),
+  error: (
+    <span
+      aria-hidden="true"
+      className={cn(iconClass, "bg-toast-error/14 text-toast-error")}
+    >
+      !
+    </span>
+  ),
+  warning: (
+    <span
+      aria-hidden="true"
+      className={cn(iconClass, "bg-toast-warning-tint/20 text-toast-warning")}
+    >
+      !
+    </span>
+  ),
+  info: (
+    <span
+      aria-hidden="true"
+      className={cn(iconClass, "bg-toast-info/14 text-toast-info")}
+    >
+      i
+    </span>
+  ),
+  close: <span aria-hidden="true">✕</span>,
+};
 
 export function Toaster({
   pendingVerification: pending,
@@ -167,21 +100,37 @@ export function Toaster({
   useEffect(() => {
     pendingVerification = pending;
   }, [pending]);
-  const t = useSyncExternalStore(
-    subscribe,
-    () => current,
-    () => null
-  );
-  // As regiões vivas ficam sempre montadas: leitores de tela costumam ignorar regiões
-  // que já nascem com conteúdo. Erros vão para a região `alert`.
   return (
-    <>
-      <div aria-atomic="true" aria-live="polite" role="status">
-        {t && t.type !== "error" ? <ToastCard key={t.id} t={t} /> : null}
-      </div>
-      <div aria-atomic="true" role="alert">
-        {t && t.type === "error" ? <ToastCard key={t.id} t={t} /> : null}
-      </div>
-    </>
+    <SonnerToaster
+      closeButton
+      containerAriaLabel="Notificações"
+      icons={ICONS}
+      // Desktop: centralizado. Até 600px: à esquerda da coluna de botões flutuantes.
+      mobileOffset={{ bottom: 16, left: 16, right: 88 }}
+      offset={{ bottom: 28 }}
+      position="bottom-center"
+      style={{ "--width": "min(440px, calc(100vw - 40px))" } as CSSProperties}
+      toastOptions={{
+        unstyled: true,
+        closeButtonAriaLabel: "Fechar notificação",
+        classNames: {
+          // O CSS do Sonner fica fora das @layer e supõe offsets simétricos no mobile:
+          // a largura descontando os dois lados precisa de `!`.
+          toast:
+            "flex w-full max-[600px]:w-[calc(100%-var(--mobile-offset-left)-var(--mobile-offset-right))]! items-start font-sans gap-3 overflow-hidden rounded-xl border border-line bg-card py-3.5 pr-3 pb-4 pl-3.5 text-ink shadow-[0_12px_32px_rgba(0,0,0,.14),0_2px_6px_rgba(0,0,0,.06)] after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:origin-left after:opacity-55 after:[animation:acv-toast-bar_var(--toast-ms)_linear_both] data-[expanded=true]:after:[animation-play-state:paused]",
+          success: "after:bg-toast-success",
+          error: "after:bg-toast-error",
+          warning: "after:bg-toast-warning",
+          info: "after:bg-toast-info",
+          content: "min-w-0 flex-1 pt-1",
+          title: "text-pretty font-semibold text-sm leading-5",
+          description:
+            "mt-0.5 text-pretty text-[13px] text-mute leading-[18px]",
+          closeButton:
+            "order-last flex size-7 flex-none items-center justify-center rounded-lg border-0 bg-transparent text-mute text-sm transition-colors duration-200 hover:bg-acc/10 hover:text-acc focus-visible:shadow-ring",
+        },
+      }}
+      visibleToasts={1}
+    />
   );
 }

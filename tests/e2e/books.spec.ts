@@ -208,13 +208,13 @@ test.describe("acervo", () => {
       mimeType: "application/json",
       buffer: Buffer.from("isto não é json"),
     });
-    // O toast de erro fica na região `alert` (as outras ficam em `status`).
-    const alert = page.getByRole("alert");
+    // Os toasts (Sonner) ficam na região viva "Notificações".
+    const toasts = page.getByRole("region", { name: /Notificações/ });
     await expect(
-      alert.getByText("Não foi possível restaurar o backup")
+      toasts.getByText("Não foi possível restaurar o backup")
     ).toBeVisible();
     await expect(
-      alert.getByText(
+      toasts.getByText(
         "O arquivo escolhido não é um backup válido da Bodega Literária."
       )
     ).toBeVisible();
@@ -329,7 +329,9 @@ test.describe("acervo", () => {
       .first();
     await expect(cycleBtn).toBeVisible();
     await cycleBtn.click();
-    await expect(page.getByRole("status").first()).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: /Notificações/ }).getByRole("listitem")
+    ).toBeVisible();
   });
 
   test("busca mobile auto-foca input ao abrir", async ({ page }) => {
