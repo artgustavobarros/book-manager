@@ -50,10 +50,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <EmailVerificationBanner key={pathname} />
       {children}
       <AppFooter />
-      {/* Até 640px: espaço para os botões flutuantes não cobrirem o fim da página. */}
+      {/* Espaço para os botões flutuantes não cobrirem o fim da página. */}
       <div
         aria-hidden="true"
-        className="hidden h-24 flex-none max-[640px]:block"
+        className="hidden h-24 flex-none max-[1025px]:block"
       />
       <MobileFabs />
       <Toaster pendingVerification={!user.emailVerified} />

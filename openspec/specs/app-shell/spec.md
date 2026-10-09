@@ -23,7 +23,7 @@ As telas existentes em `design/handoff/source/Acervo.dc.html` (standalone da ide
 - **THEN** a saudação, os valores dos KPIs e o número da meta usam Fraunces, e os rótulos, botões e textos de interface usam Instrument Sans, ambas servidas pelo próprio app
 
 ### Requirement: Header e navegação
-O layout autenticado SHALL ter um header com a marca (que leva ao Painel), a busca, as abas Painel / Estante / Dados do acervo como controle segmentado, o botão de tema e o avatar. Cada aba MUST corresponder a uma rota (`/`, `/estante`, `/dados`). Acima de 640px de largura, o header MUST ser fixo, translúcido com blur, e conter também "Me surpreenda" e "+ Registrar livro". Até 640px, o header MUST ser compacto e não fixo: marca, botão de busca (44px), botão de tema (44px) e avatar (44px) numa linha, e as abas ocupando a largura toda na linha de baixo. O campo de busca MUST aparecer quando o botão de busca é acionado ou quando a pessoa escolhe editar uma consulta ativa. Recolher o campo MUST preservar o texto e o filtro; uma ação separada, nomeada "Limpar busca", MUST apagá-los. Se houver consulta ativa recolhida, o header MUST mostrá-la de forma visível e removível.
+O layout autenticado SHALL ter um header com a marca (que leva ao Painel), a busca, as abas Painel / Estante / Dados do acervo como controle segmentado, o botão de tema e o avatar. Cada aba MUST corresponder a uma rota (`/`, `/estante`, `/dados`). Acima de 1024px de largura, o header MUST ser fixo, translúcido com blur, e conter também "Me surpreenda" e "+ Registrar livro". Até 1024px, o header MUST ser compacto e não fixo: marca, botão de busca (44px), botão de tema (44px) e avatar (44px) numa linha, e as abas ocupando a largura toda na linha de baixo. O campo de busca MUST aparecer quando o botão de busca é acionado ou quando a pessoa escolhe editar uma consulta ativa. Recolher o campo MUST preservar o texto e o filtro; uma ação separada, nomeada "Limpar busca", MUST apagá-los. Se houver consulta ativa recolhida, o header MUST mostrá-la de forma visível e removível.
 
 #### Scenario: Navegar entre abas
 - **WHEN** o usuário clica em "Dados do acervo"
@@ -123,7 +123,7 @@ As páginas do app SHALL renderizar no servidor já com o acervo do usuário, se
 - **THEN** o HTML inicial já contém os primeiros cards de livro
 
 ### Requirement: Botões flutuantes no mobile
-Até 640px de largura, o layout autenticado SHALL mostrar no canto inferior direito o botão "Registrar livro" (56px, "+") e, acima dele, o botão "Me surpreenda" (48px, 🎲), desabilitado e esmaecido quando não há livro "Não lido". Os botões MUST se esconder quando o usuário rola a página para baixo e voltar quando rola para cima ou chega ao topo. O fim de cada página MUST ter um espaço de 96px para que os botões não cubram o último conteúdo.
+Até 1024px de largura, o layout autenticado SHALL mostrar no canto inferior direito o botão "Registrar livro" (56px, "+") e, acima dele, o botão "Me surpreenda" (48px, 🎲), desabilitado e esmaecido quando não há livro "Não lido". Os botões MUST se esconder quando o usuário rola a página para baixo e voltar quando rola para cima ou chega ao topo. O fim de cada página MUST ter um espaço de 96px para que os botões não cubram o último conteúdo.
 
 #### Scenario: Esconder ao rolar
 - **WHEN** a 390px o usuário rola a Estante para baixo
@@ -227,9 +227,34 @@ O header (desktop e mobile) e a tela de entrada SHALL mostrar a marca da Bodega 
 - **THEN** a garrafa e "Literária" usam o acento do tema escuro, e os livros, a linha de base e "Bodega" usam o texto principal do tema escuro
 
 ### Requirement: Busca mobile ergonômica com foco automático
-No viewport móvel (até 640px), o acionamento do botão de busca no header SHALL expandir o campo de busca e focar imediatamente o elemento de entrada (`input`), permitindo digitação instantânea sem exigir um segundo toque do usuário.
+No cabeçalho compacto (até 1024px), o acionamento do botão de busca no header SHALL expandir o campo de busca e focar imediatamente o elemento de entrada (`input`), permitindo digitação instantânea sem exigir um segundo toque do usuário.
 
 #### Scenario: Abrir busca no smartphone
 - **WHEN** o usuário em viewport de 390px toca no ícone de busca do header
 - **THEN** o campo de busca abre com foco automático e teclado virtual disponível para digitação imediata
 
+### Requirement: Cabeçalho compacto consistente no celular e no tablet
+O sistema SHALL exibir o mesmo cabeçalho compacto em páginas autenticadas quando a largura da janela for de até 1024 px. Esse cabeçalho MUST oferecer marca, abas Painel, Estante e Dados do acervo, além dos ícones de busca, tema e conta com os mesmos rótulos e ações em celular e tablet. Acima de 1024 px, o sistema SHALL exibir somente o cabeçalho largo.
+
+#### Scenario: Celular e tablet mostram as mesmas ações
+- **WHEN** a pessoa abre uma página autenticada com largura de 390 px ou 768 px
+- **THEN** há exatamente um cabeçalho visível com os ícones de busca, tema e conta e as mesmas três abas de navegação
+
+#### Scenario: Busca funciona no tablet como no celular
+- **WHEN** a pessoa abre a busca pelo ícone em uma janela de 768 px
+- **THEN** o campo de busca recebe foco e permite consultar o acervo sem perder o valor ao recolher a busca
+
+#### Scenario: Limite entre tablet e desktop
+- **WHEN** a largura da janela passa de 1024 px para 1025 px
+- **THEN** somente o cabeçalho largo fica visível
+
+### Requirement: Ações de acervo disponíveis com o cabeçalho compacto
+O sistema SHALL oferecer os controles flutuantes de registrar livro e me surpreenda em toda largura que usar o cabeçalho compacto, inclusive em tablets. O estado indisponível de me surpreenda MUST continuar visível e desabilitado quando não houver livro elegível, e o conteúdo final da página MUST permanecer acessível sem ser coberto pelos controles.
+
+#### Scenario: Tablet com livro elegível
+- **WHEN** a pessoa usa a estante em uma janela de 768 px e existe um livro não lido
+- **THEN** consegue abrir o registro e o sorteio pelos controles flutuantes
+
+#### Scenario: Tablet sem livro elegível
+- **WHEN** a pessoa usa a estante em uma janela de 1024 px e não existe livro não lido
+- **THEN** o controle de sorteio está visível e desabilitado, enquanto o registro permanece disponível

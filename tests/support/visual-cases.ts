@@ -113,8 +113,8 @@ export async function openApp(
 /**
  * Casos que divergem de propósito do standalone em design/handoff: saem do oráculo e
  * passam a ter baselines próprias em diverged.spec.ts. O standalone da identidade bordô
- * (change nova-identidade-visual) já tem header compacto, botões flutuantes e Estante em
- * 1 coluna; no mobile continuam diferentes os ajustes do app: pontos do carrossel maiores
+ * (change nova-identidade-visual) já tem header compacto e botões flutuantes; no mobile
+ * continuam diferentes os ajustes do app: Estante em duas colunas, pontos do carrossel maiores
  * (alvo de toque), contadores dos chips com mais contraste, selo da meta na linha do
  * título, lista responsiva, "Cor/etnia do autor(a)" na ficha e o rodapé.
  */

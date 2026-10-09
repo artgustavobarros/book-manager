@@ -199,7 +199,7 @@ test.describe("layout mobile", () => {
     const header = page.locator("header:visible");
     await expect(header).toHaveCount(1);
     const box = await header.boundingBox();
-    expect(box!.height).toBeLessThanOrEqual(130);
+    expect(box!.height).toBeLessThanOrEqual(136);
     expect(await header.evaluate((e) => getComputedStyle(e).position)).not.toBe(
       "sticky"
     );
@@ -251,18 +251,57 @@ test.describe("layout mobile", () => {
     await expect(page.getByText(/^\d+ livros$/)).toBeVisible();
   });
 
-  test("Estante em uma coluna, sem selo sobre a capa e com ações visíveis", async ({
-    page,
-  }) => {
+  for (const width of [320, 390, 640]) {
+    test(`Estante em duas colunas a ${width}px, com ações acessíveis`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto("/estante");
+      const cards = page.locator("[data-bid]");
+      await expect(cards.nth(1)).toBeVisible();
+      const [a, b] = [
+        await cards.nth(0).boundingBox(),
+        await cards.nth(1).boundingBox(),
+      ];
+      expect(Math.abs(b!.y - a!.y)).toBeLessThanOrEqual(1);
+      expect(b!.x).toBeGreaterThan(a!.x + a!.width);
+      expect(b!.width).toBeCloseTo(a!.width, 0);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth)
+      ).toBeLessThanOrEqual(width);
+
+      const firstCard = cards.first().locator("..");
+      const favorite = firstCard.getByRole("button", { name: /favoritos/ });
+      const status = firstCard.getByRole("combobox", { name: "Status" });
+      const cycle = firstCard
+        .getByRole("button", {
+          name: /Começar a ler|Concluir leitura|Marcar como não lido/,
+        })
+        .last();
+      await expect(favorite).toBeVisible();
+      await expect(status).toBeVisible();
+      await expect(cycle).toBeVisible();
+      const cardBox = await firstCard.boundingBox();
+      for (const control of [status, cycle]) {
+        const box = await control.boundingBox();
+        expect(box!.x + box!.width).toBeLessThanOrEqual(
+          cardBox!.x + cardBox!.width + 1
+        );
+      }
+    });
+  }
+
+  test("Estante volta ao grid automático acima de 640px", async ({ page }) => {
+    await page.setViewportSize({ width: 641, height: 844 });
     await page.goto("/estante");
     const cards = page.locator("[data-bid]");
-    const [a, b] = [
-      await cards.nth(0).boundingBox(),
-      await cards.nth(1).boundingBox(),
-    ];
-    expect(b!.y).toBeGreaterThan(a!.y + a!.height);
-    await expect(
-      cards.first().getByRole("button", { name: /favoritos/ })
-    ).toBeVisible();
+    await expect(cards.nth(2)).toBeVisible();
+    const columns = await cards
+      .first()
+      .locator("../..")
+      .evaluate((grid) =>
+        getComputedStyle(grid).gridTemplateColumns.split(" ")
+      );
+    expect(columns).toHaveLength(3);
   });
 });

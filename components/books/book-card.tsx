@@ -41,7 +41,7 @@ export function BookCard({
   ];
   return (
     <div
-      className="group flex animate-acv-in cursor-pointer flex-col gap-3"
+      className="group flex min-w-0 animate-acv-in cursor-pointer flex-col gap-3"
       onClick={() => app.openView(b.id)}
       style={{ animationDelay: delayMs + "ms" }}
     >
@@ -51,10 +51,10 @@ export function BookCard({
         ref={coverRef}
         style={{ background: coverBg, color: coverInk }}
       >
-        <span className="font-semibold text-xs uppercase tracking-[.1em] opacity-80">
+        <span className="break-words font-semibold text-xs uppercase tracking-[.1em] opacity-80">
           {author}
         </span>
-        <span className="text-balance font-bold font-title text-xl leading-[1.08]">
+        <span className="text-balance break-words font-bold font-title text-xl leading-[1.08]">
           {b.title}
         </span>
         <span
@@ -63,17 +63,17 @@ export function BookCard({
         />
         {/* Sem selo de status sobre a capa (cobria o autor): o status fica no seletor abaixo. */}
         {b.favorite ? (
-          <span className="absolute top-2 right-2 text-sm text-white [text-shadow:0_1px_3px_rgba(0,0,0,.4)] group-hover:hidden max-[640px]:hidden">
+          <span className="absolute top-2 right-2 text-sm text-white [text-shadow:0_1px_3px_rgba(0,0,0,.4)] group-hover:hidden max-[641px]:hidden">
             ♥
           </span>
         ) : null}
         {/* Ações no hover; até 640px (toque, sem hover) ficam sempre visíveis. */}
-        <div className="pointer-events-none absolute top-2 right-2 z-[2] flex translate-x-[10px] flex-col gap-2 opacity-0 transition-[opacity,transform] duration-200 ease-[ease] group-focus-within:pointer-events-auto group-focus-within:translate-x-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-x-0 group-hover:opacity-100 max-[640px]:pointer-events-auto max-[640px]:translate-x-0 max-[640px]:opacity-100">
+        <div className="pointer-events-none absolute top-2 right-2 z-[2] flex translate-x-[10px] flex-col gap-2 opacity-0 transition-[opacity,transform] duration-200 ease-[ease] group-focus-within:pointer-events-auto group-focus-within:translate-x-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-x-0 group-hover:opacity-100 max-[641px]:pointer-events-auto max-[641px]:translate-x-0 max-[641px]:opacity-100">
           {actions.map(([glyph, label, fn, on]) => (
             <button
               aria-label={label}
               className={cn(
-                "flex size-9 items-center justify-center rounded-full border-0 text-base leading-none shadow-[0_2px_8px_rgba(27,26,23,.2)] transition-[background-color,color] duration-150 active:scale-[.86] max-[640px]:size-11",
+                "flex size-9 items-center justify-center rounded-full border-0 text-base leading-none shadow-[0_2px_8px_rgba(27,26,23,.2)] transition-[background-color,color] duration-150 active:scale-[.86] max-[641px]:size-11",
                 on ? "bg-[#1b1a17] text-white" : "bg-white text-[#1b1a17]"
               )}
               key={label}
@@ -95,7 +95,7 @@ export function BookCard({
         </span>
         {/* O card inteiro abre a ficha com o mouse; o título é o alvo do teclado. */}
         <button
-          className="text-pretty border-0 bg-transparent p-0 text-left font-semibold text-ink text-sm leading-[1.25]"
+          className="text-pretty break-words border-0 bg-transparent p-0 text-left font-semibold text-ink text-sm leading-[1.25]"
           onClick={(e) => {
             e.stopPropagation();
             app.openView(b.id);
@@ -105,7 +105,7 @@ export function BookCard({
           {b.title}
         </button>
         <button
-          className="cursor-pointer self-start border-0 bg-transparent p-0 text-left text-mute text-xs hover:text-acc hover:underline"
+          className="max-w-full cursor-pointer self-start break-words border-0 bg-transparent p-0 text-left text-mute text-xs hover:text-acc hover:underline"
           onClick={(e) => {
             e.stopPropagation();
             onAuthor(author);
@@ -126,7 +126,7 @@ export function BookCard({
             onReturn={() => app.returnBook(b)}
           />
         ) : null}
-        <div className="mt-2 flex items-center gap-1.5 self-start">
+        <div className="mt-2 flex max-w-full flex-wrap items-center gap-1.5 self-start">
           <StatusSelect
             onChange={(k) => app.setStatus(b, k)}
             value={b.status}
@@ -139,7 +139,7 @@ export function BookCard({
                   ? "Concluir leitura"
                   : "Começar a ler"
             }
-            className="flex size-7 items-center justify-center rounded-full border border-line2 bg-card text-ink text-xs transition-colors hover:border-ink hover:text-acc active:scale-95 max-[640px]:size-9 max-[640px]:min-h-9 max-[640px]:min-w-9"
+            className="flex size-7 items-center justify-center rounded-full border border-line2 bg-card text-ink text-xs transition-colors hover:border-ink hover:text-acc active:scale-95 max-[641px]:size-9 max-[641px]:min-h-9 max-[641px]:min-w-9"
             onClick={(e) => {
               e.stopPropagation();
               app.cycleStatus(b);

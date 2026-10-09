@@ -39,7 +39,7 @@ function useHideOnScroll() {
 
 /**
  * "Me surpreenda" (🎲, 48px) e "Registrar livro" (+, 56px) flutuando no canto, só até
- * 640px de largura (design de 2026-10-02), onde o header não tem essas ações.
+ * 1024px de largura, onde o header compacto não tem essas ações.
  */
 export function MobileFabs() {
   const app = useApp();
@@ -53,7 +53,7 @@ export function MobileFabs() {
     <div
       aria-hidden={hidden || undefined}
       className={cn(
-        "fixed right-4 bottom-4 z-20 hidden flex-col items-center gap-3 transition-[transform,opacity] duration-200 ease-out max-[640px]:flex",
+        "fixed right-4 bottom-4 z-20 hidden flex-col items-center gap-3 transition-[transform,opacity] duration-200 ease-out max-[1025px]:flex",
         hidden && "pointer-events-none translate-y-[calc(100%+16px)] opacity-0"
       )}
       data-hidden={hidden ? "true" : undefined}

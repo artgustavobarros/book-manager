@@ -23,7 +23,7 @@ export function StatusSelect({
   const dot = stat(value).dot;
   return (
     <span
-      className={cn("relative flex items-center", className)}
+      className={cn("relative flex max-w-full items-center", className)}
       onClick={(e) => e.stopPropagation()}
     >
       <span
@@ -34,7 +34,7 @@ export function StatusSelect({
       <select
         aria-label="Status"
         className={cn(
-          "h-7 cursor-pointer appearance-none rounded-full border border-transparent pr-7 pl-6 font-semibold text-ink text-xs outline-none transition-[border-color,background-color] duration-150 hover:border-line2 focus:border-ink",
+          "h-7 max-w-full cursor-pointer appearance-none rounded-full border border-transparent pr-7 pl-6 font-semibold text-ink text-xs outline-none transition-[border-color,background-color] duration-150 hover:border-line2 focus:border-ink",
           selectClassName
         )}
         onChange={(e) => onChange(e.target.value as BookStatus)}
