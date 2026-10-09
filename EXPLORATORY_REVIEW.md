@@ -102,6 +102,87 @@ As 4 propostas foram criadas no sistema OpenSpec (`openspec/changes/`) na ordem 
 
 ---
 
+### Item 5: `Button` e `IconButton` estilizados dentro de `components/ui/`
+* **Origem:** proposta `adopt-shadcn-sonner-base-ui` (fora do escopo).
+* **O que precisa mudar:**
+  * Pela convenção shadcn-first (spec `ui-components`), `components/ui/` fica como a CLI gera. Hoje `ui/button.tsx` tem as variantes da Bodega (`primary`, `neutral`, `danger`, tamanhos `xs`/`none`) e o `IconButton`, que é estilizado ali.
+  * O `IconButton` se repete em 4 lugares (`ModalClose`, aviso de e-mail, meta do Painel e, antes do Sonner, o toast), então deve ir para `components/custom/`.
+* **Como reproduzir:**
+  1. Comparar `components/ui/button.tsx` com o original em `https://ui.shadcn.com/r/styles/base-nova/button.json`.
+  2. Observar variantes e o `IconButton` que não existem no componente original.
+* **Critérios de Aceitabilidade:**
+  - `components/ui/button.tsx` igual ao gerado pela CLI (Base UI).
+  - Estilos repetidos da Bodega em `components/custom/` (ex.: `custom/icon-button.tsx` envolvendo o `Button`).
+  - Testes visuais sem regressão.
+
+---
+
+### Item 6: Componentes feitos à mão com equivalente no shadcn
+* **Origem:** auditoria shadcn-first (proposta `adopt-shadcn-sonner-base-ui`).
+* **O que precisa mudar:** trocar pelo componente do shadcn, estilizando no ponto de uso:
+
+  | Hoje | Onde | shadcn |
+  |---|---|---|
+  | `Segmented` (botões com `aria-pressed`) | `ui/segmented.tsx`, Estante, Dados | ToggleGroup |
+  | `SortMenu` com `Popover` do `radix-ui` direto | `estante/shelf-page.tsx` | Popover (ou DropdownMenu + RadioGroup) |
+  | Abas manuais (`role="tablist"`) | `auth/sign-in-card.tsx` | Tabs |
+  | `<textarea>` e `<label>` crus | `book-modals`, `account-modal`, `surprise-modal`, `sign-in-card` | Textarea, Label / Field |
+  | Barras de progresso | Painel (meta), Dados | Progress |
+  | Pílulas de status / emprestado | `books/lent-badge.tsx`, `book-modals` | Badge |
+  | `Avatar` próprio | `app/avatar.tsx` | Avatar |
+  | `title=` como dica (22 arquivos) | vários | Tooltip (ou só `aria-label`, já que tooltip não funciona no toque) |
+  | `Carousel` próprio | `ui/carousel.tsx` | Carousel (embla) |
+  | ~100 `<button>`/`<input>` crus fora de `ui/` | `book-modals` (24), `shelf-page` (13), `account-modal` (12), `insights-page` (11)… | Button, Input |
+* **Como reproduzir:** `grep -rnE '<(button|select|input|textarea)\b' components app --include=*.tsx | grep -v components/ui/`
+* **Critérios de Aceitabilidade:**
+  - Cada troca usa o componente de `components/ui/` sem alterá-lo; estilos repetidos vão para `components/custom/`.
+  - Testes visuais e e2e sem regressão.
+
+---
+
+### Item 7: Seletor de status com duas implementações
+* **Origem:** commit `5e24a86` (ficha passou a usar `Select`).
+* **O que precisa mudar:** a ficha usa o `Select` (Base UI), mas os cards e linhas da Estante usam o `StatusSelect` com `<select>` nativo. O mesmo controle tem visual e comportamento diferentes.
+* **Como reproduzir:**
+  1. Abrir a ficha de um livro e trocar o status.
+  2. Trocar o status pelo card na Estante e comparar.
+* **Critérios de Aceitabilidade:**
+  - Uma única implementação (provavelmente `custom/status-select.tsx` sobre o `Select`), avaliando desempenho com 600 livros (persona `arthur.whale`) e o seletor nativo do sistema no mobile.
+
+---
+
+### Item 8: Primitivas Radix restantes e configuração do shadcn
+* **Origem:** proposta `adopt-shadcn-sonner-base-ui` (Base UI virou o padrão).
+* **O que precisa mudar:**
+  * `ui/dialog.tsx`, `ui/alert-dialog.tsx` e o `Slot` de `ui/button.tsx` ainda usam `radix-ui`.
+  * `components.json` aponta `utils` para `@/lib/utils`, que ninguém importa (o código usa o pacote `cn`).
+  * Os tokens semânticos do shadcn (`primary`, `muted`, `popover`…) estão mapeados no `globals.css`, mas têm 0 usos.
+* **Critérios de Aceitabilidade:**
+  - Dialog e AlertDialog em Base UI, sem regressão de foco, rascunho e testes visuais.
+  - `components.json` e tokens refletindo o que o código usa de fato.
+
+---
+
+### Item 9: Testes e2e quebrados antes desta proposta
+* **Origem:** verificação da proposta `adopt-shadcn-sonner-base-ui`.
+* **O que precisa mudar:**
+  * `books.spec.ts` › "Salvar fica inativo sem título e números são validados": espera `aria-disabled="true"` no Salvar do formulário, mas o botão (`book-modals.tsx`) não tem o atributo.
+  * `books.spec.ts` › "ações rápidas de status na Estante e no Painel": o clique no botão de ciclo é interceptado pela capa e pelo header (falha também sem as mudanças da proposta).
+* **Como reproduzir:** `pnpm exec playwright test --project=setup --project=e2e tests/e2e/books.spec.ts`
+* **Critérios de Aceitabilidade:**
+  - Os dois testes passam, corrigindo o app (se o comportamento esperado ainda vale) ou o teste.
+
+---
+
+### Item 10: Toast de erro sem anúncio assertivo
+* **Origem:** troca para o Sonner (proposta `adopt-shadcn-sonner-base-ui`).
+* **O que precisa mudar:** antes, erros iam para uma região `role="alert"` (interrompe o leitor de tela). O Sonner tem uma única região `aria-live="polite"`.
+* **Como reproduzir:** com leitor de tela ativo, restaurar um backup inválido e observar que o erro espera a fala atual terminar.
+* **Critérios de Aceitabilidade:**
+  - Decidir se o anúncio educado basta ou se erros precisam de um anúncio assertivo à parte (ex.: região `alert` oculta que repete a mensagem).
+
+---
+
 ## 4. Status de Execução e Pull Requests Abertos
 
 Todas as 4 propostas foram implementadas e submetidas em branches individuais, mantendo a branch `main` limpa e sem commits diretos:

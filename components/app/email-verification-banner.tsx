@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, IconButton } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { api } from "@/lib/client/api";
@@ -136,17 +136,16 @@ export function EmailVerificationBanner() {
           <Button disabled={checking} onClick={() => void checkNow()} size="sm">
             {checking ? "Conferindo…" : "Já confirmei"}
           </Button>
-          <button
+          <IconButton
             aria-label="Fechar aviso de confirmação"
-            className="flex size-9 items-center justify-center rounded-lg border-0 bg-transparent text-mute hover:bg-hov hover:text-ink focus-visible:shadow-ring"
+            className="size-9 rounded-lg"
             onClick={() => {
               setDismissed(true);
               focusMain();
             }}
-            type="button"
           >
-            <span aria-hidden="true">×</span>
-          </button>
+            ×
+          </IconButton>
         </div>
         {message ? (
           <p

@@ -13,9 +13,7 @@ export function AppFooter() {
   return (
     <footer className="border-line border-t">
       <div className="mx-auto flex max-w-[1440px] flex-wrap justify-between gap-4 px-7 py-4 text-mute text-xs">
-        <span>
-          Bodega Literária · os livros de casa, guardados na sua conta.
-        </span>
+        <span>Bodega Literária</span>
         <div className="flex flex-wrap gap-5">
           <button
             className={linkClass}
