@@ -220,6 +220,51 @@ test.describe("acervo", () => {
     ).toBeVisible();
   });
 
+  test("restaurar backup sem livros válidos não pede confirmação nem apaga o acervo", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const [chooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Restaurar backup" }).click(),
+    ]);
+    await chooser.setFiles({
+      name: "backup.json",
+      mimeType: "application/json",
+      buffer: Buffer.from('[{"foo":1},{"bar":2}]'),
+    });
+    const toasts = page.getByRole("region", { name: /Notificações/ });
+    await expect(
+      toasts.getByText(
+        "O arquivo escolhido não é um backup válido da Bodega Literária."
+      )
+    ).toBeVisible();
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(page.getByText("Livros no acervo")).toBeVisible();
+  });
+
+  test("a confirmação de restaurar conta só os livros válidos", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const [chooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Restaurar backup" }).click(),
+    ]);
+    await chooser.setFiles({
+      name: "backup.json",
+      mimeType: "application/json",
+      buffer: Buffer.from('[{"title":"A"},{"title":"B"},{"foo":1}]'),
+    });
+    const dialog = page.getByRole("alertdialog");
+    await expect(
+      dialog.getByText(/O backup tem 2 livros \(1 item ignorado\)/)
+    ).toBeVisible();
+    // Cancela: o acervo de referência é compartilhado pelos testes seguintes.
+    await dialog.getByRole("button", { name: "Cancelar" }).click();
+    await expect(dialog).toHaveCount(0);
+  });
+
   test("Salvar fica inativo sem título e números são validados", async ({
     page,
   }) => {

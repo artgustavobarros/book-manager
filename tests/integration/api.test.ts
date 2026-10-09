@@ -263,6 +263,31 @@ describe("importar backup", () => {
     );
     expect(res.status).toBe(400);
   });
+  it("rejeita backup sem livros válidos sem apagar o acervo", async () => {
+    const count = async () =>
+      (
+        await body<{ books: Book[] }>(
+          await booksRoute.GET(req("/api/books", { cookie: ana.cookie }), ctx())
+        )
+      ).books.length;
+    await importRoute.POST(
+      req("/api/books/import", {
+        method: "POST",
+        cookie: ana.cookie,
+        json: backup,
+      }),
+      ctx()
+    );
+    expect(await count()).toBe(30);
+    for (const json of [[], [{}], [{ foo: 1 }, { bar: 2 }]]) {
+      const res = await importRoute.POST(
+        req("/api/books/import", { method: "POST", cookie: ana.cookie, json }),
+        ctx()
+      );
+      expect(res.status).toBe(400);
+    }
+    expect(await count()).toBe(30);
+  });
 });
 
 describe("metas", () => {

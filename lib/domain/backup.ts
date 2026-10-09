@@ -79,7 +79,8 @@ export function toGender(v: unknown): AuthorGender | null {
 /**
  * Converte um backup (deste app ou do standalone) em campos de livro prontos para gravar.
  * Entradas sem título são ignoradas; nºs ausentes são atribuídos como em `withOrders`.
- * @throws InvalidBackupError se o conteúdo não for um array.
+ * @throws InvalidBackupError se o conteúdo não for um array ou não tiver nenhum livro
+ * com título (restaurar substitui o acervo, então um backup vazio apagaria tudo).
  */
 export function fromBackup(
   data: unknown,
@@ -96,6 +97,9 @@ export function fromBackup(
         !!toText((b as Record<string, unknown>).title)
     )
     .map((b) => legacyToFields(b, now));
+  if (!books.length) {
+    throw new InvalidBackupError();
+  }
   return withOrders(books);
 }
 

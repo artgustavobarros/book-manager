@@ -6,6 +6,7 @@ import { ConfirmDialog } from "@/components/ui/alert-dialog";
 import { RESTORE_EVENT } from "@/hooks/use-backup";
 import { useBookActions, useBooks } from "@/hooks/use-books";
 import { api } from "@/lib/client/api";
+import { fromBackup } from "@/lib/domain/backup";
 import type { Book } from "@/lib/domain/types";
 
 import { toast } from "./toast";
@@ -21,7 +22,10 @@ export function RestoreHost() {
   const input = useRef<HTMLInputElement>(null);
   const books = useBooks();
   const { replaceAll } = useBookActions();
-  const [pending, setPending] = useState<unknown[] | null>(null);
+  const [pending, setPending] = useState<{
+    data: unknown[];
+    valid: number;
+  } | null>(null);
 
   useEffect(() => {
     const open = () => input.current?.click();
@@ -63,14 +67,15 @@ export function RestoreHost() {
           } catch {
             data = null;
           }
-          if (!Array.isArray(data)) {
+          const valid = countValidBooks(data);
+          if (!(Array.isArray(data) && valid)) {
             return toast("Não foi possível restaurar o backup", {
               type: "error",
               note: INVALID_BACKUP,
             });
           }
           if (books.length) {
-            setPending(data);
+            setPending({ data, valid });
           } else {
             void restore(data);
           }
@@ -81,9 +86,9 @@ export function RestoreHost() {
       />
       <ConfirmDialog
         confirmLabel="Restaurar backup"
-        description={`O backup tem ${pending?.length ?? 0} itens e vai substituir os ${books.length} livros atuais. Esta ação não pode ser desfeita.`}
+        description={`O backup tem ${pending?.valid ?? 0} livros${ignoredNote(pending)} e vai substituir os ${books.length} livros atuais. Esta ação não pode ser desfeita.`}
         onConfirm={() => {
-          const data = pending!;
+          const { data } = pending!;
           setPending(null);
           void restore(data);
         }}
@@ -93,4 +98,22 @@ export function RestoreHost() {
       />
     </>
   );
+}
+
+/** Livros que o servidor vai aceitar (mesma regra de `fromBackup`); 0 se inválido. */
+function countValidBooks(data: unknown): number {
+  try {
+    return fromBackup(data).length;
+  } catch {
+    return 0;
+  }
+}
+
+/** " (N itens ignorados)" quando parte do arquivo não tem título. */
+function ignoredNote(pending: { data: unknown[]; valid: number } | null) {
+  const ignored = pending ? pending.data.length - pending.valid : 0;
+  if (!ignored) {
+    return "";
+  }
+  return ignored === 1 ? " (1 item ignorado)" : ` (${ignored} itens ignorados)`;
 }
