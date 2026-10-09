@@ -63,6 +63,12 @@ describe("fromBackup", () => {
     expect(() => fromBackup({ books: [] })).toThrow(InvalidBackupError);
   });
 
+  it("rejeita backup sem nenhum livro com título", () => {
+    for (const data of [[], [{}], [1, 2, 3], [{ foo: 1 }, { bar: 2 }]]) {
+      expect(() => fromBackup(data)).toThrow(InvalidBackupError);
+    }
+  });
+
   it("limpa 'emprestado para' fora do status emprestado", () => {
     expect(
       fromBackup([{ title: "A", status: "lido", borrower: "Ana" }])[0].borrower
