@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useApp } from "@/components/app/app-provider";
 import { PageMain } from "@/components/app/app-shell";
 import { MiniCover } from "@/components/books/mini-cover";
+import { IconButton } from "@/components/ui/button";
 import {
   CarouselDots,
   trackNarrow,
@@ -226,25 +227,23 @@ export function DashboardPage() {
               de {d.goal} livros lidos
             </span>
             <div className="ml-auto flex items-center gap-1 rounded-lg border border-line2 p-1">
-              <button
+              <IconButton
                 aria-label="Diminuir meta"
-                className="size-7 rounded-md border-0 bg-transparent text-base text-ink hover:bg-hov"
+                className="size-7 rounded-md text-base text-ink"
                 onClick={() => app.changeGoal(-1)}
-                type="button"
               >
                 −
-              </button>
+              </IconButton>
               <span className="px-2 font-semibold text-mute text-xs">
                 Meta: {d.goal}
               </span>
-              <button
+              <IconButton
                 aria-label="Aumentar meta"
-                className="size-7 rounded-md border-0 bg-transparent text-base text-ink hover:bg-hov"
+                className="size-7 rounded-md text-base text-ink"
                 onClick={() => app.changeGoal(1)}
-                type="button"
               >
                 +
-              </button>
+              </IconButton>
             </div>
           </div>
           <div className="flex flex-col gap-2">

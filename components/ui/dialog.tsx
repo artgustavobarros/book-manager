@@ -4,6 +4,7 @@ import { cn } from "cn";
 import { Dialog as DialogPrimitive, VisuallyHidden } from "radix-ui";
 import * as React from "react";
 import { ConfirmDialog } from "./alert-dialog";
+import { IconButton } from "./button";
 
 type DraftContextValue = {
   register: (key: symbol, dirty: boolean) => void;
@@ -196,17 +197,13 @@ function ModalClose({
 }) {
   const requestClose = useModalClose();
   return (
-    <button
+    <IconButton
       aria-label={label}
-      className={cn(
-        "flex size-8 flex-none items-center justify-center rounded-lg border-0 bg-transparent text-base text-mute transition-colors duration-150 hover:bg-hov hover:text-ink focus-visible:shadow-[0_0_0_3px_rgba(127,120,110,.35)] focus-visible:outline-none",
-        className
-      )}
+      className={cn("size-8 rounded-lg text-base", className)}
       onClick={requestClose}
-      type="button"
     >
       ✕
-    </button>
+    </IconButton>
   );
 }
 
