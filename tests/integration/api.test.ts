@@ -319,6 +319,46 @@ describe("metas", () => {
     );
     expect(bad.status).toBe(400);
   });
+
+  const getGoal = (cookie: string, y: string) =>
+    goalsRoute.GET(req(`/api/goals/${y}`, { cookie }), ctx({ year: y }));
+  const putGoal = (cookie: string, y: string, target: unknown) =>
+    goalsRoute.PUT(
+      req(`/api/goals/${y}`, { method: "PUT", cookie, json: { target } }),
+      ctx({ year: y })
+    );
+  const targetOf = async (cookie: string, y: string) =>
+    (await body<{ target: number }>(await getGoal(cookie, y))).target;
+
+  it("isola a meta de cada usuário no mesmo ano", async () => {
+    expect((await putGoal(ana.cookie, "2030", 50)).status).toBe(200);
+    expect(await targetOf(bia.cookie, "2030")).toBe(24);
+    expect((await putGoal(bia.cookie, "2030", 7)).status).toBe(200);
+    expect(await targetOf(ana.cookie, "2030")).toBe(50);
+    expect(await targetOf(bia.cookie, "2030")).toBe(7);
+  });
+
+  it("aceita metas de 1 a 1000 e rejeita o resto sem alterar a meta", async () => {
+    for (const target of [1, 1000]) {
+      expect((await putGoal(ana.cookie, "2031", target)).status).toBe(200);
+      expect(await targetOf(ana.cookie, "2031")).toBe(target);
+    }
+    for (const target of [0, 1001, 1.5]) {
+      expect((await putGoal(ana.cookie, "2031", target)).status).toBe(400);
+    }
+    expect(await targetOf(ana.cookie, "2031")).toBe(1000);
+  });
+
+  it("aceita anos de 1000 a 9999 e responde 404 fora disso", async () => {
+    for (const y of ["1000", "9999"]) {
+      expect((await getGoal(ana.cookie, y)).status).toBe(200);
+      expect((await putGoal(ana.cookie, y, 10)).status).toBe(200);
+    }
+    for (const y of ["999", "10000"]) {
+      expect((await getGoal(ana.cookie, y)).status).toBe(404);
+      expect((await putGoal(ana.cookie, y, 10)).status).toBe(404);
+    }
+  });
 });
 
 describe("planilha", () => {
