@@ -122,4 +122,29 @@ describe("insights", () => {
     expect(d.yearCols).toEqual([]);
     expect(d.assignEmpty).toBe(true);
   });
+
+  it("emprestado com ano de leitura conta como lido nos gráficos", () => {
+    const d = insights(
+      [
+        makeBook({ status: "lido", yearRead: 2026, pages: 100 }),
+        makeBook({
+          status: "emprestado",
+          borrower: "Joana",
+          yearRead: 2026,
+          pages: 200,
+        }),
+        makeBook({ status: "emprestado", borrower: "Lucas", pages: 50 }),
+      ],
+      {
+        scope: "lidos",
+        expanded: {},
+        assignAll: false,
+        assignMore: false,
+        year: 2026,
+      }
+    );
+    expect(d.yearCols).toMatchObject([{ year: 2026, count: 2, pages: 300 }]);
+    expect(d.assignReadCount).toBe(2);
+    expect(d.dataKpis[0].value).toBe("300");
+  });
 });

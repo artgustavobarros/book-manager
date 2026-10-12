@@ -1,4 +1,4 @@
-import type { BookStatus } from "./types";
+import type { Book, BookStatus } from "./types";
 
 export interface StatusInfo {
   /** Cor do ponto (token CSS do design). */
@@ -54,4 +54,19 @@ export function nextReadingStatus(current: BookStatus): BookStatus {
     return "lido";
   }
   return "nao-lido";
+}
+
+/**
+ * Livro lido para as contagens (meta anual, Lidos, Dados): status "lido", ou emprestado
+ * com ano de leitura, que é um livro lido que está fora de casa.
+ */
+export function isRead(book: Pick<Book, "status" | "yearRead">): boolean {
+  return (
+    book.status === "lido" || (book.status === "emprestado" && !!book.yearRead)
+  );
+}
+
+/** Status de um livro emprestado ao ser devolvido: "lido" se tem ano de leitura. */
+export function returnStatus(book: Pick<Book, "yearRead">): BookStatus {
+  return book.yearRead ? "lido" : "nao-lido";
 }

@@ -461,3 +461,55 @@ test.describe("tempo do empréstimo (BP-06)", () => {
     ).toBeVisible();
   });
 });
+
+test.describe("devolução de empréstimo (BP-07)", () => {
+  test.use({ storageState: AUTH_STATE });
+
+  test("livro lido no ano continua na meta emprestado e depois de devolvido", async ({
+    page,
+  }) => {
+    await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+    // Macunaíma é "lido" em 2026 na fixture de referência.
+    const goalDone = page
+      .getByText(/livros lidos$/)
+      .locator("xpath=preceding-sibling::span[1]");
+    const inYearReads = page.getByRole("button", {
+      name: "Desfazer leitura de Macunaíma",
+    });
+
+    await page.goto("/");
+    await expect(inYearReads).toHaveCount(1);
+    const before = await goalDone.textContent();
+
+    await page.goto("/estante?q=macunaima");
+    await page
+      .getByRole("combobox", { name: "Status" })
+      .first()
+      .selectOption("emprestado");
+    const lend = page.getByRole("dialog");
+    await lend.getByLabel("Nome da pessoa").fill("Rita");
+    await lend.getByRole("button", { name: "Marcar como emprestado" }).click();
+    await expect(page.getByText(/Com Rita/).first()).toBeVisible();
+
+    await page.goto("/");
+    await expect(goalDone).toHaveText(before ?? "");
+    await expect(inYearReads).toHaveCount(1);
+
+    await page.goto("/estante?q=macunaima");
+    await page
+      .getByRole("button", {
+        name: "Registrar devolução de livro emprestado a Rita",
+      })
+      .first()
+      .click();
+    await expect(page.getByText("Macunaíma devolvido (Lido)")).toBeVisible();
+
+    await page.reload();
+    await expect(
+      page.getByRole("combobox", { name: "Status" }).first()
+    ).toHaveValue("lido");
+    await page.goto("/");
+    await expect(goalDone).toHaveText(before ?? "");
+    await expect(inYearReads).toHaveCount(1);
+  });
+});

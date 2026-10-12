@@ -1,5 +1,6 @@
 /** Seletores do Painel (porta de `painel()` do standalone). */
 import { wallClock, yearFraction } from "./clock";
+import { isRead } from "./status";
 import { nf } from "./text";
 import type { Book } from "./types";
 
@@ -72,7 +73,7 @@ export function dashboard(
   const { goal, now, tz } = opts;
   const clock = wallClock(now, tz);
   const Y = clock.year;
-  const read = books.filter((b) => b.status === "lido");
+  const read = books.filter(isRead);
   const withP = books.filter((b) => pg(b) > 0);
   const acqY = books.filter((b) =>
     (b.acquiredOn || "").startsWith(String(Y))

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { isBookStatus, nextReadingStatus, STATUS, stat } from "./status";
+import {
+  isBookStatus,
+  isRead,
+  nextReadingStatus,
+  returnStatus,
+  STATUS,
+  stat,
+} from "./status";
 
 describe("status", () => {
   it("tem os 6 status na ordem do design", () => {
@@ -27,5 +34,15 @@ describe("status", () => {
     expect(nextReadingStatus("lido")).toBe("nao-lido");
     expect(nextReadingStatus("abandonado")).toBe("nao-lido");
     expect(nextReadingStatus("emprestado")).toBe("nao-lido");
+  });
+  it("conta como lido o emprestado com ano de leitura", () => {
+    expect(isRead({ status: "lido", yearRead: null })).toBe(true);
+    expect(isRead({ status: "emprestado", yearRead: 2026 })).toBe(true);
+    expect(isRead({ status: "emprestado", yearRead: null })).toBe(false);
+    expect(isRead({ status: "doado", yearRead: 2024 })).toBe(false);
+  });
+  it("devolve como lido quem tem ano de leitura", () => {
+    expect(returnStatus({ yearRead: 2026 })).toBe("lido");
+    expect(returnStatus({ yearRead: null })).toBe("nao-lido");
   });
 });

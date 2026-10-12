@@ -1,7 +1,7 @@
 /** Seletores de "Dados do acervo" (porta de `dados()` do standalone). */
 import { distinctCount, type Kpi } from "./dashboard";
 import { groupKey, NOT_INFORMED } from "./shelf";
-import { STATUS, type StatusInfo } from "./status";
+import { isRead, STATUS, type StatusInfo } from "./status";
 import { cmp, nf } from "./text";
 import type { Book } from "./types";
 
@@ -121,7 +121,7 @@ export function insights(
   opts: InsightOptions
 ): Insights {
   const { scope, expanded, assignAll, assignMore, year: Y } = opts;
-  const read = books.filter((b) => b.status === "lido");
+  const read = books.filter(isRead);
   const base = scope === "lidos" ? read : books;
   const withP = books.filter((b) => pg(b) > 0);
   const readP = read.filter((b) => pg(b) > 0);
