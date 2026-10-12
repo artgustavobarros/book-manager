@@ -9,6 +9,7 @@ import {
   pickFields,
   restoreRemovedBook,
   revertBookPatch,
+  settleBook,
 } from "./book-cache";
 
 /** Simula o `onMutate` de uma edição: aplica o patch e devolve como desfazê-lo. */
@@ -109,5 +110,42 @@ describe("rollback de exclusão", () => {
     const [a, b] = [makeBook(), makeBook()];
 
     expect(restoreRemovedBook([a, b], b, 0)).toEqual([a, b]);
+  });
+});
+
+describe("resposta de edição", () => {
+  it("sem edições pendentes, troca o livro pelo do servidor", () => {
+    const [a, b] = [makeBook(), makeBook()];
+    const server = { ...a, favorite: true, updatedAt: "2026-10-12T12:00:00Z" };
+
+    expect(settleBook([a, b], server, {})).toEqual([server, b]);
+  });
+
+  it("mantém por cima os campos das edições pendentes no mesmo livro", () => {
+    const a = makeBook({ favorite: false, status: "nao-lido" });
+    // Edição 1 (favorito) respondeu; edição 2 (status) ainda está pendente.
+    let books = applyBookPatch([a], a.id, { favorite: true });
+    books = applyBookPatch(books, a.id, { status: "lendo" });
+    const server = { ...a, favorite: true, updatedAt: "2026-10-12T12:00:00Z" };
+
+    books = settleBook(books, server, { status: "lendo" });
+
+    expect(byId(books, a.id)).toEqual({ ...server, status: "lendo" });
+  });
+
+  it("a resposta da edição 1 não volta o favorito da edição 2", () => {
+    const a = makeBook({ favorite: false });
+    let books = applyBookPatch([a], a.id, { favorite: true });
+    books = applyBookPatch(books, a.id, { favorite: false });
+
+    books = settleBook(books, { ...a, favorite: true }, { favorite: false });
+
+    expect(byId(books, a.id)?.favorite).toBe(false);
+  });
+
+  it("livro que saiu do cache não volta", () => {
+    const [a, b] = [makeBook(), makeBook()];
+
+    expect(settleBook([b], { ...a, favorite: true }, {})).toEqual([b]);
   });
 });

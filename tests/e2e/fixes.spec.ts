@@ -134,6 +134,7 @@ test.describe("acervo (desktop)", () => {
       await cycle(idA).click();
       await expect(cycle(idA)).not.toHaveAttribute("aria-label", beforeA);
 
+      // B não entra na fila de A: o PATCH de B sai e responde com A ainda segurado.
       const savedB = page.waitForResponse(
         (r) => r.url().endsWith(`/api/books/${idB}`) && r.ok()
       );
@@ -146,6 +147,63 @@ test.describe("acervo (desktop)", () => {
       await expect(page.getByText("Falhou de propósito.")).toBeVisible();
       await expect(cycle(idA)).toHaveAttribute("aria-label", beforeA);
       await expect(cycle(idB)).toHaveAttribute("aria-label", afterB);
+    });
+
+    test("duas edições seguidas no mesmo livro vão em ordem e a primeira resposta não desfaz a segunda", async ({
+      page,
+    }) => {
+      await page.goto("/estante");
+      const id = await page
+        .locator("[data-bid]")
+        .first()
+        .getAttribute("data-bid");
+      const cover = page.locator(`[data-bid="${id}"]`);
+      // As ações da capa só aparecem com o mouse sobre ela.
+      await cover.hover();
+      const fav = cover.getByRole("button", { name: /(aos|dos) favoritos$/ });
+      const before = (await fav.getAttribute("aria-label")) ?? "";
+
+      // Cada PATCH chega ao servidor na hora, mas a resposta só volta quando liberada.
+      const sent: unknown[] = [];
+      const releases: (() => void)[] = [];
+      const gates = [0, 1].map(
+        () => new Promise<void>((r) => releases.push(r))
+      );
+      await page.route(new RegExp(`/api/books/${id}$`), async (r) => {
+        if (r.request().method() !== "PATCH") {
+          return r.fallback();
+        }
+        const n = sent.push(r.request().postDataJSON());
+        const response = await r.fetch();
+        await gates[n - 1];
+        await r.fulfill({ response });
+      });
+
+      await fav.click();
+      await expect(fav).not.toHaveAttribute("aria-label", before);
+      await fav.click();
+      await expect(fav).toHaveAttribute("aria-label", before);
+
+      // O segundo PATCH espera a resposta do primeiro.
+      await page.waitForTimeout(300);
+      expect(sent).toHaveLength(1);
+
+      releases[0]();
+      await expect.poll(() => sent.length).toBe(2);
+      // A resposta 1 já está no cache e a 2 ainda está segurada: a tela segue a edição 2.
+      await page.waitForTimeout(300);
+      expect(await fav.getAttribute("aria-label")).toBe(before);
+
+      const saved = page.waitForResponse(
+        (r) => r.url().endsWith(`/api/books/${id}`) && r.ok()
+      );
+      releases[1]();
+      await saved;
+      await page.unroute(new RegExp(`/api/books/${id}$`));
+
+      await page.reload();
+      await cover.hover();
+      await expect(fav).toHaveAttribute("aria-label", before);
     });
 
     test("rota inexistente mostra o 404 próprio com link para o Painel", async ({

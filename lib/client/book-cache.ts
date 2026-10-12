@@ -51,6 +51,20 @@ export function revertBookPatch(
   });
 }
 
+/**
+ * Põe no cache o livro que o servidor devolveu, com os campos das edições ainda
+ * pendentes nesse livro por cima, para a resposta não desfazer o que vem depois dela.
+ */
+export function settleBook(
+  books: Book[],
+  serverBook: Book,
+  pending: Patch
+): Book[] {
+  return books.map((b) =>
+    b.id === serverBook.id ? { ...serverBook, ...pending } : b
+  );
+}
+
 /** Devolve um livro cuja exclusão falhou, sem duplicar se ele já voltou ao cache. */
 export function restoreRemovedBook(
   books: Book[],

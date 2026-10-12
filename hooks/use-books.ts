@@ -10,7 +10,9 @@ import {
   pickFields,
   restoreRemovedBook,
   revertBookPatch,
+  settleBook,
 } from "@/lib/client/book-cache";
+import { createBookWriteQueue } from "@/lib/client/book-write-queue";
 import type { Book, BookFields } from "@/lib/domain/types";
 
 export const BOOKS_KEY = ["books"] as const;
@@ -26,9 +28,14 @@ export function useBooks(): Book[] {
 
 type Patch = Partial<BookFields>;
 
+/** PATCHs de livros em fila por `id`, compartilhada por todas as chamadas do hook. */
+const bookWrites = createBookWriteQueue();
+
 /**
  * Mutações do acervo com atualização otimista e rollback (toast de erro). O rollback
- * desfaz só o que a mutação que falhou mudou, sem apagar o resto do cache.
+ * desfaz só o que a mutação que falhou mudou, sem apagar o resto do cache. As edições
+ * de um mesmo livro vão ao servidor uma de cada vez, na ordem em que foram feitas, e a
+ * resposta de uma não desfaz na tela as que ainda estão pendentes.
  */
 export function useBookActions() {
   const qc = useQueryClient();
@@ -42,7 +49,9 @@ export function useBookActions() {
 
   const update = useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: Patch }) =>
-      api.patch<{ book: Book }>(`/api/books/${id}`, patch),
+      bookWrites.run(id, optimisticFields(patch), () =>
+        api.patch<{ book: Book }>(`/api/books/${id}`, patch)
+      ),
     onMutate: ({ id, patch }) => {
       const book = cached().find((b) => b.id === id);
       if (!book) {
@@ -60,7 +69,7 @@ export function useBookActions() {
       fail(e);
     },
     onSuccess: ({ book }) =>
-      setBooks((bs) => bs.map((b) => (b.id === book.id ? book : b))),
+      setBooks((bs) => settleBook(bs, book, bookWrites.pendingFields(book.id))),
   });
 
   const create = useMutation({
