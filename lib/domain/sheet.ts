@@ -345,6 +345,10 @@ export function mergeSheet(
           x[k] = m[k];
         }
       });
+      // Fora do status "emprestado" não há com quem o livro esteja.
+      if (x.status !== "emprestado") {
+        x.borrower = "";
+      }
       changed[m.id] = x;
       upd++;
     } else {
@@ -373,10 +377,8 @@ export function mergeSheet(
 
   return {
     updates,
-    inserts: added.map((a) => ({
-      ...legacyToFields(a, now),
-      borrower: toText(a.borrower),
-    })),
+    // `legacyToFields` só guarda quem pegou emprestado nos livros emprestados.
+    inserts: added.map((a) => legacyToFields(a, now)),
     updated: upd,
     added: added.length,
   };

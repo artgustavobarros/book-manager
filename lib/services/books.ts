@@ -224,15 +224,9 @@ export async function applyMerge(
       if (!owned.has(u.id)) {
         continue;
       }
-      // A planilha não mexe em "emprestado para" além do que trouxe explicitamente.
-      const { status, ...rest } = u.fields;
       await tx
         .update(books)
-        .set({
-          ...toValues(rest),
-          ...(status ? { status } : {}),
-          ...lentAtOnUpdate(status),
-        })
+        .set(toUpdateValues(u.fields))
         .where(and(eq(books.id, u.id), eq(books.userId, userId)));
     }
     for (let i = 0; i < merge.inserts.length; i += CHUNK) {

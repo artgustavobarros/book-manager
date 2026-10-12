@@ -187,3 +187,65 @@ describe("mergeSheet × standalone", () => {
     });
   });
 });
+
+describe("mergeSheet: quem pegou emprestado (BP-14)", () => {
+  const HEAD = "Título;Autor;Status;Emprestado para\n";
+
+  it("livro que deixa de estar emprestado perde quem pegou", () => {
+    const book = makeBook({
+      title: "A",
+      author: "B",
+      status: "emprestado",
+      borrower: "Joana",
+    });
+    const merge = mergeSheet([book], parseSheet(HEAD + "A;B;Lido;Joana"));
+    expect(merge.updates).toEqual([
+      { id: book.id, fields: { status: "lido", borrower: null } },
+    ]);
+  });
+
+  it("não grava quem pegou num livro que não está emprestado", () => {
+    const book = makeBook({ title: "A", author: "B", status: "lido" });
+    const merge = mergeSheet([book], parseSheet(HEAD + "A;B;;Joana"));
+    expect(merge.updates).toEqual([]);
+  });
+
+  it("limpa um nome que já tinha ficado num livro não emprestado", () => {
+    const book = makeBook({
+      title: "A",
+      author: "B",
+      status: "lido",
+      borrower: "Joana",
+    });
+    const merge = mergeSheet([book], parseSheet(HEAD + "A;B;Lido;"));
+    expect(merge.updates).toEqual([
+      { id: book.id, fields: { borrower: null } },
+    ]);
+  });
+
+  it("mantém e atualiza quem pegou num livro emprestado", () => {
+    const book = makeBook({
+      title: "A",
+      author: "B",
+      status: "emprestado",
+      borrower: "Joana",
+    });
+    const merge = mergeSheet([book], parseSheet(HEAD + "A;B;;Lucas"));
+    expect(merge.updates).toEqual([
+      { id: book.id, fields: { borrower: "Lucas" } },
+    ]);
+  });
+
+  it("insere com quem pegou só os livros emprestados", () => {
+    const merge = mergeSheet(
+      [],
+      parseSheet(
+        HEAD + "Novo lido;C;Lido;Joana\nNovo emprestado;D;Emprestado;Lia"
+      )
+    );
+    expect(merge.inserts.map((f) => [f.title, f.status, f.borrower])).toEqual([
+      ["Novo lido", "lido", null],
+      ["Novo emprestado", "emprestado", "Lia"],
+    ]);
+  });
+});
