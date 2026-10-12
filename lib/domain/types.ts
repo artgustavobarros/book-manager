@@ -35,6 +35,8 @@ export interface Book {
   favorite: boolean;
   genre: string | null;
   id: string;
+  /** ISO timestamp do início do empréstimo atual; só o servidor grava, null fora de "emprestado". */
+  lentAt: string | null;
   nationality: string | null;
   notes: string | null;
   orderNo: number | null;
@@ -48,7 +50,10 @@ export interface Book {
 }
 
 /** Campos editáveis de um livro (tudo menos id, dono e carimbos de data). */
-export type BookFields = Omit<Book, "id" | "createdAt" | "updatedAt">;
+export type BookFields = Omit<
+  Book,
+  "id" | "createdAt" | "updatedAt" | "lentAt"
+>;
 
 export const EMPTY_BOOK_FIELDS: BookFields = {
   orderNo: null,

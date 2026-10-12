@@ -34,6 +34,7 @@ export const BOOK_SHEET_HEADERS: Record<keyof Book, string> = {
   acquiredOn: "Data de aquisição (ISO)",
   status: "Status",
   borrower: "Emprestado para",
+  lentAt: "Emprestado em",
   yearRead: "Ano em que foi lido",
   notes: "Anotações",
   coverUrl: "Capa",

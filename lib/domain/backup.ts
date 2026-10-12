@@ -27,6 +27,8 @@ export interface BackupBook {
   fav?: boolean;
   genre: string;
   id: string;
+  /** Início do empréstimo (ISO), só em livros emprestados; o standalone não tem. */
+  lentAt?: string;
   nationality: string;
   notes: string;
   order: string;
@@ -37,6 +39,9 @@ export interface BackupBook {
   year: string;
   yearRead: string;
 }
+
+/** Livro restaurado: campos do modelo e, se o backup trouxer, o início do empréstimo. */
+export type RestoredBook = BookFields & { lentAt?: string };
 
 export class InvalidBackupError extends Error {
   constructor() {
@@ -83,17 +88,27 @@ export function toGender(v: unknown): AuthorGender | null {
   return AUTHOR_GENDERS.find((g) => g === v) ?? null;
 }
 
+/** Instante ISO válido e não futuro, ou undefined. */
+export function toPastInstant(v: unknown, now: Date): string | undefined {
+  if (typeof v !== "string" || !v.trim()) {
+    return;
+  }
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) || d > now ? undefined : d.toISOString();
+}
+
 /**
  * Converte um backup (deste app ou do standalone) em campos de livro prontos para gravar.
  * Entradas sem título são ignoradas; números acima de `BOOK_INT_MAX` são descartados e
- * nºs ausentes são atribuídos como em `withOrders`.
+ * nºs ausentes são atribuídos como em `withOrders`. O `lentAt` só é mantido em livro
+ * emprestado e com instante válido; sem ele, quem grava usa o instante da restauração.
  * @throws InvalidBackupError se o conteúdo não for um array ou não tiver nenhum livro
  * com título (restaurar substitui o acervo, então um backup vazio apagaria tudo).
  */
 export function fromBackup(
   data: unknown,
   now: Date = new Date()
-): BookFields[] {
+): RestoredBook[] {
   if (!Array.isArray(data)) {
     throw new InvalidBackupError();
   }
@@ -104,7 +119,14 @@ export function fromBackup(
         typeof b === "object" &&
         !!toText((b as Record<string, unknown>).title)
     )
-    .map((b) => legacyToFields(b, now));
+    .map((b): RestoredBook => {
+      const fields = legacyToFields(b, now);
+      const lentAt =
+        fields.status === "emprestado"
+          ? toPastInstant(b.lentAt, now)
+          : undefined;
+      return lentAt ? { ...fields, lentAt } : fields;
+    });
   if (!books.length) {
     throw new InvalidBackupError();
   }
@@ -189,5 +211,6 @@ export function toBackup(books: readonly Book[]): BackupBook[] {
     authorEthnicity: str(b.authorEthnicity),
     ...(b.favorite ? { fav: true } : {}),
     ...(b.coverCheckedAt ? { coverTried: 1 } : {}),
+    ...(b.status === "emprestado" && b.lentAt ? { lentAt: b.lentAt } : {}),
   }));
 }

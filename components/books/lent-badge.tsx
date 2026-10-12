@@ -1,5 +1,6 @@
 import { cn } from "cn";
 
+import { useApp } from "@/components/app/app-provider";
 import { lentDurationLabel } from "@/lib/domain/text";
 
 export function LentBadge({
@@ -13,7 +14,9 @@ export function LentBadge({
   onReturn?: () => void;
   className?: string;
 }) {
-  const duration = lentDurationLabel(lentAt);
+  const app = useApp();
+  // `now` e `tz` do servidor: o rótulo sai igual no SSR e na hidratação.
+  const duration = lentDurationLabel(lentAt, new Date(app.now), app.tz);
   return (
     <span
       className={cn(

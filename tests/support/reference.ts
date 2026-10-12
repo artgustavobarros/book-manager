@@ -9,6 +9,9 @@ export function referenceBooks(): Book[] {
   return fields.map((f, i) => ({
     ...f,
     id: raw[i].id,
+    lentAt:
+      f.lentAt ??
+      (f.status === "emprestado" ? "2026-01-01T00:00:00.000Z" : null),
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
   }));
@@ -33,6 +36,7 @@ export function makeBook(overrides: Partial<Book> = {}): Book {
     acquiredOn: null,
     status: "nao-lido",
     borrower: null,
+    lentAt: null,
     yearRead: null,
     notes: null,
     coverUrl: null,

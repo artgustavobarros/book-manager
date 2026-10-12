@@ -1,11 +1,13 @@
 /** Acesso a livros, sempre filtrado pelo dono (`userId` vem da sessão, nunca do cliente). */
-import { and, asc, eq, inArray, max } from "drizzle-orm";
+import { and, asc, eq, inArray, max, type SQL, sql } from "drizzle-orm";
 
 import type { DB } from "@/lib/db";
 import { type BookRow, books } from "@/lib/db/schema";
+import type { RestoredBook } from "@/lib/domain/backup";
 import {
   type Book,
   type BookFields,
+  type BookStatus,
   EMPTY_BOOK_FIELDS,
 } from "@/lib/domain/types";
 
@@ -25,6 +27,7 @@ export function rowToBook(r: BookRow): Book {
     acquiredOn: r.acquiredOn,
     status: r.status,
     borrower: r.borrower,
+    lentAt: r.lentAt ? r.lentAt.toISOString() : null,
     yearRead: r.yearRead,
     notes: r.notes,
     coverUrl: r.coverUrl,
@@ -36,7 +39,7 @@ export function rowToBook(r: BookRow): Book {
 }
 
 type Values = Partial<
-  Omit<BookRow, "id" | "userId" | "createdAt" | "updatedAt">
+  Omit<BookRow, "id" | "userId" | "createdAt" | "updatedAt" | "lentAt">
 >;
 
 /** Campos do modelo → valores da tabela (datas como Date; regra do empréstimo). */
@@ -51,6 +54,41 @@ function toValues(fields: Partial<BookFields>): Values {
     values.borrower = null;
   }
   return values;
+}
+
+/**
+ * Início do empréstimo num UPDATE: entrar em "emprestado" grava o instante atual,
+ * continuar emprestado mantém o valor e sair do status limpa. No SET, `books.status`
+ * ainda é o valor antigo da linha, então a transição sai sem leitura extra.
+ */
+function lentAtOnUpdate(status: BookStatus | undefined): {
+  lentAt?: SQL | null;
+} {
+  if (status === undefined) {
+    return {};
+  }
+  if (status !== "emprestado") {
+    return { lentAt: null };
+  }
+  return {
+    lentAt: sql`case when ${books.status} = 'emprestado' then coalesce(${books.lentAt}, now()) else now() end`,
+  };
+}
+
+/** Valores de um UPDATE: campos do modelo mais a regra do início do empréstimo. */
+function toUpdateValues(fields: Partial<BookFields>) {
+  return { ...toValues(fields), ...lentAtOnUpdate(fields.status) };
+}
+
+/** Início do empréstimo num INSERT: o informado (backup), ou agora; null fora de "emprestado". */
+function lentAtOnInsert(
+  status: BookStatus | undefined,
+  lentAt?: string
+): Date | null {
+  if (status !== "emprestado") {
+    return null;
+  }
+  return lentAt ? new Date(lentAt) : new Date();
 }
 
 export async function listBooks(db: DB, userId: string): Promise<Book[]> {
@@ -80,6 +118,7 @@ export async function createBook(
     .insert(books)
     .values({
       ...toValues({ ...EMPTY_BOOK_FIELDS, ...fields }),
+      lentAt: lentAtOnInsert(fields.status ?? EMPTY_BOOK_FIELDS.status),
       title: fields.title,
       orderNo,
       userId,
@@ -96,7 +135,7 @@ export async function updateBook(
 ): Promise<Book | null> {
   const [row] = await db
     .update(books)
-    .set(toValues(fields))
+    .set(toUpdateValues(fields))
     .where(and(eq(books.id, id), eq(books.userId, userId)))
     .returning();
   return row ? rowToBook(row) : null;
@@ -125,7 +164,7 @@ export async function updateBooks(
     for (const { id, ...fields } of items) {
       const [row] = await tx
         .update(books)
-        .set(toValues(fields))
+        .set(toUpdateValues(fields))
         .where(and(eq(books.id, id), eq(books.userId, userId)))
         .returning();
       if (row) {
@@ -142,18 +181,19 @@ const CHUNK = 500;
 export async function replaceBooks(
   db: DB,
   userId: string,
-  list: readonly BookFields[]
+  list: readonly RestoredBook[]
 ): Promise<number> {
   await db.transaction(async (tx) => {
     await tx.delete(books).where(eq(books.userId, userId));
     for (let i = 0; i < list.length; i += CHUNK) {
-      await tx
-        .insert(books)
-        .values(
-          list
-            .slice(i, i + CHUNK)
-            .map((f) => ({ ...toValues(f), title: f.title, userId }))
-        );
+      await tx.insert(books).values(
+        list.slice(i, i + CHUNK).map(({ lentAt, ...f }) => ({
+          ...toValues(f),
+          lentAt: lentAtOnInsert(f.status, lentAt),
+          title: f.title,
+          userId,
+        }))
+      );
     }
   });
   return list.length;
@@ -188,7 +228,11 @@ export async function applyMerge(
       const { status, ...rest } = u.fields;
       await tx
         .update(books)
-        .set({ ...toValues(rest), ...(status ? { status } : {}) })
+        .set({
+          ...toValues(rest),
+          ...(status ? { status } : {}),
+          ...lentAtOnUpdate(status),
+        })
         .where(and(eq(books.id, u.id), eq(books.userId, userId)));
     }
     for (let i = 0; i < merge.inserts.length; i += CHUNK) {
@@ -198,6 +242,7 @@ export async function applyMerge(
           return {
             ...rest,
             coverCheckedAt: coverCheckedAt ? new Date(coverCheckedAt) : null,
+            lentAt: lentAtOnInsert(f.status),
             title: f.title,
             userId,
           };

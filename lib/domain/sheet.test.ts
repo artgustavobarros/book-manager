@@ -147,6 +147,7 @@ describe("mergeSheet × standalone", () => {
           id: _id,
           createdAt: _c,
           updatedAt: _u,
+          lentAt: _l,
           ...fields
         } = { ...b, ...(u?.fields ?? {}) } as Book;
         return fields;
