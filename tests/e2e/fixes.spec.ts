@@ -94,6 +94,60 @@ test.describe("acervo (desktop)", () => {
       ).toBeVisible();
     });
 
+    test("falha ao mudar o status de um livro não desfaz a mudança feita em outro", async ({
+      page,
+    }) => {
+      await page.goto("/estante?vista=lista");
+      const covers = page.locator("[data-bid]");
+      const [idA, idB] = await Promise.all([
+        covers.nth(0).getAttribute("data-bid"),
+        covers.nth(1).getAttribute("data-bid"),
+      ]);
+      const cycle = (id: string | null) =>
+        page
+          .locator(`[data-bid="${id}"]`)
+          .locator("..")
+          .getByRole("button", {
+            name: /^(Começar a ler|Concluir leitura|Marcar como não lido)$/,
+          });
+      const label = async (id: string | null) =>
+        (await cycle(id).getAttribute("aria-label")) ?? "";
+      const [beforeA, beforeB] = [await label(idA), await label(idB)];
+
+      // Segura o PATCH de A até B já ter sido salvo, e então responde com erro.
+      let release!: () => void;
+      const held = new Promise<void>((r) => {
+        release = r;
+      });
+      await page.route(new RegExp(`/api/books/${idA}$`), async (r) => {
+        if (r.request().method() !== "PATCH") {
+          return r.fallback();
+        }
+        await held;
+        await r.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Falhou de propósito." }),
+        });
+      });
+
+      await cycle(idA).click();
+      await expect(cycle(idA)).not.toHaveAttribute("aria-label", beforeA);
+
+      const savedB = page.waitForResponse(
+        (r) => r.url().endsWith(`/api/books/${idB}`) && r.ok()
+      );
+      await cycle(idB).click();
+      await savedB;
+      const afterB = await label(idB);
+      expect(afterB).not.toBe(beforeB);
+
+      release();
+      await expect(page.getByText("Falhou de propósito.")).toBeVisible();
+      await expect(cycle(idA)).toHaveAttribute("aria-label", beforeA);
+      await expect(cycle(idB)).toHaveAttribute("aria-label", afterB);
+    });
+
     test("rota inexistente mostra o 404 próprio com link para o Painel", async ({
       page,
     }) => {
