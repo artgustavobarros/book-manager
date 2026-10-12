@@ -393,6 +393,25 @@ describe("início do empréstimo", () => {
     expect(byTitle.get("Quincas Borba")?.lentAt).toBeNull();
     expect(recent(byTitle.get("Nova emprestada")?.lentAt ?? null)).toBe(true);
   });
+
+  it("o merge da planilha limpa quem pegou quando o livro sai de emprestado", async () => {
+    const back = await create({ title: "Memórias póstumas" });
+    await patch(back.id, { status: "emprestado", borrower: "Lia" });
+    await applyMerge(db, ana.userId, {
+      updates: [{ id: back.id, fields: { status: "lido" } }],
+      inserts: [],
+    });
+    const list = (
+      await body<{ books: Book[] }>(
+        await booksRoute.GET(req("/api/books", { cookie: ana.cookie }), ctx())
+      )
+    ).books;
+    expect(list.find((b) => b.id === back.id)).toMatchObject({
+      status: "lido",
+      borrower: null,
+      lentAt: null,
+    });
+  });
 });
 
 describe("importar backup", () => {
