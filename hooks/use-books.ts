@@ -4,6 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "@/components/app/toast";
 import { api } from "@/lib/client/api";
+import {
+  applyBookPatch,
+  optimisticFields,
+  pickFields,
+  restoreRemovedBook,
+  revertBookPatch,
+} from "@/lib/client/book-cache";
 import type { Book, BookFields } from "@/lib/domain/types";
 
 export const BOOKS_KEY = ["books"] as const;
@@ -19,40 +26,39 @@ export function useBooks(): Book[] {
 
 type Patch = Partial<BookFields>;
 
-/** Mutações do acervo com atualização otimista e rollback (toast de erro). */
+/**
+ * Mutações do acervo com atualização otimista e rollback (toast de erro). O rollback
+ * desfaz só o que a mutação que falhou mudou, sem apagar o resto do cache.
+ */
 export function useBookActions() {
   const qc = useQueryClient();
-  const snapshot = () => qc.getQueryData<Book[]>(BOOKS_KEY) ?? [];
+  const cached = () => qc.getQueryData<Book[]>(BOOKS_KEY) ?? [];
   const setBooks = (fn: (books: Book[]) => Book[]) =>
     qc.setQueryData<Book[]>(BOOKS_KEY, (old) => fn(old ?? []));
-  const fail = (prev: Book[]) => (error: Error) => {
-    qc.setQueryData(BOOKS_KEY, prev);
+  const fail = (error: Error) =>
     toast(error.message || "Não foi possível salvar. Tente de novo.", {
       type: "error",
     });
-  };
 
   const update = useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: Patch }) =>
       api.patch<{ book: Book }>(`/api/books/${id}`, patch),
     onMutate: ({ id, patch }) => {
-      const prev = snapshot();
-      setBooks((bs) =>
-        bs.map((b) =>
-          b.id === id
-            ? {
-                ...b,
-                ...patch,
-                ...(patch.status && patch.status !== "emprestado"
-                  ? { borrower: null }
-                  : {}),
-              }
-            : b
-        )
-      );
-      return { prev };
+      const book = cached().find((b) => b.id === id);
+      if (!book) {
+        return;
+      }
+      const applied = optimisticFields(patch);
+      const prev = pickFields(book, applied);
+      setBooks((bs) => applyBookPatch(bs, id, applied));
+      return { id, applied, prev };
     },
-    onError: (e, _v, ctx) => fail(ctx?.prev ?? [])(e),
+    onError: (e, _v, ctx) => {
+      if (ctx) {
+        setBooks((bs) => revertBookPatch(bs, ctx.id, ctx.applied, ctx.prev));
+      }
+      fail(e);
+    },
     onSuccess: ({ book }) =>
       setBooks((bs) => bs.map((b) => (b.id === book.id ? book : b))),
   });
@@ -67,11 +73,21 @@ export function useBookActions() {
   const remove = useMutation({
     mutationFn: (id: string) => api.del(`/api/books/${id}`),
     onMutate: (id) => {
-      const prev = snapshot();
+      const list = cached();
+      const index = list.findIndex((b) => b.id === id);
+      if (index < 0) {
+        return;
+      }
+      const book = list[index];
       setBooks((bs) => bs.filter((b) => b.id !== id));
-      return { prev };
+      return { book, index };
     },
-    onError: (e, _v, ctx) => fail(ctx?.prev ?? [])(e),
+    onError: (e, _v, ctx) => {
+      if (ctx) {
+        setBooks((bs) => restoreRemovedBook(bs, ctx.book, ctx.index));
+      }
+      fail(e);
+    },
   });
 
   return {
@@ -96,7 +112,7 @@ export function useBookActions() {
     refetch: () => qc.invalidateQueries({ queryKey: BOOKS_KEY }),
     /** Aplica um patch local sem chamar a API (o lote de capas grava depois). */
     patchLocal: (id: string, patch: Patch) =>
-      setBooks((bs) => bs.map((b) => (b.id === id ? { ...b, ...patch } : b))),
+      setBooks((bs) => applyBookPatch(bs, id, patch)),
     saving: create.isPending,
   };
 }
