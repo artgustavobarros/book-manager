@@ -5,7 +5,11 @@
  */
 import { z } from "zod";
 
-import { AUTHOR_GENDERS, BOOK_STATUSES } from "@/lib/domain/types";
+import {
+  AUTHOR_GENDERS,
+  BOOK_INT_MAX,
+  BOOK_STATUSES,
+} from "@/lib/domain/types";
 
 const MAX_TEXT = 300;
 
@@ -52,7 +56,7 @@ const coverUrlText = z
 const coverUrl = coverUrlText.nullable().transform((v) => v ?? null);
 
 export const bookFieldsSchema = z.object({
-  orderNo: positiveInt("Nº de ordem", 1_000_000),
+  orderNo: positiveInt("Nº de ordem", BOOK_INT_MAX.orderNo),
   title: z
     .string()
     .trim()
@@ -64,12 +68,12 @@ export const bookFieldsSchema = z.object({
   nationality: optionalText(100),
   publisher: optionalText(),
   genre: optionalText(100),
-  yearPublished: positiveInt("Ano de lançamento", 9999),
-  pages: positiveInt("Páginas", 100_000),
+  yearPublished: positiveInt("Ano de lançamento", BOOK_INT_MAX.yearPublished),
+  pages: positiveInt("Páginas", BOOK_INT_MAX.pages),
   acquiredOn: isoDate,
   status: z.enum(BOOK_STATUSES),
   borrower: optionalText(100),
-  yearRead: positiveInt("Ano em que foi lido", 9999),
+  yearRead: positiveInt("Ano em que foi lido", BOOK_INT_MAX.yearRead),
   notes: optionalText(20_000),
   coverUrl,
   favorite: z.boolean(),
@@ -112,7 +116,7 @@ const textField = (max = MAX_TEXT) => textRule(max);
 
 export const bookFormSchema = z
   .object({
-    orderNo: intField("Nº de ordem", 1_000_000),
+    orderNo: intField("Nº de ordem", BOOK_INT_MAX.orderNo),
     title: z.string().trim().min(1, "Informe o título.").max(MAX_TEXT),
     author: textField(),
     authorGender: z
@@ -122,15 +126,15 @@ export const bookFormSchema = z
     nationality: textField(100),
     publisher: textField(),
     genre: textField(100),
-    yearPublished: intField("Ano de lançamento", 9999),
-    pages: intField("Páginas", 100_000),
+    yearPublished: intField("Ano de lançamento", BOOK_INT_MAX.yearPublished),
+    pages: intField("Páginas", BOOK_INT_MAX.pages),
     acquiredOn: z
       .string()
       .transform((v) => (v ? v : null))
       .pipe(isoDate),
     status: z.enum(BOOK_STATUSES),
     borrower: textField(100),
-    yearRead: intField("Ano em que foi lido", 9999),
+    yearRead: intField("Ano em que foi lido", BOOK_INT_MAX.yearRead),
     notes: textField(20_000),
     coverUrl: coverUrlText,
   })

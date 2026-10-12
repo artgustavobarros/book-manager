@@ -11,6 +11,7 @@ import { clean } from "./text";
 import {
   AUTHOR_GENDERS,
   type AuthorGender,
+  BOOK_INT_MAX,
   type Book,
   type BookFields,
 } from "./types";
@@ -44,13 +45,19 @@ export class InvalidBackupError extends Error {
   }
 }
 
-/** Inteiro positivo a partir de string/número; qualquer outra coisa vira null. */
-export function toPositiveInt(v: unknown): number | null {
+/**
+ * Inteiro positivo a partir de string/número; qualquer outra coisa vira null.
+ * Com `max`, valores acima do teto também viram null.
+ */
+export function toPositiveInt(
+  v: unknown,
+  max = Number.POSITIVE_INFINITY
+): number | null {
   if (typeof v === "number") {
-    return Number.isInteger(v) && v > 0 ? v : null;
+    return Number.isInteger(v) && v > 0 && v <= max ? v : null;
   }
   const n = Number.parseInt(String(v ?? ""), 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
+  return Number.isFinite(n) && n > 0 && n <= max ? n : null;
 }
 
 /** Data YYYY-MM-DD válida ou null. */
@@ -78,7 +85,8 @@ export function toGender(v: unknown): AuthorGender | null {
 
 /**
  * Converte um backup (deste app ou do standalone) em campos de livro prontos para gravar.
- * Entradas sem título são ignoradas; nºs ausentes são atribuídos como em `withOrders`.
+ * Entradas sem título são ignoradas; números acima de `BOOK_INT_MAX` são descartados e
+ * nºs ausentes são atribuídos como em `withOrders`.
  * @throws InvalidBackupError se o conteúdo não for um array ou não tiver nenhum livro
  * com título (restaurar substitui o acervo, então um backup vazio apagaria tudo).
  */
@@ -110,7 +118,7 @@ export function legacyToFields(
 ): BookFields {
   const status = isBookStatus(b.status) ? b.status : "nao-lido";
   return {
-    orderNo: toPositiveInt(b.order ?? b.orderNo),
+    orderNo: toPositiveInt(b.order ?? b.orderNo, BOOK_INT_MAX.orderNo),
     title: toText(b.title) ?? "",
     author: toText(b.author),
     authorGender: toGender(b.authorGender),
@@ -118,12 +126,15 @@ export function legacyToFields(
     nationality: toText(b.nationality),
     publisher: toText(b.publisher),
     genre: toText(b.genre),
-    yearPublished: toPositiveInt(b.year ?? b.yearPublished),
-    pages: toPositiveInt(b.pages),
+    yearPublished: toPositiveInt(
+      b.year ?? b.yearPublished,
+      BOOK_INT_MAX.yearPublished
+    ),
+    pages: toPositiveInt(b.pages, BOOK_INT_MAX.pages),
     acquiredOn: toIsoDate(b.acquired ?? b.acquiredOn),
     status,
     borrower: status === "emprestado" ? toText(b.borrower) : null,
-    yearRead: toPositiveInt(b.yearRead),
+    yearRead: toPositiveInt(b.yearRead, BOOK_INT_MAX.yearRead),
     notes: toText(b.notes),
     coverUrl: toText(b.cover ?? b.coverUrl),
     favorite: b.fav === true || b.favorite === true,
