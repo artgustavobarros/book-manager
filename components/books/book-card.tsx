@@ -122,7 +122,7 @@ export function BookCard({
           <LentBadge
             borrower={b.borrower}
             className="mt-0.5 py-0.5"
-            lentAt={b.updatedAt}
+            lentAt={b.lentAt}
             onReturn={() => app.returnBook(b)}
           />
         ) : null}

@@ -8,8 +8,9 @@ import * as goalsRoute from "@/app/api/goals/[year]/route";
 import * as settingsRoute from "@/app/api/settings/route";
 import * as syncRoute from "@/app/api/sheet-sync/route";
 import { db } from "@/lib/db";
-import { user } from "@/lib/db/schema";
-import type { Book } from "@/lib/domain/types";
+import { books, user } from "@/lib/db/schema";
+import { type Book, EMPTY_BOOK_FIELDS } from "@/lib/domain/types";
+import { applyMerge } from "@/lib/services/books";
 import backup from "@/tests/fixtures/reference-books.json";
 
 import { setupTestDb } from "../support/db";
@@ -232,6 +233,168 @@ describe("livros", () => {
   });
 });
 
+describe("início do empréstimo", () => {
+  const PAST = new Date("2026-05-01T12:00:00.000Z");
+  const recent = (iso: string | null) =>
+    iso !== null && Math.abs(Date.now() - new Date(iso).getTime()) < 60_000;
+  const create = async (json: Record<string, unknown>) =>
+    (
+      await body<{ book: Book }>(
+        await booksRoute.POST(
+          req("/api/books", { method: "POST", cookie: ana.cookie, json }),
+          ctx()
+        )
+      )
+    ).book;
+  const patch = async (id: string, json: unknown) =>
+    (
+      await body<{ book: Book }>(
+        await bookById.PATCH(
+          req(`/api/books/${id}`, {
+            method: "PATCH",
+            cookie: ana.cookie,
+            json,
+          }),
+          ctx({ id })
+        )
+      )
+    ).book;
+  /** Simula um empréstimo antigo. */
+  const backdate = (id: string) =>
+    db.update(books).set({ lentAt: PAST }).where(eq(books.id, id));
+
+  it("grava ao emprestar e limpa ao devolver", async () => {
+    const b = await create({ title: "Água viva" });
+    expect(b.lentAt).toBeNull();
+    const lent = await patch(b.id, { status: "emprestado", borrower: "Caio" });
+    expect(recent(lent.lentAt)).toBe(true);
+    const back = await patch(b.id, { status: "lido" });
+    expect(back.lentAt).toBeNull();
+  });
+
+  it("outras edições não reiniciam o empréstimo", async () => {
+    const b = await create({ title: "Vidas secas" });
+    await patch(b.id, { status: "emprestado", borrower: "Caio" });
+    await backdate(b.id);
+    for (const json of [
+      { favorite: true },
+      { notes: "Cobrar em junho" },
+      { coverCheckedAt: "2026-06-15T12:00:00.000Z" },
+      { borrower: "Caio Prado" },
+      { status: "emprestado", borrower: "Caio Prado" },
+    ]) {
+      expect((await patch(b.id, json)).lentAt).toBe(PAST.toISOString());
+    }
+  });
+
+  it("reemprestar depois da devolução grava um novo início", async () => {
+    const b = await create({ title: "Macunaíma" });
+    await patch(b.id, { status: "emprestado", borrower: "Caio" });
+    await backdate(b.id);
+    await patch(b.id, { status: "nao-lido" });
+    const again = await patch(b.id, { status: "emprestado", borrower: "Lia" });
+    expect(recent(again.lentAt)).toBe(true);
+  });
+
+  it("criar já emprestado grava o início", async () => {
+    const b = await create({
+      title: "Capitães da areia",
+      status: "emprestado",
+      borrower: "Lia",
+    });
+    expect(recent(b.lentAt)).toBe(true);
+  });
+
+  it("ignora lentAt vindo do cliente", async () => {
+    const b = await create({
+      title: "Iracema",
+      status: "emprestado",
+      borrower: "Lia",
+      lentAt: "2020-01-01T00:00:00.000Z",
+    });
+    expect(recent(b.lentAt)).toBe(true);
+    await backdate(b.id);
+    const only = await bookById.PATCH(
+      req(`/api/books/${b.id}`, {
+        method: "PATCH",
+        cookie: ana.cookie,
+        json: { lentAt: "2020-01-01T00:00:00.000Z" },
+      }),
+      ctx({ id: b.id })
+    );
+    expect(only.status).toBe(400);
+    const edited = await patch(b.id, {
+      notes: "x",
+      lentAt: "2020-01-01T00:00:00.000Z",
+    });
+    expect(edited.lentAt).toBe(PAST.toISOString());
+    const plain = await create({
+      title: "Senhora",
+      lentAt: "2020-01-01T00:00:00.000Z",
+    });
+    expect(plain.lentAt).toBeNull();
+  });
+
+  it("segue as mesmas regras no lote", async () => {
+    const kept = await create({ title: "O cortiço" });
+    await patch(kept.id, { status: "emprestado", borrower: "Caio" });
+    await backdate(kept.id);
+    const fresh = await create({ title: "Dom Casmurro" });
+    const res = await body<{ books: Book[] }>(
+      await booksRoute.PATCH(
+        req("/api/books", {
+          method: "PATCH",
+          cookie: ana.cookie,
+          json: [
+            { id: kept.id, coverUrl: "https://capa/2.jpg" },
+            { id: fresh.id, status: "emprestado", borrower: "Lia" },
+          ],
+        }),
+        ctx()
+      )
+    );
+    const byId = new Map(res.books.map((b) => [b.id, b]));
+    expect(byId.get(kept.id)?.lentAt).toBe(PAST.toISOString());
+    expect(recent(byId.get(fresh.id)?.lentAt ?? null)).toBe(true);
+  });
+
+  it("segue as mesmas regras no merge da planilha", async () => {
+    const kept = await create({ title: "A hora da estrela" });
+    await patch(kept.id, { status: "emprestado", borrower: "Caio" });
+    await backdate(kept.id);
+    const fresh = await create({ title: "Sagarana" });
+    const back = await create({ title: "Quincas Borba" });
+    await patch(back.id, { status: "emprestado", borrower: "Lia" });
+    await applyMerge(db, ana.userId, {
+      updates: [
+        {
+          id: kept.id,
+          fields: { status: "emprestado", notes: "via planilha" },
+        },
+        { id: fresh.id, fields: { status: "emprestado" } },
+        { id: back.id, fields: { status: "lido" } },
+      ],
+      inserts: [
+        {
+          ...EMPTY_BOOK_FIELDS,
+          title: "Nova emprestada",
+          status: "emprestado",
+        },
+      ],
+    });
+    const list = (
+      await body<{ books: Book[] }>(
+        await booksRoute.GET(req("/api/books", { cookie: ana.cookie }), ctx())
+      )
+    ).books;
+    const byTitle = new Map(list.map((b) => [b.title, b]));
+    expect(byTitle.get("A hora da estrela")?.lentAt).toBe(PAST.toISOString());
+    expect(recent(byTitle.get("Sagarana")?.lentAt ?? null)).toBe(true);
+    expect(byTitle.get("Quincas Borba")?.lentAt).toBeNull();
+    expect(recent(byTitle.get("Nova emprestada")?.lentAt ?? null)).toBe(true);
+  });
+});
+
 describe("importar backup", () => {
   const importAs = (cookie: string | undefined, json: unknown) =>
     importRoute.POST(
@@ -357,6 +520,30 @@ describe("importar backup", () => {
       401
     );
     expect(await booksOf(ana.cookie)).toHaveLength(30);
+  });
+
+  it("restaura o início do empréstimo do backup", async () => {
+    const twentyDaysAgo = new Date(Date.now() - 20 * 86_400_000).toISOString();
+    const res = await importAs(ana.cookie, [
+      {
+        title: "Com data",
+        status: "emprestado",
+        borrower: "Ana",
+        lentAt: twentyDaysAgo,
+      },
+      { title: "Sem data", status: "emprestado", borrower: "Bia" },
+      { title: "Devolvido", status: "lido", lentAt: twentyDaysAgo },
+    ]);
+    expect(res.status).toBe(200);
+    const byTitle = new Map(
+      (await booksOf(ana.cookie)).map((b) => [b.title, b])
+    );
+    expect(byTitle.get("Com data")?.lentAt).toBe(twentyDaysAgo);
+    const restoredAt = byTitle.get("Sem data")?.lentAt;
+    expect(Date.now() - new Date(restoredAt ?? 0).getTime()).toBeLessThan(
+      60_000
+    );
+    expect(byTitle.get("Devolvido")?.lentAt).toBeNull();
   });
 
   it("descarta números fora da faixa em vez de falhar", async () => {

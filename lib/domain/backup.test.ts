@@ -94,6 +94,24 @@ describe("fromBackup", () => {
       fromBackup([{ title: "A", status: "lido", borrower: "Ana" }])[0].borrower
     ).toBeNull();
   });
+
+  it("mantém o início do empréstimo só se válido, passado e em livro emprestado", () => {
+    const now = new Date("2026-06-15T12:00:00Z");
+    const [ok, legacy, invalid, future, notLent] = fromBackup(
+      [
+        { title: "A", status: "emprestado", lentAt: "2026-05-26T15:00:00Z" },
+        { title: "B", status: "emprestado" },
+        { title: "C", status: "emprestado", lentAt: "ontem" },
+        { title: "D", status: "emprestado", lentAt: "2026-07-01T00:00:00Z" },
+        { title: "E", status: "lido", lentAt: "2026-05-26T15:00:00Z" },
+      ],
+      now
+    );
+    expect(ok.lentAt).toBe("2026-05-26T15:00:00.000Z");
+    for (const b of [legacy, invalid, future, notLent]) {
+      expect(b).not.toHaveProperty("lentAt");
+    }
+  });
 });
 
 describe("toBackup", () => {
@@ -107,6 +125,7 @@ describe("toBackup", () => {
       acquiredOn: "2022-02-11",
       status: "emprestado",
       borrower: "Rafael",
+      lentAt: "2026-05-26T15:00:00.000Z",
       favorite: true,
       authorEthnicity: "Negra",
     });
@@ -118,10 +137,20 @@ describe("toBackup", () => {
       acquired: "2022-02-11",
       fav: true,
       authorEthnicity: "Negra",
+      lentAt: "2026-05-26T15:00:00.000Z",
     });
     const back = fromBackup(out)[0];
     const { id: _id, createdAt: _c, updatedAt: _u, ...fields } = book;
     expect(back).toEqual(fields);
+  });
+
+  it("só exporta o início do empréstimo de livros emprestados", () => {
+    const [returned, lentWithout] = toBackup([
+      makeBook({ status: "lido", lentAt: "2026-05-26T15:00:00.000Z" }),
+      makeBook({ status: "emprestado", borrower: "Ana", lentAt: null }),
+    ]);
+    expect(returned).not.toHaveProperty("lentAt");
+    expect(lentWithout).not.toHaveProperty("lentAt");
   });
 });
 

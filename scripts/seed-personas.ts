@@ -12,6 +12,7 @@
  */
 import { loadEnvConfig } from "@next/env";
 
+import type { RestoredBook } from "../lib/domain/backup";
 import type { BookFields } from "../lib/domain/types";
 
 loadEnvConfig(process.cwd());
@@ -171,7 +172,7 @@ function generateWhaleBooks(count = 600) {
 }
 
 function generateLendingBooks(count = 45) {
-  const books: BookFields[] = [];
+  const books: RestoredBook[] = [];
   for (let i = 1; i <= count; i++) {
     const author = AUTHORS[(i - 1) % AUTHORS.length];
     const genre = GENRES[(i - 1) % GENRES.length];
@@ -187,6 +188,8 @@ function generateLendingBooks(count = 45) {
         ? "lido"
         : "nao-lido";
     const borrower = isLent ? BORROWERS[(i - 1) % BORROWERS.length] : null;
+    // Empréstimos de 1 a 90 dias atrás, para a contagem variar entre "dias" e "meses".
+    const lentDaysAgo = 1 + ((i * 37) % 90);
 
     books.push({
       acquiredOn: `2024-0${1 + (i % 9)}-15`,
@@ -198,6 +201,13 @@ function generateLendingBooks(count = 45) {
       coverUrl: null,
       favorite: i <= 5,
       genre,
+      ...(isLent
+        ? {
+            lentAt: new Date(
+              Date.now() - lentDaysAgo * 86_400_000
+            ).toISOString(),
+          }
+        : {}),
       nationality: author.country,
       notes: isLent ? `Emprestado para ${borrower}. Lembrar de cobrar!` : null,
       orderNo: i,

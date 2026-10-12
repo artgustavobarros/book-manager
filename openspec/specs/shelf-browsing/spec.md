@@ -117,11 +117,15 @@ A Estante SHALL permitir alternar status diretamente nos cards de visualização
 - **THEN** o livro volta para o status anterior ou "quero-ler" e o contador de lidos é decrementado imediatamente
 
 ### Requirement: Filtro rápido e badge informativa de empréstimos na Estante
-A Estante SHALL disponibilizar acesso direto ou chip de filtro para listar apenas os livros com status "emprestado". O badge de empréstimo nos cards e linhas MUST ser clicável para exibir os dados do empréstimo ou acionar a devolução.
+A Estante SHALL disponibilizar acesso direto ou chip de filtro para listar apenas os livros com status "emprestado". O badge de empréstimo nos cards e linhas MUST ser clicável para exibir os dados do empréstimo ou acionar a devolução. O tempo exibido no badge ("hoje", "há N dias", "há N meses") MUST ser contado a partir do início do empréstimo (`lentAt`), em dias de calendário no fuso do usuário, com a mesma regra do detalhamento de empréstimos do Painel.
 
 #### Scenario: Filtrar por livros emprestados
 - **WHEN** o usuário seleciona o filtro de empréstimos na Estante
 - **THEN** apenas os livros atualmente emprestados são exibidos na lista/capas com a pessoa que pegou em destaque
+
+#### Scenario: Favoritar não altera o tempo do badge
+- **WHEN** o usuário favorita na Estante um livro emprestado há 5 dias
+- **THEN** o badge do card e da linha continua "Com <nome> · há 5 dias"
 
 ### Requirement: Áreas de toque confortáveis na Estante mobile
 Todos os controles interativos na Estante (botões de ação nos cards, seletor de status, botões de paginação e gatilho de ordenação) SHALL possuir uma área mínima de toque de 44×44px em telas de até 640px de largura, prevenindo toques errôneos em elementos vizinhos.
@@ -144,3 +148,4 @@ O sistema SHALL organizar os livros do modo Capas da estante em exatamente duas 
 #### Scenario: Alternância de modo de visualização
 - **WHEN** a pessoa escolhe Lista em uma janela de até 640 px
 - **THEN** os livros são mostrados no modo Lista existente e a escolha de duas colunas não altera filtros, ordenação ou paginação
+

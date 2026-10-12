@@ -359,3 +359,47 @@ test.describe("layout mobile", () => {
     expect(columns).toHaveLength(3);
   });
 });
+
+test.describe("tempo do empréstimo (BP-06)", () => {
+  test.use({ storageState: AUTH_STATE });
+
+  test("favoritar e editar as anotações não reiniciam a contagem", async ({
+    page,
+  }) => {
+    await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+    // Dom Casmurro foi emprestado 5 dias antes de FIXED_NOW (fixture de referência).
+    const badge = page.getByText(/Com Ana · há 5 dias/).first();
+    await page.goto("/estante?q=dom casmurro");
+    await expect(badge).toBeVisible();
+
+    // As ações da capa só aparecem no hover (desktop).
+    const cover = page.locator("[data-bid]").first();
+    await cover.hover();
+    await cover
+      .locator("..")
+      .getByRole("button", { name: /favoritos/ })
+      .click();
+    await expect(
+      page.getByText(/(Adicionado aos|Removido dos) favoritos/)
+    ).toBeVisible();
+
+    await page
+      .getByRole("button", { name: "Dom Casmurro", exact: true })
+      .click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("button", { name: "Editar ficha" }).click();
+    await dialog.getByLabel("Anotações pessoais").fill("Cobrar na sexta.");
+    await dialog.getByRole("button", { name: "Salvar" }).click();
+    await expect(page.getByText("Alterações salvas")).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await page.reload();
+    await expect(badge).toBeVisible();
+
+    await page.goto("/");
+    await page.getByText("Emprestados").click();
+    await expect(
+      page.getByRole("dialog").getByText(/Com Ana · há 5 dias/)
+    ).toBeVisible();
+  });
+});

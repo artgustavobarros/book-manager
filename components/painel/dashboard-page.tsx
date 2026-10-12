@@ -40,6 +40,8 @@ function LentModal({
   onReturn: (book: Book) => void;
   onGoShelf: () => void;
 }) {
+  const app = useApp();
+  const now = new Date(app.now);
   return (
     <Modal
       className="w-full max-w-[540px] p-6"
@@ -81,10 +83,10 @@ function LentModal({
                   </span>
                   <span className="font-semibold text-lentfg text-xs">
                     Com {b.borrower}
-                    {b.updatedAt ? (
+                    {b.lentAt ? (
                       <span className="opacity-75">
                         {" "}
-                        · {lentDurationLabel(b.updatedAt)}
+                        · {lentDurationLabel(b.lentAt, now, app.tz)}
                       </span>
                     ) : null}
                   </span>

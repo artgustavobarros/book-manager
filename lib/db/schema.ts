@@ -62,6 +62,8 @@ export const books = pgTable(
     acquiredOn: date("acquired_on", { mode: "string" }),
     status: bookStatus("status").notNull().default("nao-lido"),
     borrower: text("borrower"),
+    /** Início do empréstimo atual; só o servidor grava (ver `lib/services/books.ts`). */
+    lentAt: timestamp("lent_at", { withTimezone: true }),
     yearRead: integer("year_read"),
     notes: text("notes"),
     coverUrl: text("cover_url"),

@@ -1,5 +1,7 @@
 /** Utilitários de texto e formatação portados do standalone (Acervo.dc.html). */
 
+import { wallClock } from "./clock";
+
 /** Normaliza para comparação: sem acentos, minúsculo, só [a-z0-9#] separados por espaço. */
 export function norm(s: unknown): string {
   return String(s ?? "")
@@ -61,25 +63,41 @@ export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+const MS_PER_DAY = 86_400_000;
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Nº do dia de calendário em `tz` (dias desde 1970-01-01); data pura já é o próprio dia. */
+function calendarDay(d: string | Date, tz: string): number | null {
+  if (typeof d === "string" && DATE_ONLY.test(d)) {
+    const t = new Date(`${d}T00:00:00Z`).getTime();
+    return Number.isNaN(t) ? null : t / MS_PER_DAY;
+  }
+  const date = typeof d === "string" ? new Date(d) : d;
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  const w = wallClock(date, tz);
+  return Date.UTC(w.year, w.month, w.day) / MS_PER_DAY;
+}
+
 /**
- * Rótulo de tempo decorrido desde o empréstimo (ex: "hoje", "há 5 dias", "há 2 meses").
- * Retorna null se a data for inválida ou ausente.
+ * Rótulo de tempo decorrido desde o empréstimo (ex: "hoje", "há 5 dias", "há 2 meses"),
+ * em dias de calendário no fuso `tz`. Retorna null se a data for inválida ou ausente.
  */
 export function lentDurationLabel(
   d: string | Date | null | undefined,
-  now: Date = new Date()
+  now: Date,
+  tz: string
 ): string | null {
   if (!d) {
     return null;
   }
-  const lentDate =
-    typeof d === "string" ? new Date(d.includes("T") ? d : `${d}T00:00:00`) : d;
-  if (Number.isNaN(lentDate.getTime())) {
+  const lentDay = calendarDay(d, tz);
+  const today = calendarDay(now, tz);
+  if (lentDay === null || today === null) {
     return null;
   }
-
-  const msPerDay = 1000 * 60 * 60 * 24;
-  const diffDays = Math.floor((now.getTime() - lentDate.getTime()) / msPerDay);
+  const diffDays = today - lentDay;
 
   if (diffDays <= 0) {
     return "hoje";

@@ -22,6 +22,7 @@ const book: Book = {
   acquiredOn: "2026-01-01",
   status: "lendo",
   borrower: null,
+  lentAt: null,
   yearRead: null,
   notes: '=IMPORTXML("url")',
   coverUrl: null,

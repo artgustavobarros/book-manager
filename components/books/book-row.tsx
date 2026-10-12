@@ -59,7 +59,7 @@ export function BookRow({
           <LentBadge
             borrower={b.borrower}
             className="py-px"
-            lentAt={b.updatedAt}
+            lentAt={b.lentAt}
             onReturn={() => app.returnBook(b)}
           />
         ) : null}
