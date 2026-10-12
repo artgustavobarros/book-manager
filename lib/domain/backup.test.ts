@@ -69,6 +69,26 @@ describe("fromBackup", () => {
     }
   });
 
+  it("descarta números acima dos limites do modelo", () => {
+    const [b] = fromBackup([
+      {
+        title: "Fora da faixa",
+        order: "99999999999",
+        pages: "99999999999",
+        year: "99999",
+        yearRead: 10_000,
+        author: "Fulana",
+      },
+    ]);
+    expect(b).toMatchObject({
+      title: "Fora da faixa",
+      author: "Fulana",
+      orderNo: 1,
+      pages: null,
+      yearPublished: null,
+      yearRead: null,
+    });
+  });
   it("limpa 'emprestado para' fora do status emprestado", () => {
     expect(
       fromBackup([{ title: "A", status: "lido", borrower: "Ana" }])[0].borrower
@@ -111,6 +131,10 @@ describe("conversões", () => {
     expect(toPositiveInt("0")).toBeNull();
     expect(toPositiveInt("abc")).toBeNull();
     expect(toPositiveInt(3.5)).toBeNull();
+    expect(toPositiveInt("99999999999")).toBe(99_999_999_999);
+    expect(toPositiveInt("100000", 100_000)).toBe(100_000);
+    expect(toPositiveInt("100001", 100_000)).toBeNull();
+    expect(toPositiveInt(100_001, 100_000)).toBeNull();
   });
   it("toIsoDate", () => {
     expect(toIsoDate("2024-02-29")).toBe("2024-02-29");

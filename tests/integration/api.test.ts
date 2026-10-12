@@ -233,6 +233,18 @@ describe("livros", () => {
 });
 
 describe("importar backup", () => {
+  const importAs = (cookie: string | undefined, json: unknown) =>
+    importRoute.POST(
+      req("/api/books/import", { method: "POST", cookie, json }),
+      ctx()
+    );
+  const booksOf = async (cookie: string) =>
+    (
+      await body<{ books: Book[] }>(
+        await booksRoute.GET(req("/api/books", { cookie }), ctx())
+      )
+    ).books;
+
   it("substitui o acervo pelo backup do standalone", async () => {
     const res = await body(
       await importRoute.POST(
@@ -287,6 +299,78 @@ describe("importar backup", () => {
       expect(res.status).toBe(400);
     }
     expect(await count()).toBe(30);
+  });
+
+  it("não toca no acervo de outro usuário", async () => {
+    await booksRoute.POST(
+      req("/api/books", {
+        method: "POST",
+        cookie: bia.cookie,
+        json: { title: "Quarto de despejo" },
+      }),
+      ctx()
+    );
+    const before = await booksOf(bia.cookie);
+    expect(before.length).toBeGreaterThan(0);
+    expect((await importAs(ana.cookie, backup)).status).toBe(200);
+    expect(await booksOf(bia.cookie)).toEqual(before);
+  });
+
+  it("reimportar o mesmo backup não duplica", async () => {
+    await importAs(ana.cookie, backup);
+    const res = await body(await importAs(ana.cookie, backup));
+    expect(res.count).toBe(30);
+    const orders = (await booksOf(ana.cookie)).map((b) => b.orderNo);
+    expect(orders).toHaveLength(30);
+    expect(new Set(orders).size).toBe(30);
+    expect(Math.min(...(orders as number[]))).toBe(1);
+    expect(Math.max(...(orders as number[]))).toBe(30);
+  });
+
+  it("numera a partir de 1 um backup sem nº, mesmo com acervo anterior", async () => {
+    await importAs(ana.cookie, backup);
+    const res = await importAs(ana.cookie, [
+      { title: "Sem nº A", acquired: "2024-01-01" },
+      { title: "Sem nº B", acquired: "2024-02-01" },
+    ]);
+    expect(res.status).toBe(200);
+    const books = await booksOf(ana.cookie);
+    expect(books.map((b) => [b.title, b.orderNo])).toEqual(
+      expect.arrayContaining([
+        ["Sem nº A", 1],
+        ["Sem nº B", 2],
+      ])
+    );
+    expect(books).toHaveLength(2);
+  });
+
+  it("rejeita mais de 20000 itens sem apagar o acervo", async () => {
+    await importAs(ana.cookie, backup);
+    const huge = Array.from({ length: 20_001 }, () => ({ title: "x" }));
+    expect((await importAs(ana.cookie, huge)).status).toBe(400);
+    expect(await booksOf(ana.cookie)).toHaveLength(30);
+  });
+
+  it("exige sessão", async () => {
+    await importAs(ana.cookie, backup);
+    expect((await importAs(undefined, [{ title: "Intruso" }])).status).toBe(
+      401
+    );
+    expect(await booksOf(ana.cookie)).toHaveLength(30);
+  });
+
+  it("descarta números fora da faixa em vez de falhar", async () => {
+    const res = await importAs(ana.cookie, [
+      { title: "Páginas demais", author: "Fulana", pages: "99999999999" },
+    ]);
+    expect(res.status).toBe(200);
+    const [book] = await booksOf(ana.cookie);
+    expect(book).toMatchObject({
+      title: "Páginas demais",
+      author: "Fulana",
+      pages: null,
+      orderNo: 1,
+    });
   });
 });
 

@@ -13,6 +13,14 @@ export type BookStatus = (typeof BOOK_STATUSES)[number];
 export const AUTHOR_GENDERS = ["Homem", "Mulher", "Não definido"] as const;
 export type AuthorGender = (typeof AUTHOR_GENDERS)[number];
 
+/** Teto dos campos inteiros do livro (formulário, API e restauração de backup). */
+export const BOOK_INT_MAX = {
+  orderNo: 1_000_000,
+  yearPublished: 9999,
+  pages: 100_000,
+  yearRead: 9999,
+} as const;
+
 export interface Book {
   /** Data no formato YYYY-MM-DD. */
   acquiredOn: string | null;
