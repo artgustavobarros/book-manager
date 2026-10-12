@@ -17,7 +17,7 @@ import {
 import { BOOKS_KEY, useBookActions } from "@/hooks/use-books";
 import { api } from "@/lib/client/api";
 import { createLatestSaver } from "@/lib/client/latest-saver";
-import { nextReadingStatus, stat } from "@/lib/domain/status";
+import { nextReadingStatus, returnStatus, stat } from "@/lib/domain/status";
 import type { Book, BookStatus } from "@/lib/domain/types";
 import type { Theme } from "@/lib/theme";
 
@@ -66,7 +66,7 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   modal: ModalState;
   openEdit: (id: string | null) => void;
   openView: (id: string) => void;
-  returnBook: (book: Book, returnStatus?: BookStatus) => void;
+  returnBook: (book: Book) => void;
   setAccountOpen: (v: boolean) => void;
   setSheetUrl: (url: string | null) => void;
 
@@ -203,11 +203,13 @@ function AppState({
 
   const undoRead = useCallback(
     (book: Book) => {
+      // Emprestado continua emprestado: só sai da contagem de lidos.
+      const patch: Partial<Book> =
+        book.status === "emprestado"
+          ? { yearRead: null }
+          : { status: "nao-lido", yearRead: null };
       void actions
-        .update(book.id, {
-          status: "nao-lido",
-          yearRead: null,
-        })
+        .update(book.id, patch)
         .then((ok) => ok && toast(book.title + " marcado como não lido"));
     },
     [actions]
@@ -224,25 +226,18 @@ function AppState({
     [actions]
   );
 
+  /** Devolução: volta a "lido" se o livro tem ano de leitura e nunca apaga esse ano. */
   const returnBook = useCallback(
-    (book: Book, returnStatus: BookStatus = "nao-lido") => {
-      const patch: Partial<Book> = {
-        status: returnStatus,
-        borrower: null,
-      };
-      if (returnStatus === "lido" && !book.yearRead) {
-        patch.yearRead = initial.year;
-      } else if (returnStatus === "nao-lido") {
-        patch.yearRead = null;
-      }
-      void actions.update(book.id, patch).then((ok) => {
+    (book: Book) => {
+      const status = returnStatus(book);
+      void actions.update(book.id, { status, borrower: null }).then((ok) => {
         if (!ok) {
           return;
         }
-        toast(book.title + " devolvido (" + stat(returnStatus).label + ")");
+        toast(book.title + " devolvido (" + stat(status).label + ")");
       });
     },
-    [actions, initial.year]
+    [actions]
   );
 
   const value: AppContextValue = useMemo(

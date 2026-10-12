@@ -100,4 +100,21 @@ describe("dashboard", () => {
     expect(m.goalLine).toBe("Meta cumprida.");
     expect(m.goalPct).toBe("100%");
   });
+
+  it("emprestado com ano de leitura conta na meta e em Lidos", () => {
+    const lent = makeBook({
+      status: "emprestado",
+      borrower: "Joana",
+      yearRead: 2026,
+    });
+    const books = [
+      makeBook({ status: "lido", yearRead: 2026 }),
+      lent,
+      makeBook({ status: "emprestado", borrower: "Lucas" }),
+    ];
+    const d = dashboard(books, { goal: 24, now: NOW, tz: TZ });
+    expect(d.goalDone).toBe(2);
+    expect(d.yearReads).toContain(lent);
+    expect(d.kpis[1].value).toBe("2");
+  });
 });
