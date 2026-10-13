@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { useApp } from "@/components/app/app-provider";
 import { PageMain } from "@/components/app/app-shell";
 import { MiniCover } from "@/components/books/mini-cover";
-import { IconButton } from "@/components/ui/button";
+import { Button, IconButton } from "@/components/ui/button";
 import {
   CarouselDots,
   trackNarrow,
@@ -164,19 +164,13 @@ export function DashboardPage() {
       >
         {d.kpis.map((k, i) => {
           const isLent = k.label === "Emprestados";
-          return (
-            <div
-              className={cn(
-                card,
-                "flex animate-acv-in snap-start flex-col gap-3 p-5",
-                isLent && "cursor-pointer transition-colors hover:border-ink"
-              )}
-              key={k.label}
-              onClick={isLent ? () => setLentOpen(true) : undefined}
-              role={isLent ? "button" : undefined}
-              style={{ animationDelay: i * 50 + "ms" }}
-              tabIndex={isLent ? 0 : undefined}
-            >
+          const className = cn(
+            card,
+            "flex animate-acv-in snap-start flex-col gap-3 p-5"
+          );
+          const style = { animationDelay: i * 50 + "ms" };
+          const content = (
+            <>
               <div className="flex items-center justify-between">
                 <span className="font-medium text-mute text-xs">{k.label}</span>
                 {isLent ? (
@@ -189,6 +183,26 @@ export function DashboardPage() {
                 {k.value}
               </span>
               <span className="text-mute text-xs">{k.sub}</span>
+            </>
+          );
+          return isLent ? (
+            <Button
+              aria-haspopup="dialog"
+              className={cn(
+                className,
+                "h-auto items-stretch justify-start whitespace-normal text-left font-normal"
+              )}
+              key={k.label}
+              onClick={() => setLentOpen(true)}
+              size="none"
+              style={style}
+              variant="neutral"
+            >
+              {content}
+            </Button>
+          ) : (
+            <div className={className} key={k.label} style={style}>
+              {content}
             </div>
           );
         })}

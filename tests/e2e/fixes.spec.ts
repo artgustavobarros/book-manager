@@ -565,3 +565,26 @@ test.describe("busca do header fora da Estante (BP-08)", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 });
+
+test.describe("KPI de empréstimos pelo teclado (BP-09)", () => {
+  test.use({ storageState: AUTH_STATE });
+
+  test("Enter e Espaço abrem a lista de livros emprestados", async ({
+    page,
+  }) => {
+    await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+    await page.goto("/");
+    const kpi = page.getByRole("button", { name: /^Emprestados/ });
+    const heading = page
+      .getByRole("dialog")
+      .getByRole("heading", { name: "Livros emprestados" });
+
+    for (const key of ["Enter", "Space"]) {
+      await kpi.focus();
+      await page.keyboard.press(key);
+      await expect(heading).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(heading).toBeHidden();
+    }
+  });
+});
