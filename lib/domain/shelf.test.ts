@@ -93,8 +93,46 @@ describe("sortBooks", () => {
       ],
       "editora"
     );
-    // Fiel ao standalone: editora vazia vira "~", que o ICU ordena antes das letras.
-    expect(titles(pubs)).toEqual(["x", "y"]);
+    // Diverge do standalone de propósito (BP-12): lá a editora vazia vira "~",
+    // que o ICU ordena antes das letras. Aqui os vazios ficam no fim.
+    expect(titles(pubs)).toEqual(["y", "x"]);
+  });
+
+  it("põe autor e editora vazios no fim, na ordem de entrada (BP-12)", () => {
+    for (const [sort, field] of [
+      ["editora", "publisher"],
+      ["autor", "author"],
+    ] as const) {
+      const sorted = sortBooks(
+        [
+          makeBook({ [field]: "Zahar", title: "zahar" }),
+          makeBook({ [field]: null, title: "nulo" }),
+          makeBook({ [field]: "Abril", title: "abril" }),
+          makeBook({ [field]: "", title: "vazio" }),
+          makeBook({ [field]: "  ", title: "espacos" }),
+        ],
+        sort
+      );
+      expect(titles(sorted), sort).toEqual([
+        "abril",
+        "zahar",
+        "nulo",
+        "vazio",
+        "espacos",
+      ]);
+    }
+  });
+
+  it("ignora acento e caixa entre os preenchidos", () => {
+    const sorted = sortBooks(
+      [
+        makeBook({ author: "Érico Verissimo", title: "erico" }),
+        makeBook({ author: null, title: "nulo" }),
+        makeBook({ author: "eça de Queirós", title: "eca" }),
+      ],
+      "autor"
+    );
+    expect(titles(sorted)).toEqual(["eca", "erico", "nulo"]);
   });
 });
 

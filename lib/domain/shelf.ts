@@ -139,13 +139,20 @@ export const SORT_GROUPS: readonly {
 const pg = (b: Book) => b.pages || 0;
 const ordN = (b: Book) => b.orderNo || 1e9;
 
+/** Como `cmp`, mas valores vazios (nulo, "" ou só espaços) vão para o fim. */
+function cmpEmptyLast(a: string | null, b: string | null): number {
+  const ea = !a?.trim();
+  const eb = !b?.trim();
+  return ea || eb ? Number(ea) - Number(eb) : cmp(a, b);
+}
+
 const COMPARATORS: Record<SortKey, (a: Book, b: Book) => number> = {
   ordem: (a, b) => ordN(a) - ordN(b),
   "ordem-desc": (a, b) => (b.orderNo || 0) - (a.orderNo || 0),
   titulo: (a, b) => cmp(a.title, b.title),
   "titulo-desc": (a, b) => cmp(b.title, a.title),
-  autor: (a, b) => cmp(a.author, b.author),
-  editora: (a, b) => cmp(a.publisher || "~", b.publisher || "~"),
+  autor: (a, b) => cmpEmptyLast(a.author, b.author),
+  editora: (a, b) => cmpEmptyLast(a.publisher, b.publisher),
   "lanc-novos": (a, b) => (b.yearPublished || -1e4) - (a.yearPublished || -1e4),
   "lanc-antigos": (a, b) => (a.yearPublished || 1e4) - (b.yearPublished || 1e4),
   recentes: (a, b) => (b.acquiredOn || "").localeCompare(a.acquiredOn || ""),
