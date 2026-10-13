@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { useBooks } from "@/hooks/use-books";
-import { useShelfState } from "@/hooks/use-shelf-state";
+import { type HeaderSearch, useHeaderSearch } from "@/hooks/use-header-search";
 
 import { useApp } from "./app-provider";
 import { Avatar } from "./avatar";
@@ -95,10 +95,9 @@ const searchClass =
   "w-full rounded-lg border bg-card text-ink outline-none placeholder:text-[light-dark(#757575,#a9a9a9)]";
 
 /** Header largo (acima de 1024px): fixo, translúcido, com todas as ações. */
-function WideHeader() {
+function WideHeader({ search }: { search: HeaderSearch }) {
   const app = useApp();
   const books = useBooks();
-  const { state, setShelf } = useShelfState();
   const canSurprise = books.some((b) => b.status === "nao-lido");
 
   return (
@@ -112,9 +111,9 @@ function WideHeader() {
               searchClass,
               "h-10 max-w-[360px] border-line2 px-4 text-sm transition-[border-color,box-shadow] duration-150 focus:border-ink focus:shadow-ring"
             )}
-            onChange={(e) => setShelf({ q: e.target.value })}
+            onChange={(e) => search.setQuery(e.target.value)}
             placeholder="Buscar título, autor, editora, empréstimo, anotações…"
-            value={state.q}
+            value={search.query}
           />
         </div>
         <Tabs itemClassName="px-4 py-2" />
@@ -154,9 +153,8 @@ function WideHeader() {
  * Header compacto (até 1024px), do design de 2026-10-02: não fixo. A busca
  * abre pelo ícone; "Registrar" e "Me surpreenda" ficam nos botões flutuantes.
  */
-function NarrowHeader() {
+function NarrowHeader({ search }: { search: HeaderSearch }) {
   const app = useApp();
-  const { state, setShelf } = useShelfState();
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const shown = open;
@@ -205,29 +203,29 @@ function NarrowHeader() {
                 searchClass,
                 "h-11 animate-acv-fade border-ink px-4 text-base shadow-[0_0_0_3px_rgba(127,120,110,.18)]"
               )}
-              onChange={(e) => setShelf({ q: e.target.value })}
+              onChange={(e) => search.setQuery(e.target.value)}
               placeholder="Buscar título, autor, editora…"
               ref={inputRef}
-              value={state.q}
+              value={search.query}
             />
             <button
               aria-label="Limpar busca"
               className="min-w-11 rounded-lg border border-line2 bg-card px-2 font-semibold text-ink text-sm disabled:opacity-50"
-              disabled={!state.q}
-              onClick={() => setShelf({ q: "" })}
+              disabled={!search.query}
+              onClick={search.clear}
               type="button"
             >
               Limpar
             </button>
           </div>
         ) : null}
-        {!shown && state.q ? (
+        {!shown && search.query ? (
           <button
             className="self-start rounded-full border border-ink bg-card px-3 py-1 text-ink text-sm"
             onClick={() => setOpen(true)}
             type="button"
           >
-            Busca: {state.q} · editar
+            Busca: {search.query} · editar
           </button>
         ) : null}
         <Tabs itemClassName="h-11 min-w-0 flex-[1_1_auto] px-2 flex items-center justify-center" />
@@ -236,11 +234,13 @@ function NarrowHeader() {
   );
 }
 
+/** Os dois headers ficam montados e dividem o mesmo rascunho da busca. */
 export function AppHeader() {
+  const search = useHeaderSearch();
   return (
     <>
-      <WideHeader />
-      <NarrowHeader />
+      <WideHeader search={search} />
+      <NarrowHeader search={search} />
     </>
   );
 }
