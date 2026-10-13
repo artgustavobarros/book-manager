@@ -513,3 +513,55 @@ test.describe("devolução de empréstimo (BP-07)", () => {
     await expect(inYearReads).toHaveCount(1);
   });
 });
+
+test.describe("busca do header fora da Estante (BP-08)", () => {
+  test.use({ storageState: AUTH_STATE });
+
+  test.beforeEach(async ({ page }) => {
+    await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+  });
+
+  /** Digita sem pausa e confere que a Estante abriu com o texto inteiro. */
+  async function typeFromDashboard(page: Page) {
+    const search = page
+      .locator("header:visible")
+      .getByRole("textbox", { name: "Buscar no acervo" });
+    await expect(search).toBeFocused();
+    await page.keyboard.type("kindred");
+    await expect(page).toHaveURL(/\/estante\?q=kindred$/);
+    await expect(search).toHaveValue("kindred");
+    await expect(page.getByText(/^1 de \d+ livros$/)).toBeVisible();
+  }
+
+  test("no desktop, digitar rápido no Painel leva à Estante com o texto inteiro", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByText("Lendo agora")).toBeVisible();
+    await page
+      .locator("header:visible")
+      .getByRole("textbox", { name: "Buscar no acervo" })
+      .click();
+    await typeFromDashboard(page);
+
+    // A busca criou uma única entrada no histórico.
+    await page.goBack();
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("no celular, digitar rápido no Painel leva à Estante com o texto inteiro", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await expect(page.getByText("Lendo agora")).toBeVisible();
+    await page
+      .locator("header:visible")
+      .getByRole("button", { name: "Abrir busca" })
+      .click();
+    await typeFromDashboard(page);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/$/);
+  });
+});
