@@ -52,7 +52,7 @@ O sistema SHALL suportar uma faceta ativa por vez, aplicada a partir do clique e
 - **THEN** a Estante mostra só os livros desse autor, com a pílula "Autor(a): <nome> ✕"
 
 ### Requirement: Ordenação
-O menu "Ordenar" SHALL oferecer os grupos e opções do standalone: Ordem da planilha (1 → fim, fim → 1), Título (A–Z, Z–A), Autor(a) (A–Z), Editora (A–Z), Lançamento (novos, antigos), Aquisição (recentes) e Páginas (maiores). A comparação de texto MUST usar a collation pt-BR sem diferenciar acentos.
+O menu "Ordenar" SHALL oferecer os grupos e opções do standalone: Ordem da planilha (1 → fim, fim → 1), Título (A–Z, Z–A), Autor(a) (A–Z), Editora (A–Z), Lançamento (novos, antigos), Aquisição (recentes) e Páginas (maiores). A comparação de texto MUST usar a collation pt-BR sem diferenciar acentos. Em "Autor(a) · A–Z" e "Editora · A–Z", livros sem o campo (nulo, vazio ou só espaços) MUST ficar no fim da lista, depois de todos os que têm o campo preenchido, mantendo entre si a ordem anterior.
 
 #### Scenario: Escolher ordenação
 - **WHEN** o usuário escolhe "Título · Z–A"
@@ -61,6 +61,10 @@ O menu "Ordenar" SHALL oferecer os grupos e opções do standalone: Ordem da pla
 #### Scenario: Fechar o menu
 - **WHEN** o menu está aberto e o usuário clica fora ou pressiona Esc
 - **THEN** o menu fecha com a seta voltando à posição original
+
+#### Scenario: Livros sem editora ou sem autor no fim
+- **WHEN** o acervo tem livros das editoras "Zahar" e "Abril" e um livro sem editora, e o usuário escolhe "Editora · A–Z"
+- **THEN** a lista mostra Abril, Zahar e por último o livro sem editora; em "Autor(a) · A–Z", o livro sem autor também fica por último
 
 ### Requirement: Estado da Estante na URL
 Busca, chip de status, faceta, ordenação, modo de visualização e página atual SHALL ficar refletidos nos parâmetros de URL da Estante, para que recarregar ou compartilhar o link preserve a vista. Alterar busca, status, faceta ou ordem MUST voltar à primeira página válida; se o total diminuir, a página MUST ser ajustada para a última válida.
