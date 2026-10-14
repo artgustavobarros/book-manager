@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect } from "react";
 
 import { StatusScreen } from "@/components/app/status-screen";
@@ -28,12 +27,12 @@ export default function AppError({
       <Button onClick={() => retry()} size="lg">
         Tentar de novo
       </Button>
-      <Link
+      <a
         className="self-center font-semibold text-mute text-xs no-underline hover:text-ink"
         href="/"
       >
         Voltar ao Painel
-      </Link>
+      </a>
     </StatusScreen>
   );
 }
