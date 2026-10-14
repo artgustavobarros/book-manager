@@ -54,4 +54,4 @@
 - [x] 8.4 Rodar `pnpm lint`, `pnpm typecheck` e `pnpm test`
 - [x] 8.5 Rodar os e2e e visuais, comparar com a baseline de falhas conhecidas da `main` e regenerar só os snapshots que mudaram por causa desta change
 - [x] 8.6 Rodar `openspec validate polish-shelf-dashboard-insights-ui --strict`
-- [ ] 8.7 Abrir o PR com a change e, depois do merge, arquivar e sincronizar a change no checkout principal (`git add -f` da change arquivada e das specs principais)
+- [x] 8.7 Abrir o PR com a change e, depois do merge, arquivar e sincronizar a change no checkout principal (`git add -f` da change arquivada e das specs principais)

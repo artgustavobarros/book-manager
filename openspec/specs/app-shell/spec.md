@@ -23,7 +23,7 @@ As telas existentes em `design/handoff/source/Acervo.dc.html` (standalone da ide
 - **THEN** a saudação, os valores dos KPIs e o número da meta usam Fraunces, e os rótulos, botões e textos de interface usam Instrument Sans, ambas servidas pelo próprio app
 
 ### Requirement: Header e navegação
-O layout autenticado SHALL ter um header com a marca (que leva ao Painel), a busca, as abas Painel / Estante / Dados do acervo como controle segmentado, o botão de tema e o avatar. Cada aba MUST corresponder a uma rota (`/`, `/estante`, `/dados`). Acima de 1024px de largura, o header MUST ser fixo, translúcido com blur, e conter também "Me surpreenda" e "+ Registrar livro". Até 1024px, o header MUST ser compacto e não fixo: marca, botão de busca (44px), botão de tema (44px) e avatar (44px) numa linha, e as abas ocupando a largura toda na linha de baixo. O campo de busca MUST aparecer quando o botão de busca é acionado ou quando a pessoa escolhe editar uma consulta ativa. Recolher o campo MUST preservar o texto e o filtro; uma ação separada, nomeada "Limpar busca", MUST apagá-los. Se houver consulta ativa recolhida, o header MUST mostrá-la de forma visível e removível.
+O layout autenticado SHALL ter um header com a marca (que leva ao Painel), a busca, as abas Painel / Estante / Dados do acervo como controle segmentado, o botão de tema e o avatar. Cada aba MUST corresponder a uma rota (`/`, `/estante`, `/dados`). Acima de 1024px de largura, o header MUST ser fixo, translúcido com blur, e conter também "Me surpreenda" e "+ Registrar livro". Até 1024px, o header MUST ser compacto e não fixo: marca, botão de busca (44px), botão de tema (44px) e avatar (44px) numa linha, e as abas ocupando a largura toda na linha de baixo. O campo de busca MUST aparecer quando o botão de busca é acionado ou quando a pessoa escolhe editar uma consulta ativa. Recolher o campo MUST preservar o texto e o filtro. Enquanto houver texto, um botão de ícone "x" dentro do campo, à direita, nomeado "Limpar busca", MUST apagar o texto e o filtro, mantendo o campo aberto e focado; sem texto, o "x" não aparece e não há outro botão de limpar ao lado do campo. Se houver consulta ativa recolhida, o header MUST mostrá-la de forma visível e removível.
 
 #### Scenario: Navegar entre abas
 - **WHEN** o usuário clica em "Dados do acervo"
@@ -38,8 +38,12 @@ O layout autenticado SHALL ter um header com a marca (que leva ao Painel), a bus
 - **THEN** a Estante continua filtrada por "kindred", a URL conserva `q=kindred` e a consulta ativa permanece visível no header
 
 #### Scenario: Limpar a busca no mobile
-- **WHEN** o usuário aciona "Limpar busca" com a consulta "kindred" ativa
-- **THEN** o texto e o parâmetro `q` são removidos e todos os livros compatíveis com os demais filtros voltam a aparecer
+- **WHEN** o usuário toca no "x" dentro do campo com a consulta "kindred" ativa
+- **THEN** o texto e o parâmetro `q` são removidos, todos os livros compatíveis com os demais filtros voltam a aparecer e o campo continua aberto, vazio e focado
+
+#### Scenario: Campo vazio sem botão de limpar
+- **WHEN** a 390px o usuário abre a busca sem digitar nada
+- **THEN** o campo não mostra o "x" e não há botão "Limpar" ao lado dele
 
 ### Requirement: Rodapé
 O rodapé SHALL mostrar a assinatura da marca e as ações "Sincronizar planilha", "Exportar Excel (CSV)", "Salvar backup" e "Restaurar backup". O texto da assinatura MUST deixar de dizer que os livros ficam guardados no navegador.
@@ -98,11 +102,19 @@ Todos os modais SHALL usar o véu preto a 45% com `acv-fade`, o painel com `acv-
 - **THEN** o rascunho continua disponível até que o usuário escolha descartá-lo ou salvá-lo
 
 ### Requirement: Carrosséis abaixo de 640px
-Abaixo de 640px de largura, os KPIs do Painel, os cards "Lendo agora" / "Últimos adicionados", os KPIs de Dados e os gráficos de Dados SHALL virar carrosséis horizontais com snap, arraste com mouse, indicadores de posição clicáveis e animação de 520 ms com easing out-quart, como no standalone.
+Abaixo de 640px de largura, os KPIs do Painel, os cards "Lendo agora" / "Últimos adicionados", os KPIs de Dados e os gráficos de Dados SHALL virar carrosséis horizontais com snap, arraste com mouse, indicadores de posição clicáveis e animação de 520 ms com easing out-quart, como no standalone. Cada item do carrossel MUST ocupar toda a largura útil do trilho (a largura da tela menos as margens laterais de 16px), um item por vez, sem mostrar parte do item seguinte. Os indicadores MUST ficar próximos entre si (no máximo 16px de espaço visível entre dois pontos inativos vizinhos), mantendo cada alvo de toque com pelo menos 24px de largura e 44px de altura.
 
 #### Scenario: Arrastar com mouse
 - **WHEN** a janela tem 390px e o usuário arrasta o carrossel de KPIs mais de 40px para a esquerda
 - **THEN** o carrossel avança para o próximo item e o indicador correspondente fica ativo
+
+#### Scenario: Item na largura toda
+- **WHEN** a janela tem 390px e o usuário abre o Painel ou Dados do acervo
+- **THEN** cada KPI, lista ou gráfico do carrossel tem 358px de largura (390px menos 16px de cada lado) e o item seguinte só aparece ao deslizar
+
+#### Scenario: Indicadores próximos
+- **WHEN** a janela tem 390px e o carrossel de gráficos de Dados mostra 6 indicadores
+- **THEN** os pontos aparecem juntos, com até 16px de espaço visível entre eles, e cada um continua clicável
 
 ### Requirement: Telas de autenticação no padrão do design
 A tela de entrada SHALL reproduzir o cartão de login do design (abas Entrar/Criar conta, botão Google, divisória "ou com e-mail", campos e CTA). As telas novas ("Verifique seu e-mail", "Esqueci minha senha", "Nova senha", link inválido) MUST usar o mesmo cartão, marca e componentes. O cadastro bem-sucedido MUST levar ao Painel; a tela "Verifique seu e-mail" permanece disponível para links inválidos ou expirados e reenvio.
@@ -123,7 +135,7 @@ As páginas do app SHALL renderizar no servidor já com o acervo do usuário, se
 - **THEN** o HTML inicial já contém os primeiros cards de livro
 
 ### Requirement: Botões flutuantes no mobile
-Até 1024px de largura, o layout autenticado SHALL mostrar no canto inferior direito o botão "Registrar livro" (56px, "+") e, acima dele, o botão "Me surpreenda" (48px, 🎲), desabilitado e esmaecido quando não há livro "Não lido". Os botões MUST se esconder quando o usuário rola a página para baixo e voltar quando rola para cima ou chega ao topo. O fim de cada página MUST ter um espaço de 96px para que os botões não cubram o último conteúdo.
+Até 1024px de largura, o layout autenticado SHALL mostrar no canto inferior direito o botão "Registrar livro" (56px, "+") e, acima dele, o botão "Me surpreenda" (48px, ícone `Shuffle` do `lucide-react`), desabilitado e esmaecido quando não há livro "Não lido". Os botões MUST se esconder quando o usuário rola a página para baixo e voltar quando rola para cima ou chega ao topo. O fim de cada página MUST ter um espaço de 96px para que os botões não cubram o último conteúdo.
 
 #### Scenario: Esconder ao rolar
 - **WHEN** a 390px o usuário rola a Estante para baixo
@@ -135,7 +147,7 @@ Até 1024px de largura, o layout autenticado SHALL mostrar no canto inferior dir
 
 #### Scenario: Sem livro não lido
 - **WHEN** não há nenhum livro "Não lido"
-- **THEN** o botão 🎲 aparece desabilitado com o título "Nenhum livro não lido para sortear"
+- **THEN** o botão "Me surpreenda" aparece desabilitado com o título "Nenhum livro não lido para sortear"
 
 ### Requirement: Mutações sem falso sucesso
 Toda ação que altera dados (editar, registrar, excluir, mudar status, favoritar, atribuir ano, meta) SHALL mostrar a mensagem de sucesso só depois que a API confirmar. Quando a API falha, a mudança otimista MUST ser desfeita e a mensagem de erro MUST ficar visível, sem ser substituída por uma mensagem de sucesso. Na edição e no registro, o modal MUST continuar aberto com os valores digitados. O rollback MUST desfazer só o que a ação que falhou mudou: no livro afetado, só os campos que ela alterou e que ainda guardam o valor otimista. Outros livros, livros criados ou excluídos nesse meio-tempo, capas aplicadas localmente e mudanças mais recentes no mesmo livro MUST continuar como estão.
