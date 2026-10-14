@@ -58,7 +58,6 @@ export interface Insights {
   genre: Bars;
   nat: Bars;
   pub: Bars;
-  scopeCaption: string;
   statusSeg: StatusSegment[];
   thermoLabel: string;
   thermoPct: string;
@@ -211,10 +210,6 @@ export function insights(
   const lim = assignMore ? pool.length : ASSIGN_LIMIT;
 
   return {
-    scopeCaption:
-      scope === "lidos"
-        ? "Gráficos calculados apenas com os " + read.length + " livros lidos"
-        : "Gráficos calculados com todo o acervo (" + books.length + " livros)",
     dataKpis,
     thermoPct: thermo + "%",
     thermoPctLabel: Math.round(thermo) + "% lido",

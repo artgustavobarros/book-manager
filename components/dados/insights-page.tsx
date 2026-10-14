@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { useApp } from "@/components/app/app-provider";
 import { PageMain } from "@/components/app/app-shell";
+import { KpiContent, kpiCardClass } from "@/components/app/kpi";
 import { toast } from "@/components/app/toast";
 import {
   CarouselDots,
@@ -62,14 +63,12 @@ function MoreButton({
 function BarCard({
   title,
   bars,
-  barColor,
   capitalize,
   onPick,
   onToggle,
 }: {
   title: string;
   bars: Bars;
-  barColor: string;
   capitalize?: boolean;
   onPick: (label: string) => void;
   onToggle: () => void;
@@ -95,7 +94,7 @@ function BarCard({
                 className="absolute inset-y-0 left-0 origin-left rounded-full"
                 style={{
                   width: r.pct,
-                  background: barColor,
+                  background: "var(--acc)",
                   animation: `acv-grow-x 700ms ${ease} both`,
                   animationDelay: i * 40 + "ms",
                 }}
@@ -203,10 +202,7 @@ function FullInsights() {
   return (
     <PageMain>
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-mute text-sm">{d.scopeCaption}</span>
-          <h1 className="m-0 font-bold font-title text-3xl">Dados do acervo</h1>
-        </div>
+        <h1 className="m-0 font-bold font-title text-3xl">Dados do acervo</h1>
         <Segmented<InsightScope>
           className="rounded-lg p-1"
           itemClassName="rounded-lg px-3 py-2 text-sm"
@@ -225,7 +221,7 @@ function FullInsights() {
         aria-label="Indicadores do acervo"
         className={cn(
           "grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3",
-          "max-[640px]:auto-cols-[72%] max-[640px]:grid-flow-col max-[640px]:grid-cols-none",
+          "max-[640px]:auto-cols-[100%] max-[640px]:grid-flow-col max-[640px]:grid-cols-none max-[640px]:gap-4",
           trackNarrow
         )}
         role="region"
@@ -233,15 +229,11 @@ function FullInsights() {
       >
         {d.dataKpis.map((k, i) => (
           <div
-            className="flex animate-acv-in snap-start flex-col gap-3 rounded-xl border border-line bg-card p-5"
+            className={kpiCardClass}
             key={k.label}
             style={{ animationDelay: i * 50 + "ms" }}
           >
-            <span className="font-medium text-mute text-xs">{k.label}</span>
-            <span className="font-bold font-title text-3xl tabular-nums leading-none">
-              {k.value}
-            </span>
-            <span className="text-mute text-xs leading-[1.4]">{k.sub}</span>
+            <KpiContent label={k.label} sub={k.sub} value={k.value} />
           </div>
         ))}
       </div>
@@ -252,7 +244,7 @@ function FullInsights() {
         aria-label="Gráficos do acervo"
         className={cn(
           "grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] items-stretch gap-4",
-          "max-[640px]:auto-cols-[88%] max-[640px]:grid-flow-col max-[640px]:grid-cols-none",
+          "max-[640px]:auto-cols-[100%] max-[640px]:grid-flow-col max-[640px]:grid-cols-none max-[640px]:gap-4",
           trackNarrow
         )}
         role="region"
@@ -359,14 +351,12 @@ function FullInsights() {
         </section>
 
         <BarCard
-          barColor="var(--ink)"
           bars={d.genre}
           onPick={pick("genero")}
           onToggle={toggle("genre")}
           title="Livros por gênero da obra"
         />
         <BarCard
-          barColor="var(--acc)"
           bars={d.nat}
           capitalize
           onPick={pick("nacionalidade")}
@@ -399,7 +389,9 @@ function FullInsights() {
                       className="origin-bottom rounded-t-md transition-[height] duration-500"
                       style={{
                         height: c.pct,
-                        background: c.current ? "var(--acc)" : "var(--ink)",
+                        background: c.current
+                          ? "var(--acc)"
+                          : "color-mix(in oklch, var(--acc) 45%, var(--card))",
                         animation: `acv-grow-y 700ms ${ease} both`,
                         animationDelay: i * 60 + "ms",
                       }}
@@ -511,7 +503,6 @@ function FullInsights() {
         </section>
 
         <BarCard
-          barColor="var(--mute)"
           bars={d.pub}
           onPick={pick("editora")}
           onToggle={toggle("publisher")}

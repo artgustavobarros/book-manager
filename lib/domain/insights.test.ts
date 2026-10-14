@@ -39,7 +39,6 @@ describe("insights × standalone", () => {
       const e = oracle.dados(oracle.state.books) as Any;
       const d = insights(books, { ...v, year: 2026 });
 
-      expect(d.scopeCaption).toBe(e.scopeCaption);
       expect(d.dataKpis.map((k) => [k.label, k.value, k.sub])).toEqual(
         e.dataKpis.map((k: Any) => [k.label, k.value, k.sub])
       );

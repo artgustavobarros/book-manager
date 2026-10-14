@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "cn";
+import { ShuffleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useBooks } from "@/hooks/use-books";
@@ -38,7 +39,7 @@ function useHideOnScroll() {
 }
 
 /**
- * "Me surpreenda" (🎲, 48px) e "Registrar livro" (+, 56px) flutuando no canto, só até
+ * "Me surpreenda" (ícone Shuffle, 48px) e "Registrar livro" (+, 56px) flutuando no canto, só até
  * 1024px de largura, onde o header compacto não tem essas ações.
  */
 export function MobileFabs() {
@@ -63,22 +64,22 @@ export function MobileFabs() {
       {canSurprise ? (
         <button
           aria-label="Me surpreenda"
-          className="flex size-12 items-center justify-center rounded-full border border-ink bg-card text-ink text-xl shadow-[0_4px_12px_rgba(27,26,23,.18)] transition-transform duration-100 active:scale-[.92]"
+          className="flex size-12 items-center justify-center rounded-full border border-ink bg-card text-ink shadow-[0_4px_12px_rgba(27,26,23,.18)] transition-transform duration-100 active:scale-[.92]"
           onClick={() => app.setSurpriseOpen(true)}
           title="Me surpreenda"
           type="button"
         >
-          🎲
+          <ShuffleIcon aria-hidden="true" className="size-5" />
         </button>
       ) : (
         <button
           aria-label="Me surpreenda (indisponível)"
-          className="flex size-12 cursor-not-allowed items-center justify-center rounded-full border border-line2 bg-card text-xl opacity-50 grayscale"
+          className="flex size-12 cursor-not-allowed items-center justify-center rounded-full border border-line2 bg-card text-ink opacity-50"
           disabled
           title="Nenhum livro não lido para sortear"
           type="button"
         >
-          🎲
+          <ShuffleIcon aria-hidden="true" className="size-5" />
         </button>
       )}
       <button

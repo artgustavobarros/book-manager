@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "cn";
+import { XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -195,28 +196,34 @@ function NarrowHeader({ search }: { search: HeaderSearch }) {
           <AccountButton className="size-11" />
         </div>
         {shown ? (
-          <div className="flex gap-2">
+          <div className="relative">
             <input
               aria-label="Buscar no acervo"
               autoFocus
               className={cn(
                 searchClass,
-                "h-11 animate-acv-fade border-ink px-4 text-base shadow-[0_0_0_3px_rgba(127,120,110,.18)]"
+                "h-11 animate-acv-fade border-ink px-4 text-base shadow-[0_0_0_3px_rgba(127,120,110,.18)]",
+                search.query && "pr-11"
               )}
               onChange={(e) => search.setQuery(e.target.value)}
               placeholder="Buscar título, autor, editora…"
               ref={inputRef}
               value={search.query}
             />
-            <button
-              aria-label="Limpar busca"
-              className="min-w-11 rounded-lg border border-line2 bg-card px-2 font-semibold text-ink text-sm disabled:opacity-50"
-              disabled={!search.query}
-              onClick={search.clear}
-              type="button"
-            >
-              Limpar
-            </button>
+            {search.query ? (
+              <button
+                aria-label="Limpar busca"
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-mute transition-[color] duration-200 hover:text-acc focus-visible:text-acc"
+                onClick={() => {
+                  search.clear();
+                  inputRef.current?.focus();
+                }}
+                title="Limpar busca"
+                type="button"
+              >
+                <XIcon aria-hidden="true" className="size-4" />
+              </button>
+            ) : null}
           </div>
         ) : null}
         {!shown && search.query ? (

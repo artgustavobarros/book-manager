@@ -5,7 +5,9 @@ import { useMemo, useState } from "react";
 
 import { useApp } from "@/components/app/app-provider";
 import { PageMain } from "@/components/app/app-shell";
+import { KpiContent, kpiCardClass } from "@/components/app/kpi";
 import { MiniCover } from "@/components/books/mini-cover";
+import { ActionButton } from "@/components/custom/action-button";
 import { Button, IconButton } from "@/components/ui/button";
 import {
   CarouselDots,
@@ -91,14 +93,12 @@ function LentModal({
                     ) : null}
                   </span>
                 </div>
-                <button
+                <ActionButton
                   aria-label={`Devolver ${b.title}`}
-                  className="h-8 flex-none rounded-lg border border-line2 bg-card px-3 font-semibold text-ink text-xs hover:border-ink hover:text-acc active:scale-95"
                   onClick={() => onReturn(b)}
-                  type="button"
                 >
                   Devolver
-                </button>
+                </ActionButton>
               </div>
             ))}
           </div>
@@ -147,7 +147,7 @@ export function DashboardPage() {
   return (
     <PageMain>
       <div className="flex flex-col gap-1">
-        <span className="text-mute text-sm">{d.todayLabel}</span>
+        <span className="self-end text-base text-mute">{d.todayLabel}</span>
         <h1 className="m-0 font-bold font-title text-3xl">{d.greeting}</h1>
       </div>
 
@@ -156,7 +156,7 @@ export function DashboardPage() {
         aria-label="Resumo do acervo"
         className={cn(
           "grid touch-pan-x touch-pan-y grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-3",
-          "max-[640px]:auto-cols-[72%] max-[640px]:grid-flow-col max-[640px]:grid-cols-none",
+          "max-[640px]:auto-cols-[100%] max-[640px]:grid-flow-col max-[640px]:grid-cols-none max-[640px]:gap-4",
           trackNarrow
         )}
         role="region"
@@ -164,26 +164,22 @@ export function DashboardPage() {
       >
         {d.kpis.map((k, i) => {
           const isLent = k.label === "Emprestados";
-          const className = cn(
-            card,
-            "flex animate-acv-in snap-start flex-col gap-3 p-5"
-          );
+          const className = kpiCardClass;
           const style = { animationDelay: i * 50 + "ms" };
           const content = (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-mute text-xs">{k.label}</span>
-                {isLent ? (
-                  <span className="font-semibold text-[11px] text-acc">
+            <KpiContent
+              aside={
+                isLent ? (
+                  <span className="flex-none font-semibold text-acc text-xs">
                     Ver lista →
                   </span>
-                ) : null}
-              </div>
-              <span className="font-bold font-title text-3xl tabular-nums leading-none">
-                {k.value}
-              </span>
-              <span className="text-mute text-xs">{k.sub}</span>
-            </>
+                ) : null
+              }
+              key={k.label}
+              label={k.label}
+              sub={k.sub}
+              value={k.value}
+            />
           );
           return isLent ? (
             <Button
@@ -322,7 +318,7 @@ export function DashboardPage() {
           aria-label="Listas do painel"
           className={cn(
             "contents",
-            "max-[640px]:grid max-[640px]:flex-[1_1_100%] max-[640px]:auto-cols-[86%] max-[640px]:grid-flow-col max-[640px]:items-stretch max-[640px]:gap-3",
+            "max-[640px]:grid max-[640px]:flex-[1_1_100%] max-[640px]:auto-cols-[100%] max-[640px]:grid-flow-col max-[640px]:items-stretch max-[640px]:gap-4",
             trackNarrow
           )}
           role="region"
@@ -360,13 +356,9 @@ export function DashboardPage() {
                         {b.author || "Autor desconhecido"}
                       </span>
                     </button>
-                    <button
-                      className="h-8 flex-none rounded-lg border border-line2 bg-card px-3 font-semibold text-ink text-xs hover:border-ink active:scale-95"
-                      onClick={() => app.finish(b)}
-                      type="button"
-                    >
+                    <ActionButton onClick={() => app.finish(b)}>
                       Terminei
-                    </button>
+                    </ActionButton>
                   </div>
                 ))}
               </div>
@@ -417,18 +409,17 @@ export function DashboardPage() {
                     </span>
                   </button>
                   {b.status === "nao-lido" ? (
-                    <button
+                    <ActionButton
                       aria-label={`Começar a ler ${b.title}`}
-                      className="h-7 flex-none rounded-md border border-line2 bg-card px-2 font-semibold text-ink text-xs hover:border-ink hover:text-acc active:scale-95"
+                      className="h-7 rounded-md px-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         app.startReading(b);
                       }}
                       title="Começar a ler"
-                      type="button"
                     >
                       Ler
-                    </button>
+                    </ActionButton>
                   ) : (
                     <span className="flex-none text-mute text-xs tabular-nums">
                       {fmtDate(b.acquiredOn)}

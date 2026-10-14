@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "cn";
+import { LayoutGridIcon, ListIcon } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useEffect, useMemo, useState } from "react";
 
@@ -10,11 +11,14 @@ import { BookCard } from "@/components/books/book-card";
 import { BookRow, LIST_COLUMNS } from "@/components/books/book-row";
 import { ConfirmDialog } from "@/components/ui/alert-dialog";
 import { Segmented, segClass } from "@/components/ui/segmented";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useAutoCovers } from "@/hooks/use-auto-covers";
 import { useBackup } from "@/hooks/use-backup";
 import { useBookActions, useBooks } from "@/hooks/use-books";
+import { useDragScroll } from "@/hooks/use-drag-scroll";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import {
+  DEFAULT_SHELF,
   facetLabel,
   filterBooks,
   type ShelfView,
@@ -40,6 +44,8 @@ function SortMenu({
   sort: SortKey;
   onSort: (k: SortKey) => void;
 }) {
+  // Até 640px o gatilho mostra só "Ordenar" até a pessoa escolher outra ordenação.
+  const chosen = sort !== DEFAULT_SHELF.sort;
   const [open, setOpen] = useState(false);
   return (
     <Popover.Root onOpenChange={setOpen} open={open}>
@@ -48,8 +54,14 @@ function SortMenu({
           className="flex h-9 items-center gap-2 rounded-full border border-line2 bg-card pr-3 pl-4 text-ink text-sm transition-[border-color] duration-200 hover:border-ink max-[640px]:min-h-11"
           type="button"
         >
-          <span className="text-mute">Ordenar</span>
-          <span className="font-semibold">{SORT_LABELS[sort]}</span>
+          <span className={cn("text-mute", chosen && "max-[640px]:sr-only")}>
+            Ordenar
+          </span>
+          <span
+            className={cn("font-semibold", !chosen && "max-[640px]:hidden")}
+          >
+            {SORT_LABELS[sort]}
+          </span>
           <span
             className={cn(
               "inline-block text-mute text-xs transition-transform duration-200",
@@ -129,6 +141,7 @@ export function ShelfPage() {
   const { state, setShelf, goShelf } = useShelfState();
   const [toDelete, setToDelete] = useState<Book | null>(null);
   const coverRef = useAutoCovers();
+  const chipDrag = useDragScroll<HTMLDivElement>();
 
   const list = useMemo(
     () =>
@@ -168,9 +181,9 @@ export function ShelfPage() {
 
   return (
     <PageMain>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 max-[640px]:flex-nowrap max-[640px]:items-center">
         <div className="flex flex-col gap-1">
-          <span className="text-mute text-sm">
+          <span className="text-mute text-sm max-[640px]:hidden">
             {(list.length === books.length
               ? nf(books.length)
               : nf(list.length) + " de " + nf(books.length)) +
@@ -182,7 +195,7 @@ export function ShelfPage() {
           <div className="flex flex-wrap items-center gap-2">
             <SortMenu onSort={(sort) => setShelf({ sort })} sort={state.sort} />
             <Segmented<ShelfView>
-              className="rounded-lg p-1"
+              className="rounded-lg p-1 max-[640px]:hidden"
               itemClassName="rounded-lg px-3 py-2 text-sm"
               label="Visualização"
               onChange={(view) => setShelf({ view })}
@@ -197,10 +210,13 @@ export function ShelfPage() {
       </div>
 
       {shelfEmpty ? null : (
-        <div className="flex flex-wrap items-center gap-2">
+        <div
+          {...chipDrag}
+          className="scrollbar-none flex flex-wrap items-center gap-2 max-[640px]:mx-[-16px] max-[640px]:cursor-grab max-[640px]:snap-x max-[640px]:scroll-px-4 max-[640px]:flex-nowrap max-[640px]:overflow-x-auto max-[640px]:px-4 max-[640px]:data-[dragging=true]:cursor-grabbing max-[640px]:data-[dragging=true]:select-none max-[640px]:data-[dragging=true]:snap-none"
+        >
           {state.facet ? (
             <button
-              className="flex h-8 animate-[acv-fade_300ms_both] items-center gap-2 rounded-full border-0 bg-acc px-3 font-semibold text-sm text-white active:scale-95"
+              className="flex h-8 flex-none animate-[acv-fade_300ms_both] snap-start items-center gap-2 whitespace-nowrap rounded-full border-0 bg-acc px-3 font-semibold text-sm text-white active:scale-95"
               onClick={() => setShelf({ facet: null })}
               type="button"
             >
@@ -214,7 +230,7 @@ export function ShelfPage() {
               <button
                 aria-pressed={on}
                 className={cn(
-                  "flex h-8 items-center gap-2 rounded-full border px-3 font-medium text-sm transition-[background-color,color,border-color] duration-200 active:scale-95 max-[640px]:min-h-10",
+                  "flex h-8 flex-none snap-start items-center gap-2 whitespace-nowrap rounded-full border px-3 font-medium text-sm transition-[background-color,color,border-color] duration-200 active:scale-95 max-[640px]:min-h-10",
                   on
                     ? "border-ink bg-ink text-card"
                     : "border-line2 bg-card text-ink"
@@ -280,6 +296,42 @@ export function ShelfPage() {
             Limpar filtros
           </button>
         </EmptyCard>
+      ) : null}
+
+      {list.length > 0 ? (
+        <div className="hidden justify-end max-[640px]:flex">
+          <ToggleGroup
+            aria-label="Visualização"
+            className="gap-0.5 rounded-lg bg-seg p-0.5"
+            onValueChange={(v) => {
+              const view = v[0] as ShelfView | undefined;
+              if (view) {
+                setShelf({ view });
+              }
+            }}
+            value={[state.view]}
+          >
+            {(
+              [
+                ["grid", "Capas", LayoutGridIcon],
+                ["list", "Lista", ListIcon],
+              ] as const
+            ).map(([k, label, Icon]) => (
+              <ToggleGroupItem
+                aria-label={label}
+                className={cn(
+                  "size-11 rounded-md hover:bg-transparent aria-pressed:bg-card",
+                  segClass(state.view === k)
+                )}
+                key={k}
+                title={label}
+                value={k}
+              >
+                <Icon aria-hidden="true" className="size-5" />
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
       ) : null}
 
       {state.view === "grid" && list.length > 0 ? (

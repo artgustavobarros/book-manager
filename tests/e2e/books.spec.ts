@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { AUTH_STATE } from "../support/e2e";
+import { AUTH_STATE, chooseFirstStatus } from "../support/e2e";
 
 test.use({ storageState: AUTH_STATE });
 
@@ -290,10 +290,7 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/estante?q=frankenstein");
-    await page
-      .getByRole("combobox", { name: "Status" })
-      .first()
-      .selectOption("emprestado");
+    await chooseFirstStatus(page, "Emprestado");
     const lend = page.getByRole("dialog");
     await expect(
       lend.getByRole("heading", { name: "Emprestado para quem?" })
@@ -365,8 +362,8 @@ test.describe("acervo", () => {
       await expect(page.getByText(/Boa leitura:/)).toBeVisible();
     }
 
-    // 2. Na Estante: alternar status com botão de ciclo rápido
-    await page.goto("/estante");
+    // 2. Na lista da Estante: alternar status com botão de ciclo rápido
+    await page.goto("/estante?vista=lista");
     const cycleBtn = page
       .getByRole("button", {
         name: /Começar a ler|Concluir leitura|Marcar como não lido/,

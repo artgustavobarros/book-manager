@@ -2,12 +2,21 @@
 
 import { cn } from "cn";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { STATUS, stat } from "@/lib/domain/status";
 import type { BookStatus } from "@/lib/domain/types";
 
+const STATUS_ITEMS = STATUS.map((s) => ({ value: s.k, label: s.label }));
+
 /**
- * Seletor de status do design: <select> nativo em pílula, com o ponto da cor do status
- * e uma seta discreta; fundo = cor do status a 16% sobre o card.
+ * Seletor de status abaixo do livro: Select do Base UI em pílula, com o ponto da cor do
+ * status; fundo = cor do status a 16% sobre o card. O wrapper segura o clique (inclusive
+ * o que sobe do popup no portal) para não abrir a ficha.
  */
 export function StatusSelect({
   value,
@@ -27,26 +36,40 @@ export function StatusSelect({
       onClick={(e) => e.stopPropagation()}
     >
       <span
-        className="pointer-events-none absolute left-3 size-2 rounded-full"
+        className="pointer-events-none absolute left-3 z-[1] size-2 rounded-full"
         style={{ background: dot }}
       />
-      <span className="pointer-events-none absolute top-2 right-3 size-1 rotate-45 border-ink border-r-[1.5px] border-b-[1.5px] opacity-55" />
-      <select
-        aria-label="Status"
-        className={cn(
-          "h-7 max-w-full cursor-pointer appearance-none rounded-full border border-transparent pr-7 pl-6 font-semibold text-ink text-xs outline-none transition-[border-color,background-color] duration-150 hover:border-line2 focus:border-ink",
-          selectClassName
-        )}
-        onChange={(e) => onChange(e.target.value as BookStatus)}
-        style={{ background: `color-mix(in oklch, ${dot} 16%, var(--card))` }}
+      <Select
+        items={STATUS_ITEMS}
+        onValueChange={(k) => {
+          if (k) {
+            onChange(k);
+          }
+        }}
         value={value}
       >
-        {STATUS.map((s) => (
-          <option key={s.k} value={s.k}>
-            {s.label}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger
+          aria-label="Status"
+          className={cn(
+            "h-7 w-auto max-w-full rounded-full border-transparent pr-2 pl-6 font-semibold text-xs hover:border-line2 max-[640px]:min-h-11 [&_svg]:size-3.5",
+            selectClassName
+          )}
+          style={{ background: `color-mix(in oklch, ${dot} 16%, var(--card))` }}
+        />
+        <SelectContent>
+          {STATUS.map((s) => (
+            <SelectItem key={s.k} value={s.k}>
+              <span className="flex items-center gap-2">
+                <span
+                  className="size-2 flex-none rounded-full"
+                  style={{ background: s.dot }}
+                />
+                {s.label}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </span>
   );
 }
