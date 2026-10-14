@@ -9,6 +9,8 @@ export const DEFAULT_GOAL = 24;
 export interface Kpi {
   label: string;
   sub: string;
+  /** Valor é uma palavra (ex.: um gênero), não um número. */
+  text?: boolean;
   value: string;
 }
 

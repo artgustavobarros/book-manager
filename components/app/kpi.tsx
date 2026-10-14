@@ -10,11 +10,14 @@ export function KpiContent({
   value,
   sub,
   aside,
+  text,
 }: {
   label: string;
   value: React.ReactNode;
   sub: React.ReactNode;
   aside?: React.ReactNode;
+  /** Valor é uma palavra (ex.: um gênero): menor e truncado numa linha. */
+  text?: boolean;
 }) {
   return (
     <>
@@ -22,9 +25,18 @@ export function KpiContent({
         <span className="font-semibold text-base text-ink">{label}</span>
         {aside}
       </span>
-      <span className="font-bold font-title text-5xl text-ink tabular-nums leading-none">
-        {value}
-      </span>
+      {text ? (
+        <span
+          className="min-w-0 truncate font-bold font-title text-3xl text-ink leading-12"
+          title={typeof value === "string" ? value : undefined}
+        >
+          {value}
+        </span>
+      ) : (
+        <span className="font-bold font-title text-5xl text-ink tabular-nums leading-none">
+          {value}
+        </span>
+      )}
       <span className="text-base text-mute leading-[1.4]">{sub}</span>
     </>
   );

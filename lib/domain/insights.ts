@@ -115,6 +115,64 @@ function bars(
   };
 }
 
+const NONE = "—";
+const dec1 = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+
+function orNone(n: number, sub: string, empty: string) {
+  return n ? { value: nf(n), sub } : { value: NONE, sub: empty };
+}
+
+function shelfKpi(total: number, withPages: number, pages: number): Kpi {
+  const label = "Páginas na estante";
+  if (!withPages) {
+    return { label, value: NONE, sub: "nenhum livro com páginas informadas" };
+  }
+  let sub = "somando " + nf(withPages) + " de " + nf(total) + " livros";
+  if (withPages === total) {
+    sub =
+      total === 1 ? "somando 1 livro" : "somando os " + nf(total) + " livros";
+  }
+  return { label, value: nf(pages), sub };
+}
+
+function topGenreKpi(read: readonly Book[]): Kpi {
+  const label = "Gênero mais lido";
+  if (!read.length) {
+    return { label, value: NONE, sub: "nenhum livro lido ainda" };
+  }
+  // groupBy já ordena por contagem e, no empate, pelo rótulo.
+  const top = groupBy(read, "genre").find((e) => e.key !== groupKey(null));
+  if (!top) {
+    return { label, value: NONE, sub: "nenhum lido com gênero informado" };
+  }
+  const sub =
+    read.length === 1
+      ? "o único lido"
+      : nf(top.count) + " dos " + nf(read.length) + " lidos";
+  return { label, value: top.label, sub, text: true };
+}
+
+function paceKpi(read: readonly Book[], Y: number): Kpi {
+  const label = "Ritmo de leitura";
+  const years = read.flatMap((b) => (b.yearRead ? [b.yearRead] : []));
+  if (!years.length) {
+    return { label, value: NONE, sub: "registre o ano de leitura dos lidos" };
+  }
+  const first = Math.min(...years);
+  const span = Math.max(Y, ...years) - first + 1;
+  if (span === 1) {
+    const unit = years.length === 1 ? "livro lido em " : "livros lidos em ";
+    return { label, value: nf(years.length), sub: unit + first };
+  }
+  const rate = Math.round((years.length / span) * 10) / 10;
+  const unit = rate < 2 ? "livro" : "livros";
+  return {
+    label,
+    value: dec1.format(rate),
+    sub: unit + " por ano desde " + first,
+  };
+}
+
 export function insights(
   books: readonly Book[],
   opts: InsightOptions
@@ -130,49 +188,19 @@ export function insights(
   const shelfPages = withP.reduce((s, b) => s + pg(b), 0);
   const estFull = Math.round(shelfPages + (books.length - withP.length) * avg);
   const readPages = read.reduce((s, b) => s + pg(b), 0);
-  const avgRead = readP.length ? Math.round(readPages / readP.length) : 0;
-  const readPct = books.length
-    ? Math.round((read.length / books.length) * 100)
-    : 0;
-  const readingN = books.filter((b) => b.status === "lendo").length;
-  const missingP = books.length - withP.length;
 
+  // KPIs valem para o acervo todo, independentemente do escopo dos gráficos.
   const dataKpis: Kpi[] = [
+    shelfKpi(books.length, withP.length, shelfPages),
+    topGenreKpi(read),
+    paceKpi(read, Y),
     {
-      label: "Páginas lidas",
-      value: nf(readPages),
-      sub:
-        "média de " +
-        nf(avgRead) +
-        " p. por livro lido · ~" +
-        nf(estFull) +
-        " p. para ler 100% do acervo",
-    },
-    {
-      label: "Páginas na estante",
-      value: nf(shelfPages),
-      sub: missingP
-        ? "~" +
-          nf(estFull) +
-          " estimadas, contando " +
-          missingP +
-          " livros sem nº de páginas"
-        : "em " + nf(books.length) + " livros",
-    },
-    {
-      label: "Leitura concluída",
-      value: readPct + "%",
-      sub: read.length + " lidos · " + readingN + " em leitura agora",
-    },
-    {
-      label: "Diversidade literária",
-      value: nf(distinctCount(books, "nationality")),
-      sub:
-        "países · " +
-        distinctCount(books, "publisher") +
-        " editoras · " +
-        distinctCount(books, "genre") +
-        " gêneros",
+      label: "Países de origem",
+      ...orNone(
+        distinctCount(books, "nationality"),
+        "entre os autores do acervo",
+        "nenhuma nacionalidade informada"
+      ),
     },
   ];
   const thermo = estFull ? Math.min(100, (readPages / estFull) * 100) : 0;

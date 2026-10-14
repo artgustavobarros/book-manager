@@ -31,7 +31,7 @@ const ease = "cubic-bezier(.2,.7,.2,1)";
 function CardHead({ title, badge }: { title: string; badge: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <h2 className="m-0 font-semibold text-base">{title}</h2>
+      <h3 className="m-0 font-semibold text-base">{title}</h3>
       <span className="text-mute text-xs">{badge}</span>
     </div>
   );
@@ -201,20 +201,7 @@ function FullInsights() {
 
   return (
     <PageMain>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="m-0 font-bold font-title text-3xl">Dados do acervo</h1>
-        <Segmented<InsightScope>
-          className="rounded-lg p-1"
-          itemClassName="rounded-lg px-3 py-2 text-sm"
-          label="Escopo dos gráficos"
-          onChange={setScope}
-          options={[
-            ["todos", "Todo o acervo"],
-            ["lidos", "Apenas lidos"],
-          ]}
-          value={scope}
-        />
-      </div>
+      <h1 className="m-0 font-bold font-title text-3xl">Dados do acervo</h1>
 
       <div
         {...kpiCar.trackProps}
@@ -233,11 +220,31 @@ function FullInsights() {
             key={k.label}
             style={{ animationDelay: i * 50 + "ms" }}
           >
-            <KpiContent label={k.label} sub={k.sub} value={k.value} />
+            <KpiContent
+              label={k.label}
+              sub={k.sub}
+              text={k.text}
+              value={k.value}
+            />
           </div>
         ))}
       </div>
       <CarouselDots count={4} index={kpiCar.index} onGo={kpiCar.go} />
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="m-0 font-bold font-title text-ink text-xl">Gráficos</h2>
+        <Segmented<InsightScope>
+          className="rounded-lg p-1"
+          itemClassName="rounded-lg px-3 py-2 text-sm"
+          label="Escopo dos gráficos"
+          onChange={setScope}
+          options={[
+            ["todos", "Todo o acervo"],
+            ["lidos", "Apenas lidos"],
+          ]}
+          value={scope}
+        />
+      </div>
 
       <div
         {...chartCar.trackProps}
