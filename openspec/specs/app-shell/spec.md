@@ -135,7 +135,7 @@ As páginas do app SHALL renderizar no servidor já com o acervo do usuário, se
 - **THEN** o HTML inicial já contém os primeiros cards de livro
 
 ### Requirement: Botões flutuantes no mobile
-Até 1024px de largura, o layout autenticado SHALL mostrar no canto inferior direito o botão "Registrar livro" (56px, "+") e, acima dele, o botão "Me surpreenda" (48px, ícone `Shuffle` do `lucide-react`), desabilitado e esmaecido quando não há livro "Não lido". Os botões MUST se esconder quando o usuário rola a página para baixo e voltar quando rola para cima ou chega ao topo. O fim de cada página MUST ter um espaço de 96px para que os botões não cubram o último conteúdo.
+Até 1024px de largura, o layout autenticado SHALL mostrar no canto inferior direito o botão "Registrar livro" (56px, "+") e, acima dele, o botão "Me surpreenda" (48px, ícone `Shuffle` do `lucide-react`), com borda e ícone na cor de acento do projeto (`--acc`) quando habilitado, e desabilitado e esmaecido quando não há livro "Não lido". Os botões MUST se esconder quando o usuário rola a página para baixo e voltar quando rola para cima ou chega ao topo. O fim de cada página MUST ter um espaço de 96px para que os botões não cubram o último conteúdo.
 
 #### Scenario: Esconder ao rolar
 - **WHEN** a 390px o usuário rola a Estante para baixo
@@ -148,6 +148,10 @@ Até 1024px de largura, o layout autenticado SHALL mostrar no canto inferior dir
 #### Scenario: Sem livro não lido
 - **WHEN** não há nenhum livro "Não lido"
 - **THEN** o botão "Me surpreenda" aparece desabilitado com o título "Nenhum livro não lido para sortear"
+
+#### Scenario: Sorteio na cor de acento
+- **WHEN** a 390px há livro "Não lido"
+- **THEN** o botão "Me surpreenda" aparece com a borda e o ícone na cor de acento do tema, como o "+ Registrar livro"
 
 ### Requirement: Mutações sem falso sucesso
 Toda ação que altera dados (editar, registrar, excluir, mudar status, favoritar, atribuir ano, meta) SHALL mostrar a mensagem de sucesso só depois que a API confirmar. Quando a API falha, a mudança otimista MUST ser desfeita e a mensagem de erro MUST ficar visível, sem ser substituída por uma mensagem de sucesso. Na edição e no registro, o modal MUST continuar aberto com os valores digitados. O rollback MUST desfazer só o que a ação que falhou mudou: no livro afetado, só os campos que ela alterou e que ainda guardam o valor otimista. Outros livros, livros criados ou excluídos nesse meio-tempo, capas aplicadas localmente e mudanças mais recentes no mesmo livro MUST continuar como estão.

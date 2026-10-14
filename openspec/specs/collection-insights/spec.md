@@ -4,7 +4,7 @@
 TBD - created by archiving change bodega-literaria-app. Update Purpose after archive.
 ## Requirements
 ### Requirement: Escopo dos gráficos
-A página Dados do acervo SHALL oferecer o escopo "Todo o acervo" ou "Apenas lidos", que afeta os gráficos por status, gênero, nacionalidade e editora. O controle segmentado de escopo MUST ficar numa linha com o título "Gráficos", logo acima da grade de gráficos e abaixo dos KPIs, e MUST NOT ficar no cabeçalho da página. Os KPIs MUST NOT mudar com o escopo. A página MUST NOT mostrar legenda de escopo ("Gráficos calculados…"); o controle segmentado é a única indicação do escopo ativo. Em toda a página (escopo, KPIs, páginas lidas, lidos por ano e atribuição de ano), um livro MUST contar como lido quando tem status `lido` ou quando tem status `emprestado` e ano lido preenchido.
+A página Dados do acervo SHALL oferecer o escopo "Todo o acervo" ou "Apenas lidos", que afeta os gráficos por status, gênero, nacionalidade e editora. O controle segmentado de escopo MUST ficar logo acima da grade de gráficos e abaixo dos KPIs, ocupando a largura toda do conteúdo, com as duas opções dividindo o espaço igualmente, sem título ao lado, e MUST NOT ficar no cabeçalho da página. Os KPIs MUST NOT mudar com o escopo. A página MUST NOT mostrar legenda de escopo ("Gráficos calculados…"); o controle segmentado é a única indicação do escopo ativo. Em toda a página (escopo, KPIs, páginas lidas, lidos por ano e atribuição de ano), um livro MUST contar como lido quando tem status `lido` ou quando tem status `emprestado` e ano lido preenchido.
 
 #### Scenario: Apenas lidos
 - **WHEN** o usuário escolhe "Apenas lidos"
@@ -12,7 +12,7 @@ A página Dados do acervo SHALL oferecer o escopo "Todo o acervo" ou "Apenas lid
 
 #### Scenario: Todo o acervo sem legenda
 - **WHEN** o usuário abre Dados do acervo com o escopo padrão
-- **THEN** o cabeçalho mostra só o título "Dados do acervo", e o controle segmentado aparece ao lado do título "Gráficos", entre os KPIs e a grade de gráficos
+- **THEN** o cabeçalho mostra só o título "Dados do acervo", e o controle segmentado aparece na largura toda, sem título, entre os KPIs e a grade de gráficos
 
 #### Scenario: Livro lido emprestado
 - **WHEN** um livro `lido` em 2026, com 200 páginas, é emprestado
