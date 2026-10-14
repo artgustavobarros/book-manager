@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { AUTH_STATE } from "../support/e2e";
+import { AUTH_STATE, chooseFirstStatus } from "../support/e2e";
 
 /** Correções da change fix-bugs-seo-mobile: bugs, SEO, teclado e layout mobile. */
 
@@ -351,7 +351,9 @@ test.describe("layout mobile", () => {
       page.getByRole("textbox", { name: "Buscar no acervo" })
     ).toBeFocused();
     await page.keyboard.type("kindred");
-    await expect(page.getByText(/^1 de \d+ livros$/)).toBeVisible();
+    // Até 640px a Estante não mostra a contagem "N livros": confere pelos cards.
+    await expect(page.locator("[data-bid]")).toHaveCount(1);
+    await expect(page.getByText(/^1 de \d+ livros$/)).toBeHidden();
     await page.getByRole("button", { name: "Recolher busca" }).click();
     await expect(
       page.getByRole("textbox", { name: "Buscar no acervo" })
@@ -360,7 +362,35 @@ test.describe("layout mobile", () => {
     await expect(page).toHaveURL(/q=kindred/);
     await page.getByRole("button", { name: "Abrir busca" }).click();
     await page.getByRole("button", { name: "Limpar busca" }).click();
-    await expect(page.getByText(/^\d+ livros$/)).toBeVisible();
+    await expect(page).not.toHaveURL(/q=kindred/);
+    // O x fica dentro do campo: limpar mantém o campo aberto, vazio e focado.
+    const field = page.getByRole("textbox", { name: "Buscar no acervo" });
+    await expect(field).toHaveValue("");
+    await expect(field).toBeFocused();
+    await expect(
+      page.getByRole("button", { name: "Limpar busca" })
+    ).toHaveCount(0);
+    await expect(page.locator("[data-bid]").nth(1)).toBeVisible();
+  });
+
+  test("chips da Estante rolam arrastando com o mouse sem filtrar", async ({
+    page,
+  }) => {
+    await page.goto("/estante");
+    const todos = page.getByRole("button", { name: /^Todos/ });
+    const strip = todos.locator("..");
+    const box = (await todos.boundingBox())!;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(box.x + 300, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 150, y, { steps: 8 });
+    await page.mouse.move(box.x + 20, y, { steps: 8 });
+    await page.mouse.up();
+    await expect
+      .poll(() => strip.evaluate((el) => el.scrollLeft))
+      .toBeGreaterThan(100);
+    await expect(todos).toHaveAttribute("aria-pressed", "true");
+    await expect(page).toHaveURL(/\/estante$/);
   });
 
   for (const width of [320, 390, 640]) {
@@ -385,21 +415,13 @@ test.describe("layout mobile", () => {
       const firstCard = cards.first().locator("..");
       const favorite = firstCard.getByRole("button", { name: /favoritos/ });
       const status = firstCard.getByRole("combobox", { name: "Status" });
-      const cycle = firstCard
-        .getByRole("button", {
-          name: /Começar a ler|Concluir leitura|Marcar como não lido/,
-        })
-        .last();
       await expect(favorite).toBeVisible();
       await expect(status).toBeVisible();
-      await expect(cycle).toBeVisible();
+      // O seletor de status ocupa a largura toda do card, sem botão ao lado.
       const cardBox = await firstCard.boundingBox();
-      for (const control of [status, cycle]) {
-        const box = await control.boundingBox();
-        expect(box!.x + box!.width).toBeLessThanOrEqual(
-          cardBox!.x + cardBox!.width + 1
-        );
-      }
+      const box = await status.boundingBox();
+      expect(Math.abs(box!.x - cardBox!.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(box!.width - cardBox!.width)).toBeLessThanOrEqual(1);
     });
   }
 
@@ -482,10 +504,7 @@ test.describe("devolução de empréstimo (BP-07)", () => {
     const before = await goalDone.textContent();
 
     await page.goto("/estante?q=macunaima");
-    await page
-      .getByRole("combobox", { name: "Status" })
-      .first()
-      .selectOption("emprestado");
+    await chooseFirstStatus(page, "Emprestado");
     const lend = page.getByRole("dialog");
     await lend.getByLabel("Nome da pessoa").fill("Rita");
     await lend.getByRole("button", { name: "Marcar como emprestado" }).click();
@@ -507,7 +526,7 @@ test.describe("devolução de empréstimo (BP-07)", () => {
     await page.reload();
     await expect(
       page.getByRole("combobox", { name: "Status" }).first()
-    ).toHaveValue("lido");
+    ).toHaveText("Lido");
     await page.goto("/");
     await expect(goalDone).toHaveText(before ?? "");
     await expect(inYearReads).toHaveCount(1);
@@ -530,7 +549,7 @@ test.describe("busca do header fora da Estante (BP-08)", () => {
     await page.keyboard.type("kindred");
     await expect(page).toHaveURL(/\/estante\?q=kindred$/);
     await expect(search).toHaveValue("kindred");
-    await expect(page.getByText(/^1 de \d+ livros$/)).toBeVisible();
+    await expect(page.locator("[data-bid]")).toHaveCount(1);
   }
 
   test("no desktop, digitar rápido no Painel leva à Estante com o texto inteiro", async ({

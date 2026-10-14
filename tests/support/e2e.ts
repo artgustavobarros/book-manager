@@ -58,3 +58,9 @@ export async function signIn(page: Page, email: string, password: string) {
   await page.getByLabel("Senha", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
 }
+
+/** Escolhe um status no primeiro seletor "Status" da página (Select do Base UI). */
+export async function chooseFirstStatus(page: Page, label: string) {
+  await page.getByRole("combobox", { name: "Status" }).first().click();
+  await page.getByRole("option", { name: label, exact: true }).click();
+}

@@ -1,6 +1,12 @@
 "use client";
 
 import { cn } from "cn";
+import {
+  CheckIcon,
+  HeartIcon,
+  type LucideIcon,
+  PencilIcon,
+} from "lucide-react";
 
 import { useApp } from "@/components/app/app-provider";
 import { coverColors, coverImage } from "@/lib/domain/cover";
@@ -24,20 +30,20 @@ export function BookCard({
   const app = useApp();
   const { coverBg, coverInk } = coverColors(b.title, b.author);
   const author = b.author || "Autor desconhecido";
-  const actions: [string, string, () => void, boolean][] = [
+  const actions: [LucideIcon, string, () => void, boolean][] = [
     [
-      b.favorite ? "♥" : "♡",
+      HeartIcon,
       b.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos",
       () => app.toggleFavorite(b),
       b.favorite,
     ],
     [
-      "✓",
+      CheckIcon,
       b.status === "lido" ? "Marcar como não lido" : "Marcar como lido",
       () => app.toggleRead(b),
       b.status === "lido",
     ],
-    ["✎", "Editar", () => app.openEdit(b.id), false],
+    [PencilIcon, "Editar", () => app.openEdit(b.id), false],
   ];
   return (
     <div
@@ -69,12 +75,12 @@ export function BookCard({
         ) : null}
         {/* Ações no hover; até 640px (toque, sem hover) ficam sempre visíveis. */}
         <div className="pointer-events-none absolute top-2 right-2 z-[2] flex translate-x-[10px] flex-col gap-2 opacity-0 transition-[opacity,transform] duration-200 ease-[ease] group-focus-within:pointer-events-auto group-focus-within:translate-x-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-x-0 group-hover:opacity-100 max-[641px]:pointer-events-auto max-[641px]:translate-x-0 max-[641px]:opacity-100">
-          {actions.map(([glyph, label, fn, on]) => (
+          {actions.map(([Icon, label, fn, on]) => (
             <button
               aria-label={label}
               className={cn(
                 "flex size-9 items-center justify-center rounded-full border-0 text-base leading-none shadow-[0_2px_8px_rgba(27,26,23,.2)] transition-[background-color,color] duration-150 active:scale-[.86] max-[641px]:size-11",
-                on ? "bg-[#1b1a17] text-white" : "bg-white text-[#1b1a17]"
+                on ? "bg-acc text-onacc" : "bg-card text-ink"
               )}
               key={label}
               onClick={(e) => {
@@ -84,7 +90,11 @@ export function BookCard({
               title={label}
               type="button"
             >
-              {glyph}
+              <Icon
+                aria-hidden="true"
+                className="size-4"
+                fill={on && Icon === HeartIcon ? "currentColor" : "none"}
+              />
             </button>
           ))}
         </div>
@@ -126,36 +136,13 @@ export function BookCard({
             onReturn={() => app.returnBook(b)}
           />
         ) : null}
-        <div className="mt-2 flex max-w-full flex-wrap items-center gap-1.5 self-start">
-          <StatusSelect
-            onChange={(k) => app.setStatus(b, k)}
-            value={b.status}
-          />
-          <button
-            aria-label={
-              b.status === "lido"
-                ? "Marcar como não lido"
-                : b.status === "lendo"
-                  ? "Concluir leitura"
-                  : "Começar a ler"
-            }
-            className="flex size-7 items-center justify-center rounded-full border border-line2 bg-card text-ink text-xs transition-colors hover:border-ink hover:text-acc active:scale-95 max-[641px]:size-9 max-[641px]:min-h-9 max-[641px]:min-w-9"
-            onClick={(e) => {
-              e.stopPropagation();
-              app.cycleStatus(b);
-            }}
-            title={
-              b.status === "lido"
-                ? "Marcar como não lido"
-                : b.status === "lendo"
-                  ? "Concluir leitura"
-                  : "Começar a ler"
-            }
-            type="button"
-          >
-            {b.status === "lido" ? "↺" : b.status === "lendo" ? "✓" : "▶"}
-          </button>
-        </div>
+        {/* O seletor já troca o status; o card não repete a ação rápida da lista. */}
+        <StatusSelect
+          className="mt-2 w-full"
+          onChange={(k) => app.setStatus(b, k)}
+          selectClassName="w-full"
+          value={b.status}
+        />
       </div>
     </div>
   );

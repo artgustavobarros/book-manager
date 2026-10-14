@@ -1,11 +1,14 @@
 "use client";
 
+import { PencilIcon, Trash2Icon } from "lucide-react";
+
 import { useApp } from "@/components/app/app-provider";
 import { fmtDate } from "@/lib/domain/text";
 import type { Book } from "@/lib/domain/types";
 
 import { LentBadge } from "./lent-badge";
 import { MiniCover } from "./mini-cover";
+import { StatusActionIcon, statusActionLabel } from "./status-action";
 import { StatusSelect } from "./status-select";
 
 export const LIST_COLUMNS =
@@ -25,6 +28,7 @@ export function BookRow({
 }) {
   const app = useApp();
   const author = b.author || "Autor desconhecido";
+  const statusLabel = statusActionLabel(b.status);
   return (
     <div
       className={
@@ -96,32 +100,20 @@ export function BookRow({
       />
       <span className="flex justify-end gap-1 max-[640px]:col-start-3 max-[640px]:row-start-3">
         <button
-          aria-label={
-            b.status === "lido"
-              ? "Marcar como não lido"
-              : b.status === "lendo"
-                ? "Concluir leitura"
-                : "Começar a ler"
-          }
-          className="size-7 rounded-md border border-line2 bg-card text-ink text-xs hover:border-ink max-[640px]:size-9"
+          aria-label={statusLabel}
+          className="flex size-7 items-center justify-center rounded-md border border-line2 bg-card text-ink hover:border-ink max-[640px]:size-9"
           onClick={(e) => {
             e.stopPropagation();
             app.cycleStatus(b);
           }}
-          title={
-            b.status === "lido"
-              ? "Marcar como não lido"
-              : b.status === "lendo"
-                ? "Concluir leitura"
-                : "Começar a ler"
-          }
+          title={statusLabel}
           type="button"
         >
-          {b.status === "lido" ? "↺" : b.status === "lendo" ? "✓" : "▶"}
+          <StatusActionIcon className="size-3.5" status={b.status} />
         </button>
         <button
           aria-label="Editar"
-          className="size-7 rounded-md border border-line2 bg-card text-ink text-sm hover:border-ink max-[640px]:size-9"
+          className="flex size-7 items-center justify-center rounded-md border border-line2 bg-card text-ink hover:border-ink max-[640px]:size-9"
           onClick={(e) => {
             e.stopPropagation();
             app.openEdit(b.id);
@@ -129,11 +121,11 @@ export function BookRow({
           title="Editar"
           type="button"
         >
-          ✎
+          <PencilIcon aria-hidden="true" className="size-3.5" />
         </button>
         <button
           aria-label="Excluir"
-          className="size-7 rounded-md border border-line2 bg-card text-acc text-xs hover:border-acc max-[640px]:size-9"
+          className="flex size-7 items-center justify-center rounded-md border border-line2 bg-card text-acc hover:border-acc max-[640px]:size-9"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(b);
@@ -141,7 +133,7 @@ export function BookRow({
           title="Excluir"
           type="button"
         >
-          ✕
+          <Trash2Icon aria-hidden="true" className="size-3.5" />
         </button>
       </span>
     </div>

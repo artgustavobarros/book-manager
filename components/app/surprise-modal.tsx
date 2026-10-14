@@ -1,5 +1,6 @@
 "use client";
 
+import { ShuffleIcon } from "lucide-react";
 import { useId, useMemo, useRef, useState } from "react";
 
 import {
@@ -181,11 +182,12 @@ function SurpriseBody() {
               </button>
               <div className="flex gap-2">
                 <button
-                  className="h-10 flex-1 rounded-lg border border-ink bg-transparent px-3 font-semibold text-ink text-sm hover:bg-hov active:scale-[.98]"
+                  className="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-ink bg-transparent px-3 font-semibold text-ink text-sm hover:bg-hov active:scale-[.98]"
                   onClick={() => draw(genre, sb.id)}
                   type="button"
                 >
-                  🎲 Sortear outro livro
+                  <ShuffleIcon aria-hidden="true" className="size-4" />
+                  Sortear outro livro
                 </button>
                 <button
                   className="h-10 flex-none rounded-lg border border-line2 bg-card px-4 font-semibold text-ink text-sm hover:border-ink"

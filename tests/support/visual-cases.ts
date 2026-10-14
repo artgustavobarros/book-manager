@@ -116,15 +116,27 @@ export async function openApp(
  * (change nova-identidade-visual) já tem header compacto e botões flutuantes; no mobile
  * continuam diferentes os ajustes do app: Estante em duas colunas, pontos do carrossel maiores
  * (alvo de toque), contadores dos chips com mais contraste, selo da meta na linha do
- * título, lista responsiva, "Cor/etnia do autor(a)" na ficha e o rodapé.
+ * título, lista responsiva, "Cor/etnia do autor(a)" na ficha e o rodapé. No desktop,
+ * a lista da Estante usa ícones do lucide nas ações e Dados não tem a legenda de escopo
+ * e usa o bordô em todas as barras, e os KPIs do Painel seguem a tipografia do card da
+ * meta, inclusive atrás dos modais de sorteio e planilha; nos cards de capa da Estante,
+ * o seletor de status ocupa a largura toda, sem o botão de ação rápida (change
+ * polish-shelf-dashboard-insights-ui).
  */
 export const DIVERGED = new Set([
+  "painel/desktop",
   "painel/mobile",
+  "estante/desktop",
+  "estante-lista/desktop",
+  "estante-filtro/desktop",
+  "dados/desktop",
   "estante/mobile",
   "estante-lista/mobile",
   "estante-filtro/mobile",
   "dados/mobile",
   "ficha/mobile",
+  "surpresa/desktop",
   "surpresa/mobile",
+  "planilha/desktop",
   "planilha/mobile",
 ]);

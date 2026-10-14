@@ -188,7 +188,7 @@ export function CarouselDots({
           aria-current={k === index ? "true" : undefined}
           aria-label={"Ir para o item " + (k + 1)}
           className={cn(
-            "flex size-11 items-center justify-center rounded-lg border-0 bg-transparent p-0"
+            "flex h-11 w-6 items-center justify-center rounded-lg border-0 bg-transparent p-0"
           )}
           key={k}
           onClick={() => onGo(k)}
