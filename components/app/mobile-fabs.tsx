@@ -64,7 +64,7 @@ export function MobileFabs() {
       {canSurprise ? (
         <button
           aria-label="Me surpreenda"
-          className="flex size-12 items-center justify-center rounded-full border border-ink bg-card text-ink shadow-[0_4px_12px_rgba(27,26,23,.18)] transition-transform duration-100 active:scale-[.92]"
+          className="flex size-12 items-center justify-center rounded-full border border-acc bg-card text-acc shadow-[0_4px_12px_rgba(27,26,23,.18)] transition-transform duration-100 active:scale-[.92]"
           onClick={() => app.setSurpriseOpen(true)}
           title="Me surpreenda"
           type="button"

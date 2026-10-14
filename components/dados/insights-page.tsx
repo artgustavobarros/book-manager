@@ -31,7 +31,7 @@ const ease = "cubic-bezier(.2,.7,.2,1)";
 function CardHead({ title, badge }: { title: string; badge: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <h3 className="m-0 font-semibold text-base">{title}</h3>
+      <h2 className="m-0 font-semibold text-base">{title}</h2>
       <span className="text-mute text-xs">{badge}</span>
     </div>
   );
@@ -231,20 +231,17 @@ function FullInsights() {
       </div>
       <CarouselDots count={4} index={kpiCar.index} onGo={kpiCar.go} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="m-0 font-bold font-title text-ink text-xl">Gráficos</h2>
-        <Segmented<InsightScope>
-          className="rounded-lg p-1"
-          itemClassName="rounded-lg px-3 py-2 text-sm"
-          label="Escopo dos gráficos"
-          onChange={setScope}
-          options={[
-            ["todos", "Todo o acervo"],
-            ["lidos", "Apenas lidos"],
-          ]}
-          value={scope}
-        />
-      </div>
+      <Segmented<InsightScope>
+        className="w-full rounded-lg p-1"
+        itemClassName="flex-1 rounded-lg px-3 py-2 text-sm"
+        label="Escopo dos gráficos"
+        onChange={setScope}
+        options={[
+          ["todos", "Todo o acervo"],
+          ["lidos", "Apenas lidos"],
+        ]}
+        value={scope}
+      />
 
       <div
         {...chartCar.trackProps}
