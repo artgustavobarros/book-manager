@@ -2,7 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "cn";
-import { useMemo, useRef, useState } from "react";
+import { Share2Icon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Controller,
   type UseFormReturn,
@@ -244,13 +245,29 @@ function ViewModal({ book }: { book: Book }) {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <DeleteButton onConfirm={() => del(book)} />
-          <button
-            className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
-            onClick={() => app.openEdit(book.id)}
-            type="button"
-          >
-            Editar ficha
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {/* Livro doado não aparece na estante pública. */}
+            {book.status === "doado" ? null : (
+              <button
+                className="flex h-10 items-center gap-2 rounded-lg border border-line2 bg-card px-4 font-semibold text-ink text-sm transition-[border-color] duration-150 hover:border-ink"
+                onClick={() =>
+                  app.openShare({ kind: "livro", bookId: book.id })
+                }
+                title="Compartilhar este livro"
+                type="button"
+              >
+                <Share2Icon aria-hidden="true" className="size-4" />
+                Compartilhar
+              </button>
+            )}
+            <button
+              className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
+              onClick={() => app.openEdit(book.id)}
+              type="button"
+            >
+              Editar ficha
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -355,12 +372,27 @@ function OnlineSearch({
   const [results, setResults] = useState<LookupResult[] | null>(null);
   // Só a busca mais recente pode preencher os resultados.
   const searchId = useRef(0);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function run() {
-    if (loading) {
+  useEffect(
+    () => () => {
+      if (searchTimer.current) {
+        clearTimeout(searchTimer.current);
+      }
+      searchId.current += 1;
+    },
+    []
+  );
+
+  async function run(query?: string) {
+    if (!query && loading) {
       return;
     }
-    const q = sq.trim() || form.getValues("title").trim();
+    if (searchTimer.current) {
+      clearTimeout(searchTimer.current);
+      searchTimer.current = null;
+    }
+    const q = query?.trim() || sq.trim() || form.getValues("title").trim();
     if (!q) {
       return setMsg("Digite um título ou ISBN.");
     }
@@ -381,6 +413,20 @@ function OnlineSearch({
           ? ""
           : "Nenhum resultado encontrado."
     );
+  }
+
+  function changeQuery(value: string) {
+    setSq(value);
+    searchId.current += 1;
+    if (searchTimer.current) {
+      clearTimeout(searchTimer.current);
+    }
+    setLoading(false);
+    setResults(null);
+    setMsg("");
+    if (value.trim()) {
+      searchTimer.current = setTimeout(() => void run(value), 500);
+    }
   }
 
   function pick(r: LookupResult) {
@@ -413,7 +459,7 @@ function OnlineSearch({
         <input
           aria-label="Buscar online"
           className={cn(fieldInput, "flex-1")}
-          onChange={(e) => setSq(e.target.value)}
+          onChange={(e) => changeQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();

@@ -99,6 +99,10 @@ export const userSettings = pgTable("user_settings", {
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
   sheetUrl: text("sheet_url"),
+  /** Endereço da estante pública (`/estante/{slug}`): gerado na 1ª publicação e nunca mais muda. */
+  publicSlug: text("public_slug").unique("user_settings_public_slug_unique"),
+  /** A estante só é pública enquanto o dono mantém isto ligado. */
+  publicEnabled: boolean("public_enabled").notNull().default(false),
   ...timestamps,
 });
 

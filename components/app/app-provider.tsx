@@ -17,7 +17,9 @@ import {
 import { BOOKS_KEY, useBookActions } from "@/hooks/use-books";
 import { api } from "@/lib/client/api";
 import { createLatestSaver } from "@/lib/client/latest-saver";
+import type { ShareScope } from "@/lib/domain/share";
 import { nextReadingStatus, returnStatus, stat } from "@/lib/domain/status";
+import { initialsOf } from "@/lib/domain/text";
 import type { Book, BookStatus } from "@/lib/domain/types";
 import type { Theme } from "@/lib/theme";
 
@@ -39,11 +41,19 @@ export interface AppInitial {
   hasPassword: boolean;
   /** Instante do render no servidor (mantém data/saudação iguais na hidratação). */
   now: string;
+  /** URL pública do app (links compartilhados são absolutos). */
+  origin: string;
+  publicShelf: PublicShelfState;
   sheetUrl: string | null;
   theme: Theme;
   tz: string;
   user: AppUser;
   year: number;
+}
+
+export interface PublicShelfState {
+  enabled: boolean;
+  slug: string | null;
 }
 
 type ModalState =
@@ -56,6 +66,7 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   changeGoal: (delta: number) => void;
   closeLend: () => void;
   closeModal: () => void;
+  closeShare: () => void;
   confirmLend: (book: Book, borrower: string) => void;
   cycleStatus: (book: Book) => void;
   finish: (book: Book) => void;
@@ -65,9 +76,12 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
 
   modal: ModalState;
   openEdit: (id: string | null) => void;
+  /** Abre o modal "Compartilhar" (escopo padrão: estante toda). */
+  openShare: (scope?: ShareScope) => void;
   openView: (id: string) => void;
   returnBook: (book: Book) => void;
   setAccountOpen: (v: boolean) => void;
+  setPublicShelf: (state: PublicShelfState) => void;
   setSheetUrl: (url: string | null) => void;
 
   /** Muda o status (abre o pedido de "com quem?" para Emprestado). */
@@ -75,6 +89,8 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   setSurpriseOpen: (v: boolean) => void;
   setSyncOpen: (v: boolean) => void;
   setUser: (patch: Partial<AppUser>) => void;
+  /** Escopo inicial do modal "Compartilhar" aberto; null = fechado. */
+  shareScope: ShareScope | null;
   startReading: (book: Book) => void;
   surpriseOpen: boolean;
   syncOpen: boolean;
@@ -82,6 +98,8 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   toggleRead: (book: Book) => void;
   undoRead: (book: Book) => void;
 }
+
+export { initialsOf } from "@/lib/domain/text";
 
 const AppContext = createContext<AppContextValue | null>(null);
 
@@ -91,16 +109,6 @@ export function useApp(): AppContextValue {
     throw new Error("useApp fora do AppProvider");
   }
   return ctx;
-}
-
-export function initialsOf(name: string, email: string): string {
-  return (name || email || "L")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
 }
 
 function AppState({
@@ -123,6 +131,8 @@ function AppState({
   const [accountOpen, setAccountOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [lendFor, setLendFor] = useState<Book | null>(null);
+  const [publicShelf, setPublicShelf] = useState(initial.publicShelf);
+  const [shareScope, setShareScope] = useState<ShareScope | null>(null);
 
   const goalKey = ["goal", initial.year] as const;
   const { data: goal = initial.goal } = useQuery({
@@ -249,6 +259,14 @@ function AppState({
       changeGoal,
       sheetUrl,
       setSheetUrl,
+      publicShelf,
+      setPublicShelf,
+      shareScope,
+      openShare: (scope) => {
+        setModal(null);
+        setShareScope(scope ?? { kind: "todos" });
+      },
+      closeShare: () => setShareScope(null),
       setUser,
       modal,
       openView: (id) => setModal({ kind: "view", id }),
@@ -313,6 +331,8 @@ function AppState({
       goal,
       changeGoal,
       sheetUrl,
+      publicShelf,
+      shareScope,
       modal,
       surpriseOpen,
       accountOpen,

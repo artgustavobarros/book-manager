@@ -21,6 +21,9 @@ async function audit(page: Page) {
     )
   );
   const results = await new AxeBuilder({ page })
+    // A prévia do card social é a imagem OG desenhada em escala (role="img" com descrição):
+    // o texto miúdo dela não é lido como texto da página.
+    .exclude("[data-og-preview]")
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
   const serious = results.violations.filter(
@@ -67,6 +70,38 @@ for (const theme of ["light", "dark"] as const) {
         await audit(page);
         await page.getByRole("button", { name: "Editar ficha" }).click();
         await audit(page);
+      });
+
+      test("compartilhar e estante pública", async ({ page }) => {
+        await page.goto("/");
+        await page
+          .getByRole("button", { name: "Compartilhar estante" })
+          .first()
+          .click();
+        const dialog = page.getByRole("dialog", { name: "Compartilhar" });
+        await audit(page);
+        try {
+          await dialog
+            .getByRole("button", { name: "Publicar estante" })
+            .click();
+          await expect(dialog.getByLabel("Link da estante")).toBeVisible();
+          // Audita o modal sem o toast de confirmação por cima (ele some sozinho).
+          await expect(page.getByText("Estante publicada")).toBeHidden({
+            timeout: 10_000,
+          });
+          await audit(page);
+          await page.goto("/estante/ana-lima?genero=romance");
+          await audit(page);
+          await page.getByRole("button", { name: "Sortear para mim" }).click();
+          await audit(page);
+          await page.getByRole("button", { name: "Ver ficha" }).click();
+          await expect(page.getByText("Da estante de Ana")).toBeVisible();
+          await audit(page);
+        } finally {
+          await page.request.put("/api/public-shelf", {
+            data: { enabled: false },
+          });
+        }
       });
     });
   });

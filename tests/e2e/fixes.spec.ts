@@ -243,9 +243,12 @@ test.describe("SEO (sem sessão)", () => {
     const sitemap = await (await request.get("/sitemap.xml")).text();
     expect(sitemap).toContain(`<loc>${baseURL}/entrar</loc>`);
     expect(sitemap.match(/<loc>/g)).toHaveLength(1);
-    expect(await (await request.get("/robots.txt")).text()).toMatch(
-      /Disallow: \/\n/
-    );
+    const robots = await (await request.get("/robots.txt")).text();
+    expect(robots).toMatch(/Disallow: \/\n/);
+    // Estantes públicas e suas imagens OG ficam abertas aos robôs de preview; /estante não.
+    expect(robots).toContain("Allow: /estante/\n");
+    expect(robots).toContain("Allow: /og/\n");
+    expect(robots).not.toMatch(/Allow: \/estante\n/);
   });
 
   test("a entrada é indexável e tem metadados de compartilhamento", async ({
