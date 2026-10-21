@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { uniqueEmail } from "../support/e2e";
+import { signIn } from "../support/e2e";
 
 test("avatar mostra a foto salva e usa iniciais quando ela falha", async ({
   page,
@@ -16,16 +16,11 @@ test("avatar mostra a foto salva e usa iniciais quando ela falha", async ({
     route.fulfill({ status: 404 })
   );
 
-  await page.goto("/entrar?modo=cadastro");
-  await page.getByLabel("Nome").fill("Beatriz Lima");
-  await page.getByLabel("E-mail").fill(uniqueEmail("avatar"));
-  await page.getByLabel("Senha", { exact: true }).fill("senha-forte-123");
-  await page.getByLabel("Confirmar senha").fill("senha-forte-123");
-  await page.getByRole("button", { name: "Criar conta", exact: true }).click();
+  await signIn(page, "zero.novato@exemplo.com", "senha-forte-123");
   await expect(page).toHaveURL("/");
 
   const button = page.getByRole("button", { name: "Minha conta" });
-  await expect(button).toContainText("BL");
+  await expect(button).toContainText("ZN");
 
   async function setImage(image: string) {
     const status = await page.evaluate(async (url) => {
@@ -53,7 +48,7 @@ test("avatar mostra a foto salva e usa iniciais quando ela falha", async ({
   await expect(page.getByRole("dialog").locator("img")).toBeVisible();
 
   await setImage("https://avatar.example.test/falha.png");
-  await expect(button).toContainText("BL");
+  await expect(button).toContainText("ZN");
   await button.click();
-  await expect(page.getByRole("dialog")).toContainText("BL");
+  await expect(page.getByRole("dialog")).toContainText("ZN");
 });

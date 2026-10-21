@@ -40,7 +40,7 @@ import { searchCatalogs } from "@/lib/client/lookup";
 import { coverColors, coverImage } from "@/lib/domain/cover";
 import { GENRES, suggestions } from "@/lib/domain/genres";
 import type { LookupResult } from "@/lib/domain/lookup";
-import { STATUS, stat } from "@/lib/domain/status";
+import { readingYearForStatus, STATUS, stat } from "@/lib/domain/status";
 import { capitalize, fmtDate, nf, norm } from "@/lib/domain/text";
 import { BOOK_STATUSES, type Book } from "@/lib/domain/types";
 import {
@@ -835,8 +835,14 @@ function EditModal({ book }: { book: Book | null }) {
                     key={k}
                     onClick={() => {
                       setValue("status", k, { shouldDirty: true });
-                      if (k === "lido" && !form.getValues("yearRead")) {
-                        setValue("yearRead", String(app.year));
+                      const current = form.getValues("yearRead");
+                      const next = readingYearForStatus(
+                        current,
+                        k,
+                        String(app.year)
+                      );
+                      if (next !== current) {
+                        setValue("yearRead", next ?? "", { shouldDirty: true });
                       }
                     }}
                     role="radio"
@@ -893,8 +899,9 @@ function EditModal({ book }: { book: Book | null }) {
               Cancelar
             </button>
             <button
+              aria-disabled={!title?.trim() || formState.isSubmitting}
               className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2 active:scale-[.97]"
-              disabled={formState.isSubmitting}
+              disabled={!title?.trim() || formState.isSubmitting}
               type="submit"
             >
               Salvar

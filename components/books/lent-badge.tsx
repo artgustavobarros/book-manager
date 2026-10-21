@@ -26,7 +26,7 @@ export function LentBadge({
     >
       <span>
         Com {borrower}
-        {duration ? <span className="opacity-75"> · {duration}</span> : null}
+        {duration ? <span> · {duration}</span> : null}
       </span>
       {onReturn ? (
         <button

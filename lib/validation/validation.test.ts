@@ -82,6 +82,19 @@ describe("API", () => {
       ]).success
     ).toBe(true);
   });
+
+  it("rejeita datas de aquisição que o calendário não contém", () => {
+    expect(
+      bookCreateSchema.safeParse({ title: "A", acquiredOn: "2024-02-31" })
+        .success
+    ).toBe(false);
+    expect(
+      bookFormSchema.safeParse({ ...form, acquiredOn: "2024-02-31" }).success
+    ).toBe(false);
+    expect(
+      bookPatchSchema.safeParse({ acquiredOn: "2024-02-29" }).success
+    ).toBe(true);
+  });
 });
 
 describe("auth", () => {

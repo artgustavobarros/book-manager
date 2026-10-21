@@ -193,8 +193,7 @@ function FullInsights() {
   const kpiCar = useCarousel(4);
   const chartCar = useCarousel(6);
 
-  const drill = (facet: Facet) =>
-    goShelf({ status: scope === "lidos" ? "lido" : "todos", facet });
+  const drill = (facet: Facet) => goShelf({ facet });
   const pick = (kind: FacetKind) => (value: string) => drill({ kind, value });
   const toggle = (k: BarField) => () =>
     setExpanded((e) => ({ ...e, [k]: !e[k] }));

@@ -86,10 +86,7 @@ function LentModal({
                   <span className="font-semibold text-lentfg text-xs">
                     Com {b.borrower}
                     {b.lentAt ? (
-                      <span className="opacity-75">
-                        {" "}
-                        · {lentDurationLabel(b.lentAt, now, app.tz)}
-                      </span>
+                      <span> · {lentDurationLabel(b.lentAt, now, app.tz)}</span>
                     ) : null}
                   </span>
                 </div>

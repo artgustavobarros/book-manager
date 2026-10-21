@@ -107,6 +107,8 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 | `pnpm test:e2e` | Fluxos no navegador e auditoria de acessibilidade (axe) contra a build de produção, com PGlite descartável |
 | `pnpm test:visual` | Compara 10 telas e modais com o standalone (1440×900 e 390×844, claro e escuro; tolerância de 1%) e as telas novas com linhas de base próprias |
 
+Os testes Playwright criam banco PGlite, caixa de e-mail e sessão em um diretório temporário exclusivo por execução, removido ao terminar. Não apagam `.data/dev` nem `.data/e2e`; a porta de teste (`E2E_PORT`, padrão 3100) precisa estar livre.
+
 `pnpm test:visual --update-snapshots` regrava as linhas de base das telas que não existem no design.
 
 ## Deploy (Vercel)

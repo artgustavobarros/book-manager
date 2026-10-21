@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import * as route from "@/app/api/public-shelf/route";
 import * as ogRoute from "@/app/og/estante/[slug]/route";
 import { db } from "@/lib/db";
-import { books, user } from "@/lib/db/schema";
+import { books, user, userSettings } from "@/lib/db/schema";
 import { fetchCoverDataUrl, isFetchableCover } from "@/lib/services/og-covers";
 import {
   findPublicShelf,
@@ -70,6 +70,34 @@ describe("publicação da estante", () => {
       enabled: false,
       slug: null,
     });
+  });
+
+  it("não troca um slug criado entre a leitura e a gravação", async () => {
+    const owner = await createUserSession("Lia Corrida");
+    await setPublished(db, owner.userId, true);
+    // Simula a leitura antiga da segunda publicação, após a primeira ter gravado.
+    const staleReadDb = new Proxy(db, {
+      get(target, property) {
+        if (property !== "select") {
+          return Reflect.get(target, property);
+        }
+        return (...args: unknown[]) => {
+          const fields = args[0] as Record<string, unknown> | undefined;
+          if (fields && "enabled" in fields && "slug" in fields) {
+            return { from: () => ({ where: async () => [] }) };
+          }
+          return db.select(...(args as Parameters<typeof db.select>));
+        };
+      },
+    });
+    expect((await setPublished(staleReadDb, owner.userId, true)).slug).toBe(
+      "lia-corrida"
+    );
+    const [saved] = await db
+      .select({ slug: userSettings.publicSlug })
+      .from(userSettings)
+      .where(eq(userSettings.userId, owner.userId));
+    expect(saved.slug).toBe("lia-corrida");
   });
 });
 

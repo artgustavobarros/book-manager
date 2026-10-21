@@ -18,7 +18,12 @@ import { BOOKS_KEY, useBookActions } from "@/hooks/use-books";
 import { api } from "@/lib/client/api";
 import { createLatestSaver } from "@/lib/client/latest-saver";
 import type { ShareScope } from "@/lib/domain/share";
-import { nextReadingStatus, returnStatus, stat } from "@/lib/domain/status";
+import {
+  nextReadingStatus,
+  readingYearForStatus,
+  returnStatus,
+  stat,
+} from "@/lib/domain/status";
 import { initialsOf } from "@/lib/domain/text";
 import type { Book, BookStatus } from "@/lib/domain/types";
 import type { Theme } from "@/lib/theme";
@@ -171,10 +176,9 @@ function AppState({
         return setLendFor(book);
       }
       const patch: Partial<Book> = { status: k, borrower: null };
-      if (k === "lido" && !book.yearRead) {
-        patch.yearRead = initial.year;
-      } else if (k === "nao-lido") {
-        patch.yearRead = null;
+      const yearRead = readingYearForStatus(book.yearRead, k, initial.year);
+      if (yearRead !== book.yearRead) {
+        patch.yearRead = yearRead;
       }
       void actions
         .update(book.id, patch)
@@ -187,11 +191,15 @@ function AppState({
     (book: Book) => {
       const nextStatus = nextReadingStatus(book.status);
       const patch: Partial<Book> = { status: nextStatus };
-
-      if (nextStatus === "lido") {
-        patch.yearRead = book.yearRead || initial.year;
-      } else if (nextStatus === "nao-lido") {
-        patch.yearRead = null;
+      const yearRead = readingYearForStatus(
+        book.yearRead,
+        nextStatus,
+        initial.year
+      );
+      if (yearRead !== book.yearRead) {
+        patch.yearRead = yearRead;
+      }
+      if (nextStatus === "nao-lido") {
         patch.borrower = null;
       }
 
@@ -319,7 +327,7 @@ function AppState({
           .update(book.id, {
             status: "lido",
             borrower: null,
-            yearRead: book.yearRead || initial.year,
+            yearRead: readingYearForStatus(book.yearRead, "lido", initial.year),
           })
           .then((ok) => ok && toast(book.title + " marcado como lido"));
       },

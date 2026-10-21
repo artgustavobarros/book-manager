@@ -2,7 +2,7 @@
  * Estante pública: publicação pelo dono e leitura por visitantes. A projeção dos
  * livros é feita aqui, na consulta, para que campos privados nunca saiam do banco.
  */
-import { and, asc, count, eq, like, max, ne, or } from "drizzle-orm";
+import { and, asc, count, eq, like, max, ne, or, sql } from "drizzle-orm";
 
 import type { DB } from "@/lib/db";
 import { books, user, userSettings } from "@/lib/db/schema";
@@ -96,14 +96,18 @@ export async function setPublished(
   for (let attempt = 0; ; attempt++) {
     const slug = await freeSlug(db, base);
     try {
-      await db
+      const [saved] = await db
         .insert(userSettings)
         .values({ userId, publicEnabled: true, publicSlug: slug })
         .onConflictDoUpdate({
           target: userSettings.userId,
-          set: { publicEnabled: true, publicSlug: slug },
-        });
-      return { enabled: true, slug };
+          set: {
+            publicEnabled: true,
+            publicSlug: sql`coalesce(${userSettings.publicSlug}, excluded.public_slug)`,
+          },
+        })
+        .returning({ slug: userSettings.publicSlug });
+      return { enabled: true, slug: saved.slug };
     } catch (e) {
       if (!isUniqueViolation(e) || attempt >= 4) {
         throw e;

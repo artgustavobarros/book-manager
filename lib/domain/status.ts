@@ -66,6 +66,21 @@ export function isRead(book: Pick<Book, "status" | "yearRead">): boolean {
   );
 }
 
+/** Ano de leitura ao trocar status, usado pela ficha e pelas ações rápidas. */
+export function readingYearForStatus<Year extends string | number>(
+  current: Year | null,
+  status: BookStatus,
+  year: Year
+): Year | null {
+  if (status === "nao-lido") {
+    return null;
+  }
+  if (status === "lido" && !current) {
+    return year;
+  }
+  return current;
+}
+
 /** Status de um livro emprestado ao ser devolvido: "lido" se tem ano de leitura. */
 export function returnStatus(book: Pick<Book, "yearRead">): BookStatus {
   return book.yearRead ? "lido" : "nao-lido";

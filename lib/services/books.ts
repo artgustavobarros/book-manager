@@ -1,5 +1,5 @@
 /** Acesso a livros, sempre filtrado pelo dono (`userId` vem da sessão, nunca do cliente). */
-import { and, asc, eq, inArray, max, type SQL, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, max, type SQL, sql } from "drizzle-orm";
 
 import type { DB } from "@/lib/db";
 import { type BookRow, books } from "@/lib/db/schema";
@@ -157,15 +157,26 @@ export async function deleteBook(
 export async function updateBooks(
   db: DB,
   userId: string,
-  items: readonly ({ id: string } & Partial<BookFields>)[]
+  items: readonly ({
+    id: string;
+    onlyIfNoCover?: boolean;
+  } & Partial<BookFields>)[]
 ): Promise<Book[]> {
   return db.transaction(async (tx) => {
     const out: Book[] = [];
-    for (const { id, ...fields } of items) {
+    for (const { id, onlyIfNoCover, ...fields } of items) {
       const [row] = await tx
         .update(books)
         .set(toUpdateValues(fields))
-        .where(and(eq(books.id, id), eq(books.userId, userId)))
+        .where(
+          and(
+            eq(books.id, id),
+            eq(books.userId, userId),
+            ...(onlyIfNoCover
+              ? [isNull(books.coverUrl), isNull(books.coverCheckedAt)]
+              : [])
+          )
+        )
         .returning();
       if (row) {
         out.push(rowToBook(row));

@@ -372,9 +372,12 @@ test.describe("acervo", () => {
     // 2. Na lista da Estante: alternar status com botão de ciclo rápido
     await page.goto("/estante?vista=lista");
     const cycleBtn = page
-      .getByRole("button", {
-        name: /Começar a ler|Concluir leitura|Marcar como não lido/,
+      .locator("[data-bid]")
+      .locator("..")
+      .filter({
+        hasNot: page.getByRole("button", { name: "Dom Casmurro", exact: true }),
       })
+      .getByRole("button", { name: /^Começar a ler/ })
       .first();
     await expect(cycleBtn).toBeVisible();
     await cycleBtn.click();

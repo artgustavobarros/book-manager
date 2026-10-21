@@ -39,6 +39,8 @@ export const env = createEnv({
     VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
     /** Só para testes visuais: instante fixo usado pelo servidor como "agora". */
     FIXED_NOW: z.iso.datetime({ offset: true }).optional(),
+    /** Aumenta o limite de login só no PGlite descartável dos testes E2E. */
+    E2E_MODE: z.literal("1").optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url().optional(),

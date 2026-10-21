@@ -4,6 +4,7 @@ import {
   isBookStatus,
   isRead,
   nextReadingStatus,
+  readingYearForStatus,
   returnStatus,
   STATUS,
   stat,
@@ -44,5 +45,11 @@ describe("status", () => {
   it("devolve como lido quem tem ano de leitura", () => {
     expect(returnStatus({ yearRead: 2026 })).toBe("lido");
     expect(returnStatus({ yearRead: null })).toBe("nao-lido");
+  });
+
+  it("mantém a mesma regra de ano ao trocar status na ficha ou na ação rápida", () => {
+    expect(readingYearForStatus(2020, "nao-lido", 2026)).toBeNull();
+    expect(readingYearForStatus(null, "lido", 2026)).toBe(2026);
+    expect(readingYearForStatus(2020, "emprestado", 2026)).toBe(2020);
   });
 });

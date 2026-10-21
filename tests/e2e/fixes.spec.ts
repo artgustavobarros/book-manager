@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import referenceBooks from "../fixtures/reference-books.json";
 import { AUTH_STATE, chooseFirstStatus } from "../support/e2e";
 
 /** Correções da change fix-bugs-seo-mobile: bugs, SEO, teclado e layout mobile. */
@@ -98,7 +99,16 @@ test.describe("acervo (desktop)", () => {
       page,
     }) => {
       await page.goto("/estante?vista=lista");
-      const covers = page.locator("[data-bid]");
+      const covers = page
+        .locator("[data-bid]")
+        .locator("..")
+        .filter({
+          hasNot: page.getByRole("button", {
+            name: "Dom Casmurro",
+            exact: true,
+          }),
+        })
+        .locator("[data-bid]");
       const [idA, idB] = await Promise.all([
         covers.nth(0).getAttribute("data-bid"),
         covers.nth(1).getAttribute("data-bid"),
@@ -450,6 +460,10 @@ test.describe("tempo do empréstimo (BP-06)", () => {
     page,
   }) => {
     await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+    const restore = await page.request.post("/api/books/import", {
+      data: referenceBooks,
+    });
+    expect(restore.ok()).toBe(true);
     // Dom Casmurro foi emprestado 5 dias antes de FIXED_NOW (fixture de referência).
     const badge = page.getByText(/Com Ana · há 5 dias/).first();
     await page.goto("/estante?q=dom casmurro");
