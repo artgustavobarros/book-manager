@@ -18,7 +18,7 @@
     "test:visual": "playwright test --project=setup --project=visual",
     "test:watch": "vitest",
     "typecheck": "next typegen && tsc --noEmit",
-    "vercel-build": "pnpm db:migrate && next build"
+    "vercel-build": "node scripts/check-deploy-database.mjs && pnpm db:migrate && next build"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

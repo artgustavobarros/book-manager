@@ -12,7 +12,11 @@ test.describe("teste de estresse e carga · Persona Arthur Whale (600 livros)", 
     page,
   }) => {
     await expect(page.getByText("Arthur")).toBeVisible();
-    await expect(page.getByText(/600 livros/i)).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Resumo do acervo" }).getByText("600", {
+        exact: true,
+      })
+    ).toBeVisible();
     await expect(page.getByText("Emprestados")).toBeVisible();
   });
 
@@ -24,7 +28,7 @@ test.describe("teste de estresse e carga · Persona Arthur Whale (600 livros)", 
     await expect(
       page.getByRole("heading", { level: 1, name: "Estante" })
     ).toBeVisible();
-    await expect(page.getByText("600 livros")).toBeVisible();
+    await expect(page.getByText("600 livros", { exact: true })).toBeVisible();
     const shelfLoadMs = Date.now() - t0;
     // O carregamento inicial da estante com 600 livros deve ocorrer em tempo hábil
     expect(shelfLoadMs).toBeLessThan(5000);
@@ -41,7 +45,11 @@ test.describe("teste de estresse e carga · Persona Arthur Whale (600 livros)", 
       .getByRole("textbox", { name: "Buscar no acervo" })
       .first();
     await searchInput.fill("Machado");
-    await expect(page.getByText(/Machado/i).first()).toBeVisible();
+    await expect(
+      page
+        .getByRole("button", { name: /Volume \d+: Odisseia Literária Machado/ })
+        .first()
+    ).toBeVisible();
     expect(Date.now() - tSearch).toBeLessThan(2000);
 
     // 3. Alterna visualização para Lista

@@ -28,6 +28,8 @@ function deliver(message: EmailMessage) {
 export const googleEnabled = Boolean(
   env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
 );
+const e2eMode =
+  env.E2E_MODE === "1" && env.DATABASE_URL.startsWith("pglite://");
 
 const trustedOrigins = [appUrl, env.NEXT_PUBLIC_APP_URL, vercelUrl].filter(
   (o): o is string => !!o
@@ -112,7 +114,7 @@ export const auth = betterAuth({
     window: 60,
     max: 100,
     customRules: {
-      "/sign-in/email": { window: 60, max: 10 },
+      "/sign-in/email": { window: 60, max: e2eMode ? 100 : 10 },
       "/sign-up/email": { window: 60, max: 5 },
       "/request-password-reset": { window: 60, max: 5 },
       "/send-verification-email": { window: 60, max: 5 },

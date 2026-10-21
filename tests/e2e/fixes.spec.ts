@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import referenceBooks from "../fixtures/reference-books.json";
 import { AUTH_STATE, chooseFirstStatus } from "../support/e2e";
 
 /** Correções da change fix-bugs-seo-mobile: bugs, SEO, teclado e layout mobile. */
@@ -27,6 +28,10 @@ test.describe("acervo (desktop)", () => {
   test("capas automáticas são buscadas para os livros já visíveis, sem rolar", async ({
     page,
   }) => {
+    const restore = await page.request.post("/api/books/import", {
+      data: referenceBooks,
+    });
+    expect(restore.ok()).toBe(true);
     const lookups: string[] = [];
     page.on("request", (r) => CATALOGS.test(r.url()) && lookups.push(r.url()));
     await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());

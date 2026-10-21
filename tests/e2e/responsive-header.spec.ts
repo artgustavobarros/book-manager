@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { AUTH_STATE, uniqueEmail } from "../support/e2e";
+import { AUTH_STATE, signIn } from "../support/e2e";
 
 test.use({ storageState: AUTH_STATE });
 
@@ -78,12 +78,7 @@ test("tablet sem livro elegível mantém sorteio desabilitado e rodapé acessív
 }) => {
   await page.setViewportSize({ width: 1024, height: 844 });
   await page.context().clearCookies();
-  await page.goto("/entrar?modo=cadastro");
-  await page.getByLabel("Nome").fill("Usuária Tablet");
-  await page.getByLabel("E-mail").fill(uniqueEmail("tablet-vazio"));
-  await page.getByLabel("Senha", { exact: true }).fill("senha-forte-123");
-  await page.getByLabel("Confirmar senha").fill("senha-forte-123");
-  await page.getByRole("button", { name: "Criar conta", exact: true }).click();
+  await signIn(page, "zero.novato@exemplo.com", "senha-forte-123");
   await expect(page).toHaveURL("/");
   await page.goto("/estante");
   const actions = page.locator('[data-slot="mobile-fabs"]');
