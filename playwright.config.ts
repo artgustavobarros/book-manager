@@ -1,7 +1,19 @@
+import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const baseURL = `http://localhost:${PORT}`;
+const runDir =
+  process.env.BOOK_MANAGER_E2E_RUN_DIR ??
+  join(tmpdir(), `book-manager-e2e-${randomUUID()}`);
+const databaseURL = `pglite://${join(runDir, "db")}`;
+const outboxFile = join(runDir, "outbox.jsonl");
+
+process.env.BOOK_MANAGER_E2E_RUN_DIR = runDir;
+process.env.EMAIL_OUTBOX_FILE = outboxFile;
 
 /** Instante fixo dos testes (servidor via FIXED_NOW, navegador via page.clock). */
 export const FIXED_NOW = "2026-06-15T15:00:00-03:00";
@@ -12,6 +24,7 @@ export const FIXED_NOW = "2026-06-15T15:00:00-03:00";
  */
 export default defineConfig({
   testDir: "tests",
+  globalTeardown: "./tests/support/e2e-teardown.ts",
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
@@ -53,14 +66,19 @@ export default defineConfig({
     command: `bash scripts/e2e-server.sh ${PORT}`,
     url: baseURL + "/entrar",
     timeout: 300_000,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     env: {
-      DATABASE_URL: "pglite://./.data/e2e",
+      BOOK_MANAGER_E2E_RUN_DIR: runDir,
+      DATABASE_URL: databaseURL,
+      DATABASE_URL_UNPOOLED: databaseURL,
       BETTER_AUTH_SECRET: "e2e-secret-e2e-secret-e2e-secret-0000",
       BETTER_AUTH_URL: baseURL,
       NEXT_PUBLIC_APP_URL: baseURL,
       EMAIL_TRANSPORT: "outbox",
-      EMAIL_OUTBOX_FILE: ".data/outbox-e2e.jsonl",
+      EMAIL_OUTBOX_FILE: outboxFile,
+      E2E_MODE: "1",
+      GOOGLE_CLIENT_ID: "",
+      GOOGLE_CLIENT_SECRET: "",
       FIXED_NOW,
     },
   },

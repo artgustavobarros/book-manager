@@ -52,10 +52,15 @@ test.describe("acervo", () => {
   test("busca online preenche o formulário ao escolher um livro", async ({
     page,
   }) => {
+    const onlineQueries: string[] = [];
     await page.route(
       /^https:\/\/www\.googleapis\.com\/books\/v1\/volumes\?/,
-      (route) =>
-        route.fulfill({
+      (route) => {
+        const params = new URL(route.request().url()).searchParams;
+        if (params.get("maxResults") === "6") {
+          onlineQueries.push(params.get("q") ?? "");
+        }
+        return route.fulfill({
           json: {
             items: [
               {
@@ -76,7 +81,8 @@ test.describe("acervo", () => {
               },
             ],
           },
-        })
+        });
+      }
     );
     await page.route(/^https:\/\/openlibrary\.org\/search\.json\?/, (route) =>
       route.fulfill({ json: { docs: [] } })
@@ -88,12 +94,14 @@ test.describe("acervo", () => {
     await page.goto("/estante");
     await page.getByRole("button", { name: "+ Registrar livro" }).click();
     const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Buscar online").fill("Torto");
     await dialog.getByLabel("Buscar online").fill("Torto arado");
     await dialog.getByRole("button", { name: "Buscar", exact: true }).click();
     const matches = dialog
       .getByRole("button")
       .filter({ hasText: "Torto arado" });
     await expect(matches.first()).toContainText("Itamar Vieira Junior");
+    expect(onlineQueries).toEqual(["Torto arado"]);
     await matches.first().click();
 
     await expect(dialog.getByLabel("Título *")).toHaveValue("Torto arado");
@@ -365,9 +373,12 @@ test.describe("acervo", () => {
     // 2. Na lista da Estante: alternar status com botão de ciclo rápido
     await page.goto("/estante?vista=lista");
     const cycleBtn = page
-      .getByRole("button", {
-        name: /Começar a ler|Concluir leitura|Marcar como não lido/,
+      .locator("[data-bid]")
+      .locator("..")
+      .filter({
+        hasNot: page.getByRole("button", { name: "Dom Casmurro", exact: true }),
       })
+      .getByRole("button", { name: /^Começar a ler/ })
       .first();
     await expect(cycleBtn).toBeVisible();
     await cycleBtn.click();

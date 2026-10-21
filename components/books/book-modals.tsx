@@ -847,8 +847,9 @@ function EditModal({ book }: { book: Book | null }) {
               Cancelar
             </button>
             <button
+              aria-disabled={!title?.trim() || formState.isSubmitting}
               className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2 active:scale-[.97]"
-              disabled={formState.isSubmitting}
+              disabled={!title?.trim() || formState.isSubmitting}
               type="submit"
             >
               Salvar

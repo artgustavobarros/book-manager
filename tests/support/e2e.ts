@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import type { Page } from "@playwright/test";
 
@@ -7,8 +8,13 @@ export const REFERENCE_USER = {
   password: "senha-forte-123",
   name: "Ana Lima",
 };
-export const AUTH_STATE = ".data/e2e-auth.json";
-const OUTBOX = ".data/outbox-e2e.jsonl";
+const runDir = process.env.BOOK_MANAGER_E2E_RUN_DIR;
+if (!runDir) {
+  throw new Error("BOOK_MANAGER_E2E_RUN_DIR não definido pelo Playwright.");
+}
+
+export const AUTH_STATE = join(runDir, "auth.json");
+const OUTBOX = join(runDir, "outbox.jsonl");
 
 /** Último e-mail para o destinatário (opcionalmente filtrando pelo assunto). */
 export async function waitForEmail(
