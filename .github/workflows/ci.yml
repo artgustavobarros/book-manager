@@ -20,7 +20,7 @@ jobs:
     env:
       DATABASE_URL: pglite://./.data/ci
       DATABASE_URL_UNPOOLED: pglite://./.data/ci
-      EMAIL_TRANSPORT: console
+      EMAIL_TRANSPORT: outbox
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
