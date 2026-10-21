@@ -13,12 +13,19 @@ if (
 
 if (environment === "preview") {
   const expectedProject = process.env.PREVIEW_NEON_PROJECT_ID;
-  const baseHost = process.env.PREVIEW_BASE_DATABASE_HOST;
+  const baseDirectHost = process.env.PREVIEW_BASE_DATABASE_HOST;
+  const basePooledHost = process.env.PREVIEW_BASE_POOLED_DATABASE_HOST;
   const databaseUrl = process.env.DATABASE_URL;
   const directUrl = process.env.DATABASE_URL_UNPOOLED;
 
   if (
-    !(expectedProject && baseHost && databaseUrl && directUrl) ||
+    !(
+      expectedProject &&
+      baseDirectHost &&
+      basePooledHost &&
+      databaseUrl &&
+      directUrl
+    ) ||
     process.env.NEON_PROJECT_ID !== expectedProject
   ) {
     throw new Error(
@@ -35,7 +42,11 @@ if (environment === "preview") {
     throw new Error("Preview Neon connection URLs are invalid.");
   }
 
-  if (pooledHost === baseHost || directHost === baseHost) {
+  if (
+    pooledHost === basePooledHost ||
+    directHost === baseDirectHost ||
+    pooledHost.replace("-pooler.", ".") !== directHost
+  ) {
     throw new Error(
       "Preview Neon branch was not created; refusing to run migrations."
     );

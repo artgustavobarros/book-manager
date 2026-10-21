@@ -126,6 +126,7 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
    | `PRODUCTION_NEON_PROJECT_ID` | ID do projeto Neon de produção | — |
    | `PREVIEW_NEON_PROJECT_ID` | — | ID do projeto Neon de Preview |
    | `PREVIEW_BASE_DATABASE_HOST` | — | Host da URL direta do banco base de Preview |
+   | `PREVIEW_BASE_POOLED_DATABASE_HOST` | — | Host da URL pooled do banco base de Preview |
 
    `ENABLE_EXPERIMENTAL_COREPACK` faz a Vercel usar o pnpm do campo `packageManager` (pnpm 11); sem ela, a versão é deduzida pelo lockfile (pnpm 9/10), que não entende o `pnpm-workspace.yaml` deste projeto.
 5. **Google (opcional):** no Google Cloud Console, crie um "ID do cliente OAuth" (aplicativo da Web) com o URI de redirecionamento `<URL de produção>/api/auth/callback/google` (e `http://localhost:3000/api/auth/callback/google` para desenvolvimento) e defina `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`. Nos previews, que têm URL dinâmica, o login com Google não funciona; use e-mail e senha.
