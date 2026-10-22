@@ -1,12 +1,17 @@
 /** Seletores de "Dados do acervo" (porta de `dados()` do standalone). */
 import { distinctCount, type Kpi } from "./dashboard";
-import { groupKey, NOT_INFORMED } from "./shelf";
+import { groupKey, NOT_INFORMED, type StatusFilter } from "./shelf";
 import { isRead, STATUS, type StatusInfo } from "./status";
 import { cmp, nf } from "./text";
 import type { Book } from "./types";
 
 export type InsightScope = "todos" | "lidos";
 export type BarField = "genre" | "nationality" | "publisher";
+
+/** Status da Estante que mostra os mesmos livros contados no escopo dos gráficos. */
+export function scopeShelfStatus(scope: InsightScope): StatusFilter {
+  return scope === "lidos" ? "lido" : "todos";
+}
 
 export interface BarItem {
   count: number;

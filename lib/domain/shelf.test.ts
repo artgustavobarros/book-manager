@@ -38,6 +38,18 @@ describe("filterBooks", () => {
     expect(
       filterBooks(books, { q: "", status: "lido", facet: null })
     ).toHaveLength(16);
+    const lentRead = makeBook({ status: "emprestado", yearRead: 2024 });
+    const lentUnread = makeBook({ status: "emprestado" });
+    expect(
+      filterBooks([lentRead, lentUnread], {
+        q: "",
+        status: "lido",
+        facet: null,
+      })
+    ).toEqual([lentRead]);
+    expect(
+      shelfChips([lentRead, lentUnread]).find((c) => c.k === "lido")?.count
+    ).toBe(1);
     const withFav = [...books.slice(0, 3), makeBook({ favorite: true })];
     expect(
       filterBooks(withFav, { q: "", status: "fav", facet: null })
