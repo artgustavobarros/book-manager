@@ -28,6 +28,10 @@ test.describe("acervo (desktop)", () => {
   test("capas automáticas são buscadas para os livros já visíveis, sem rolar", async ({
     page,
   }) => {
+    const restore = await page.request.post("/api/books/import", {
+      data: referenceBooks,
+    });
+    expect(restore.ok()).toBe(true);
     const lookups: string[] = [];
     page.on("request", (r) => CATALOGS.test(r.url()) && lookups.push(r.url()));
     await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());

@@ -113,11 +113,11 @@ Os testes Playwright criam banco PGlite, caixa de e-mail e sessão em um diretó
 
 ## Deploy (Vercel)
 
-1. O deploy de produção sai da branch `main`; as outras branches viram previews.
-2. Na Vercel, importe o repositório (preset Next.js). O `vercel.json` já define o build (`pnpm vercel-build`, que roda as migrations antes do `next build`). Antes do primeiro deploy, configure os passos 3 e 4.
-3. **Storage → Create Database → Neon**, conectado ao projeto, sem prefixo nas variáveis e com **branch por preview** habilitada. A integração injeta `DATABASE_URL` e `DATABASE_URL_UNPOOLED`.
+1. A integração GitHub → Vercel cria o deploy de produção da branch `main` e um preview por PR. O GitHub Actions executa `quality` e `e2e` em cada PR; o teste visual fica em **Actions → Visual → Run workflow**.
+2. O `vercel.json` define o build (`pnpm vercel-build`). Antes das migrations, ele confere o projeto Neon e, em Preview, exige um endpoint de branch diferente do banco base.
+3. Conecte dois recursos Neon ao projeto, sem prefixo nas variáveis: `bodega-literaria-db` somente em **Production** e `bodega-literaria-preview-db` somente em **Preview**. O banco base de Preview deve conter apenas dados fictícios. Em **Storage → bodega-literaria-preview-db → Projects → ⋮ → Update Project Connection → Advanced Options**, selecione **Required → Preview**, **Create a database branch for deployment → Preview** e **Resource must be active before deployment**. A integração injeta `DATABASE_URL`, `DATABASE_URL_UNPOOLED` e `NEON_PROJECT_ID`.
    - **Região:** a do banco não muda depois. O `vercel.json` fixa as funções em `gru1` (São Paulo), junto do Neon em `aws-sa-east-1`; se o banco ficar em outra região, ajuste `regions` (ex.: `iad1` para `aws-us-east-1`).
-   - **Branch por preview é obrigatória:** como todo build roda as migrations, sem ela um preview aplicaria as migrations da branch no banco de produção.
+   - **Branch por preview é obrigatória:** sem ela, o build de Preview falha antes das migrations. Migrations de produção devem continuar compatíveis com a versão anterior do app durante o deploy.
 4. Em **Settings → Environment Variables**:
 
    | Variável | Production | Preview |
@@ -129,13 +129,17 @@ Os testes Playwright criam banco PGlite, caixa de e-mail e sessão em um diretó
    | `CRON_SECRET` | ✓ | — |
    | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✓ | opcional |
    | `BETTER_AUTH_URL` | só para forçar outro domínio | — |
+   | `PRODUCTION_NEON_PROJECT_ID` | ID do projeto Neon de produção | — |
+   | `PREVIEW_NEON_PROJECT_ID` | — | ID do projeto Neon de Preview |
+   | `PREVIEW_BASE_DATABASE_HOST` | — | Host da URL direta do banco base de Preview |
+   | `PREVIEW_BASE_POOLED_DATABASE_HOST` | — | Host da URL pooled do banco base de Preview |
 
    `ENABLE_EXPERIMENTAL_COREPACK` faz a Vercel usar o pnpm do campo `packageManager` (pnpm 11); sem ela, a versão é deduzida pelo lockfile (pnpm 9/10), que não entende o `pnpm-workspace.yaml` deste projeto.
 5. **Google (opcional):** no Google Cloud Console, crie um "ID do cliente OAuth" (aplicativo da Web) com o URI de redirecionamento `<URL de produção>/api/auth/callback/google` (e `http://localhost:3000/api/auth/callback/google` para desenvolvimento) e defina `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`. Nos previews, que têm URL dinâmica, o login com Google não funciona; use e-mail e senha.
 6. **Gmail:** ative a verificação em duas etapas na conta e gere uma senha de app em <https://myaccount.google.com/apppasswords>.
 7. Depois do deploy, teste cadastro, e-mail de verificação, login com Google e, em **Settings → Cron Jobs**, rode o cron manualmente (**Run**).
 
-> **`vercel env pull`:** a integração aponta o ambiente *Development* para a branch principal do Neon, ou seja, o banco de produção. Depois de puxar as variáveis, troque `DATABASE_URL` por `pglite://./.data/dev` ou por uma branch `dev` do Neon antes de rodar `pnpm dev` ou `pnpm db:migrate`.
+> **`vercel env pull`:** use `--environment preview` apenas para trabalhar em uma branch isolada do Neon. O ambiente *Development* não recebe credenciais Neon automaticamente. Para desenvolvimento local, use `DATABASE_URL=pglite://./.data/dev`.
 
 ### Cópia semanal no Google Sheets
 
