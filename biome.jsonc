@@ -9,7 +9,6 @@
   "files": {
     "includes": [
       "!!design",
-      "!!openspec",
       "!!.agent",
       "!!.agents",
       "!!.claude",

@@ -4,7 +4,7 @@ Catálogo pessoal dos livros de casa: **Painel** (indicadores, meta anual, leitu
 
 Quem cria uma conta com e-mail e senha pode usar o acervo imediatamente. Um aviso lembra da confirmação do endereço até que o link enviado por e-mail seja aberto; os dados criados nesse período ficam salvos.
 
-O app reproduz pixel a pixel o design do handoff em [`design/handoff/`](design/handoff/README.md), verificado por uma suíte visual que compara cada tela com o standalone original. O plano de implementação (proposta, specs, design e tasks) está em [`openspec/changes/bodega-literaria-app/`](openspec/changes/bodega-literaria-app/).
+O app reproduz pixel a pixel o design do handoff em [`design/handoff/`](design/handoff/README.md), verificado por uma suíte visual que compara cada tela com o standalone original.
 
 ## Stack
 
