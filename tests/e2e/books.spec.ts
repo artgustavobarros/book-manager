@@ -96,6 +96,7 @@ test.describe("acervo", () => {
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Buscar online").fill("Torto");
     await dialog.getByLabel("Buscar online").fill("Torto arado");
+    await dialog.getByRole("button", { name: "Buscar", exact: true }).click();
     const matches = dialog
       .getByRole("button")
       .filter({ hasText: "Torto arado" });

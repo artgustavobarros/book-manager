@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "cn";
 import { Share2Icon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Controller,
   type UseFormReturn,
@@ -372,27 +372,12 @@ function OnlineSearch({
   const [results, setResults] = useState<LookupResult[] | null>(null);
   // Só a busca mais recente pode preencher os resultados.
   const searchId = useRef(0);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(
-    () => () => {
-      if (searchTimer.current) {
-        clearTimeout(searchTimer.current);
-      }
-      searchId.current += 1;
-    },
-    []
-  );
-
-  async function run(query?: string) {
-    if (!query && loading) {
+  async function run() {
+    if (loading) {
       return;
     }
-    if (searchTimer.current) {
-      clearTimeout(searchTimer.current);
-      searchTimer.current = null;
-    }
-    const q = query?.trim() || sq.trim() || form.getValues("title").trim();
+    const q = sq.trim() || form.getValues("title").trim();
     if (!q) {
       return setMsg("Digite um título ou ISBN.");
     }
@@ -413,20 +398,6 @@ function OnlineSearch({
           ? ""
           : "Nenhum resultado encontrado."
     );
-  }
-
-  function changeQuery(value: string) {
-    setSq(value);
-    searchId.current += 1;
-    if (searchTimer.current) {
-      clearTimeout(searchTimer.current);
-    }
-    setLoading(false);
-    setResults(null);
-    setMsg("");
-    if (value.trim()) {
-      searchTimer.current = setTimeout(() => void run(value), 500);
-    }
   }
 
   function pick(r: LookupResult) {
@@ -459,7 +430,7 @@ function OnlineSearch({
         <input
           aria-label="Buscar online"
           className={cn(fieldInput, "flex-1")}
-          onChange={(e) => changeQuery(e.target.value)}
+          onChange={(e) => setSq(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
