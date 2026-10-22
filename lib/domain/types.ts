@@ -1,14 +1,17 @@
 /** Modelo de domínio compartilhado entre cliente e servidor (sem dependências de banco). */
 
-export const BOOK_STATUSES = [
+/** Leitura: o que a pessoa fez com o livro como leitora. */
+export const BOOK_READINGS = [
   "nao-lido",
   "lendo",
   "lido",
-  "emprestado",
   "abandonado",
-  "doado",
 ] as const;
-export type BookStatus = (typeof BOOK_STATUSES)[number];
+export type Reading = (typeof BOOK_READINGS)[number];
+
+/** Situação: onde o livro está em relação à casa da pessoa. */
+export const BOOK_SITUATIONS = ["em-casa", "emprestado", "doado"] as const;
+export type Situation = (typeof BOOK_SITUATIONS)[number];
 
 export const AUTHOR_GENDERS = ["Homem", "Mulher", "Não definido"] as const;
 export type AuthorGender = (typeof AUTHOR_GENDERS)[number];
@@ -35,14 +38,15 @@ export interface Book {
   favorite: boolean;
   genre: string | null;
   id: string;
-  /** ISO timestamp do início do empréstimo atual; só o servidor grava, null fora de "emprestado". */
+  /** ISO timestamp do início do empréstimo atual; só o servidor grava, null fora de Emprestado. */
   lentAt: string | null;
   nationality: string | null;
   notes: string | null;
   orderNo: number | null;
   pages: number | null;
   publisher: string | null;
-  status: BookStatus;
+  reading: Reading;
+  situation: Situation;
   title: string;
   updatedAt: string;
   yearPublished: number | null;
@@ -67,7 +71,8 @@ export const EMPTY_BOOK_FIELDS: BookFields = {
   yearPublished: null,
   pages: null,
   acquiredOn: null,
-  status: "nao-lido",
+  reading: "nao-lido",
+  situation: "em-casa",
   borrower: null,
   yearRead: null,
   notes: null,
@@ -78,7 +83,8 @@ export const EMPTY_BOOK_FIELDS: BookFields = {
 
 /**
  * Livro na estante pública: só os campos que o dono aceita mostrar a visitantes.
- * Tipo próprio (sem herdar de `Book`) para que nada privado passe por engano.
+ * Tipo próprio (sem herdar de `Book`) para que nada privado passe por engano: a Situação
+ * (inclusive Emprestado) nunca é pública.
  */
 export interface PublicBook {
   author: string | null;
@@ -87,7 +93,7 @@ export interface PublicBook {
   id: string;
   pages: number | null;
   publisher: string | null;
-  status: Exclude<BookStatus, "doado">;
+  reading: Reading;
   title: string;
   yearPublished: number | null;
 }

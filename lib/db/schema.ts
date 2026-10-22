@@ -17,12 +17,16 @@ import { account, user } from "./auth-schema";
 
 export * from "./auth-schema";
 
-export const bookStatus = pgEnum("book_status", [
+export const bookReading = pgEnum("book_reading", [
   "nao-lido",
   "lendo",
   "lido",
-  "emprestado",
   "abandonado",
+]);
+
+export const bookSituation = pgEnum("book_situation", [
+  "em-casa",
+  "emprestado",
   "doado",
 ]);
 
@@ -60,7 +64,8 @@ export const books = pgTable(
     yearPublished: integer("year_published"),
     pages: integer("pages"),
     acquiredOn: date("acquired_on", { mode: "string" }),
-    status: bookStatus("status").notNull().default("nao-lido"),
+    reading: bookReading("reading").notNull().default("nao-lido"),
+    situation: bookSituation("situation").notNull().default("em-casa"),
     borrower: text("borrower"),
     /** Início do empréstimo atual; só o servidor grava (ver `lib/services/books.ts`). */
     lentAt: timestamp("lent_at", { withTimezone: true }),
@@ -156,5 +161,6 @@ export const sheetExportRuns = pgTable(
 
 export type BookRow = typeof books.$inferSelect;
 export type NewBookRow = typeof books.$inferInsert;
-export type BookStatus = (typeof bookStatus.enumValues)[number];
+export type Reading = (typeof bookReading.enumValues)[number];
+export type Situation = (typeof bookSituation.enumValues)[number];
 export type AuthorGender = (typeof authorGender.enumValues)[number];

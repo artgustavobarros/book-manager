@@ -34,14 +34,20 @@ test.describe("Me surpreenda: filtro por gênero", () => {
     const booksResponse = await page.request.get("/api/books");
     expect(booksResponse.ok()).toBe(true);
     const { books } = (await booksResponse.json()) as {
-      books: { title: string; genre: string | null; status: string }[];
+      books: {
+        title: string;
+        genre: string | null;
+        reading: string;
+        situation: string;
+      }[];
     };
     expect(
       books.some(
         (book) =>
           book.title === title &&
           book.genre === "Romance" &&
-          book.status === "nao-lido"
+          book.reading === "nao-lido" &&
+          book.situation === "em-casa"
       )
     ).toBe(true);
   });

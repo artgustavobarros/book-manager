@@ -9,7 +9,8 @@ import { toIsoDate } from "@/lib/domain/backup";
 import {
   AUTHOR_GENDERS,
   BOOK_INT_MAX,
-  BOOK_STATUSES,
+  BOOK_READINGS,
+  BOOK_SITUATIONS,
 } from "@/lib/domain/types";
 
 const MAX_TEXT = 300;
@@ -69,7 +70,8 @@ export const bookFieldsSchema = z.object({
   yearPublished: positiveInt("Ano de lançamento", BOOK_INT_MAX.yearPublished),
   pages: positiveInt("Páginas", BOOK_INT_MAX.pages),
   acquiredOn: isoDate,
-  status: z.enum(BOOK_STATUSES),
+  reading: z.enum(BOOK_READINGS),
+  situation: z.enum(BOOK_SITUATIONS),
   borrower: optionalText(100),
   yearRead: positiveInt("Ano em que foi lido", BOOK_INT_MAX.yearRead),
   notes: optionalText(20_000),
@@ -135,7 +137,8 @@ export const bookFormSchema = z
       .string()
       .transform((v) => (v ? v : null))
       .pipe(isoDate),
-    status: z.enum(BOOK_STATUSES),
+    reading: z.enum(BOOK_READINGS),
+    situation: z.enum(BOOK_SITUATIONS),
     borrower: textField(100),
     yearRead: intField("Ano em que foi lido", BOOK_INT_MAX.yearRead),
     notes: textField(20_000),
@@ -143,7 +146,7 @@ export const bookFormSchema = z
   })
   .transform((v) => ({
     ...v,
-    borrower: v.status === "emprestado" ? v.borrower : null,
+    borrower: v.situation === "emprestado" ? v.borrower : null,
   }));
 
 export type BookFormValues = z.input<typeof bookFormSchema>;

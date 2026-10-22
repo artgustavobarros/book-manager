@@ -149,9 +149,9 @@ export async function findPublicShelf(
 }
 
 const notDonated = (ownerId: string) =>
-  and(eq(books.userId, ownerId), ne(books.status, "doado"));
+  and(eq(books.userId, ownerId), ne(books.situation, "doado"));
 
-/** Livros visíveis a visitantes: só os campos públicos e sem os doados. */
+/** Livros visíveis a visitantes: só os campos públicos (nunca a Situação) e sem os doados. */
 export async function listPublicBooks(
   db: DB,
   ownerId: string
@@ -165,7 +165,7 @@ export async function listPublicBooks(
       pages: books.pages,
       publisher: books.publisher,
       yearPublished: books.yearPublished,
-      status: books.status,
+      reading: books.reading,
       coverUrl: books.coverUrl,
     })
     .from(books)

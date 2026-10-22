@@ -22,7 +22,7 @@ import type { PublicBook } from "./types";
 
 const pb = (over: Partial<PublicBook> = {}): PublicBook => {
   const [b] = toPublicBooks([
-    makeBook({ status: "nao-lido", ...over } as never),
+    makeBook({ reading: "nao-lido", ...over } as never),
   ]);
   return b;
 };
@@ -33,7 +33,7 @@ const books: PublicBook[] = [
     title: "Kindred",
     author: "Octavia E. Butler",
     genre: "Ficção científica",
-    status: "lido",
+    reading: "lido",
     pages: 288,
     coverUrl: "https://c/1.jpg",
   }),
@@ -42,21 +42,21 @@ const books: PublicBook[] = [
     title: "Grande Sertão: Veredas",
     author: "João Guimarães Rosa",
     genre: "Romance",
-    status: "lendo",
+    reading: "lendo",
   }),
   pb({
     id: "3",
     title: "Dom Casmurro",
     author: "Machado de Assis",
     genre: "romance",
-    status: "lido",
+    reading: "lido",
   }),
   pb({
     id: "4",
     title: "Antologia",
     author: null,
     genre: null,
-    status: "emprestado",
+    reading: "abandonado",
   }),
 ];
 
@@ -73,21 +73,21 @@ describe("recorte público", () => {
   it("monta o caminho com parâmetros em ordem fixa", () => {
     expect(publicPath("ana", EMPTY_SELECTION)).toBe("/estante/ana");
     expect(
-      publicPath("ana", { bookId: "9", status: "lido", genre: "romance" })
-    ).toBe("/estante/ana?genero=romance&status=lido&livro=9");
+      publicPath("ana", { bookId: "9", reading: "lido", genre: "romance" })
+    ).toBe("/estante/ana?genero=romance&leitura=lido&livro=9");
   });
 
-  it("imagem OG de um livro ignora gênero e status na URL", () => {
+  it("imagem OG de um livro ignora gênero e Leitura na URL", () => {
     expect(
       ogImagePath(
         "ana",
-        { bookId: "9", status: "lido", genre: "romance" },
+        { bookId: "9", reading: "lido", genre: "romance" },
         "v1"
       )
     ).toBe("/og/estante/ana?livro=9&v=v1");
-    expect(ogImagePath("ana", { status: "lido", genre: "romance" }, "v1")).toBe(
-      "/og/estante/ana?genero=romance&status=lido&v=v1"
-    );
+    expect(
+      ogImagePath("ana", { reading: "lido", genre: "romance" }, "v1")
+    ).toBe("/og/estante/ana?genero=romance&leitura=lido&v=v1");
     expect(ogImagePath("ana", EMPTY_SELECTION, "v1")).toBe(
       "/og/estante/ana?v=v1"
     );
@@ -96,16 +96,16 @@ describe("recorte público", () => {
   it("mantém só gênero e livro que existem na estante", () => {
     expect(
       resolvePublicSelection(
-        { genre: "romance", status: "lendo", bookId: "1" },
+        { genre: "romance", reading: "lendo", bookId: "1" },
         books
       )
     ).toEqual({
       genre: "romance",
-      status: "lendo",
+      reading: "lendo",
       bookId: "1",
     });
     expect(
-      resolvePublicSelection({ genre: "xyz", status: "", bookId: "zz" }, books)
+      resolvePublicSelection({ genre: "xyz", reading: "", bookId: "zz" }, books)
     ).toEqual(EMPTY_SELECTION);
   });
 
@@ -115,9 +115,9 @@ describe("recorte público", () => {
         title: "A",
         notes: "segredo",
         borrower: "Carla",
-        status: "emprestado",
+        situation: "emprestado",
       }),
-      makeBook({ title: "B", status: "doado" }),
+      makeBook({ title: "B", situation: "doado" }),
     ]);
     expect(rest).toHaveLength(0);
     expect(Object.keys(b).sort()).toEqual([
@@ -127,27 +127,29 @@ describe("recorte público", () => {
       "id",
       "pages",
       "publisher",
-      "status",
+      "reading",
       "title",
       "yearPublished",
     ]);
   });
 
-  it("filtra por busca sem acento, gênero e status, ordenando por título", () => {
+  it("filtra por busca sem acento, gênero e Leitura, ordenando por título", () => {
     expect(
-      filterPublicBooks(books, { q: "sertao", genre: "", status: "" }).map(
+      filterPublicBooks(books, { q: "sertao", genre: "", reading: "" }).map(
         (b) => b.id
       )
     ).toEqual(["2"]);
     expect(
-      filterPublicBooks(books, { q: "", genre: "romance", status: "" }).map(
+      filterPublicBooks(books, { q: "", genre: "romance", reading: "" }).map(
         (b) => b.id
       )
     ).toEqual(["3", "2"]);
     expect(
-      filterPublicBooks(books, { q: "", genre: "romance", status: "lido" }).map(
-        (b) => b.id
-      )
+      filterPublicBooks(books, {
+        q: "",
+        genre: "romance",
+        reading: "lido",
+      }).map((b) => b.id)
     ).toEqual(["3"]);
   });
 
@@ -158,14 +160,14 @@ describe("recorte público", () => {
       "Ana compartilhou os livros de Romance. Mude os filtros à vontade para ver o resto."
     );
     expect(
-      sharedNotice("Ana", { ...EMPTY_SELECTION, status: "lendo" }, books)
+      sharedNotice("Ana", { ...EMPTY_SELECTION, reading: "lendo" }, books)
     ).toBe(
       "Ana compartilhou o que está lendo agora. Mude os filtros à vontade para ver o resto."
     );
     expect(
       sharedNotice(
         "Ana",
-        { genre: "romance", status: "lido", bookId: "" },
+        { genre: "romance", reading: "lido", bookId: "" },
         books
       )
     ).toBe(
@@ -198,11 +200,11 @@ describe("open graph", () => {
     expect(og.covers.map((c) => c.title)[0]).toBe("Kindred");
   });
 
-  it("gênero, status, singular e milhar", () => {
+  it("gênero, Leitura, singular e milhar", () => {
     expect(
       ogFor(books, "Ana", { ...EMPTY_SELECTION, genre: "romance" }).title
     ).toBe("Romance na estante de Ana");
-    const lendo = ogFor(books, "Ana", { ...EMPTY_SELECTION, status: "lendo" });
+    const lendo = ogFor(books, "Ana", { ...EMPTY_SELECTION, reading: "lendo" });
     expect(lendo.title).toBe("Lendo agora na estante de Ana");
     expect(lendo.description).toBe(
       "1 livro nesta seleção. Veja a estante, filtre por gênero e sorteie sua próxima leitura."
@@ -244,7 +246,7 @@ describe("open graph", () => {
 describe("destinos e escopo", () => {
   it("codifica texto e URL em cada rede", () => {
     const og = ogFor(books, "Ana", EMPTY_SELECTION);
-    const url = "https://bodega.app/estante/ana?genero=romance&status=lido";
+    const url = "https://bodega.app/estante/ana?genero=romance&leitura=lido";
     const t = Object.fromEntries(
       shareTargets(url, og).map((x) => [x.label, x.href])
     );
@@ -281,34 +283,37 @@ describe("destinos e escopo", () => {
   });
 
   it("deriva o escopo do chip e da faceta da Estante", () => {
-    expect(scopeFromShelf({ status: "lendo", facet: null }, books)).toEqual({
-      kind: "status",
-      status: "lendo",
+    expect(scopeFromShelf({ reading: "lendo", facet: null }, books)).toEqual({
+      kind: "leitura",
+      reading: "lendo",
     });
     expect(
       scopeFromShelf(
-        { status: "todos", facet: { kind: "genero", value: "Romance" } },
+        { reading: "todos", facet: { kind: "genero", value: "Romance" } },
         books
       )
     ).toEqual({
       kind: "genero",
       genre: "romance",
     });
-    expect(scopeFromShelf({ status: "fav", facet: null }, books)).toEqual({
+    expect(scopeFromShelf({ reading: "fav", facet: null }, books)).toEqual({
       kind: "todos",
     });
     expect(
-      scopeFromShelf({ status: "emprestado", facet: null }, books)
+      scopeFromShelf({ reading: "abandonado", facet: null }, books)
     ).toEqual({ kind: "todos" });
     expect(
       scopeFromShelf(
-        { status: "todos", facet: { kind: "autor", value: "X" } },
+        { reading: "todos", facet: { kind: "autor", value: "X" } },
         books
       )
     ).toEqual({ kind: "todos" });
     expect(
       scopeFromShelf(
-        { status: "todos", facet: { kind: "genero", value: "Não informado" } },
+        {
+          reading: "todos",
+          facet: { kind: "genero", value: "Não informado" },
+        },
         books
       )
     ).toEqual({
@@ -319,14 +324,14 @@ describe("destinos e escopo", () => {
   it("o recorte considera só o campo do escopo ativo", () => {
     expect(
       selectionOf({
-        kind: "status",
-        status: "lido",
+        kind: "leitura",
+        reading: "lido",
         genre: "romance",
         bookId: "1",
       })
     ).toEqual({
       genre: "",
-      status: "lido",
+      reading: "lido",
       bookId: "",
     });
   });

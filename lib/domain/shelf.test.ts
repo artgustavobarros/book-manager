@@ -21,51 +21,71 @@ const titles = (bs: { title: string }[]) => bs.map((b) => b.title);
 describe("filterBooks", () => {
   it("busca sem acento em vários campos", () => {
     expect(
-      titles(filterBooks(books, { q: "sertao", status: "todos", facet: null }))
+      titles(
+        filterBooks(books, {
+          q: "sertao",
+          reading: "todos",
+          situation: "todas",
+          facet: null,
+        })
+      )
     ).toEqual(["Grande sertão: veredas"]);
     // borrower e notes também entram na busca
     expect(
-      titles(filterBooks(books, { q: "paula", status: "todos", facet: null }))
+      titles(
+        filterBooks(books, {
+          q: "paula",
+          reading: "todos",
+          situation: "todas",
+          facet: null,
+        })
+      )
     ).toEqual(["Mrs. Dalloway"]);
     expect(
       titles(
-        filterBooks(books, { q: "pagina 180", status: "todos", facet: null })
+        filterBooks(books, {
+          q: "pagina 180",
+          reading: "todos",
+          situation: "todas",
+          facet: null,
+        })
       )
     ).toEqual(["Grande sertão: veredas"]);
   });
 
-  it("filtra por status e favoritos", () => {
+  it("filtra por Leitura, Situação e favoritos", () => {
+    const all = { q: "", facet: null } as const;
     expect(
-      filterBooks(books, { q: "", status: "lido", facet: null })
+      filterBooks(books, { ...all, reading: "lido", situation: "todas" })
     ).toHaveLength(16);
-    const lentRead = makeBook({ status: "emprestado", yearRead: 2024 });
-    const lentUnread = makeBook({ status: "emprestado" });
+    const lentRead = makeBook({ reading: "lido", situation: "emprestado" });
+    const lentUnread = makeBook({ situation: "emprestado" });
+    const homeRead = makeBook({ reading: "lido" });
+    const three = [lentRead, lentUnread, homeRead];
     expect(
-      filterBooks([lentRead, lentUnread], {
-        q: "",
-        status: "lido",
-        facet: null,
-      })
+      filterBooks(three, { ...all, reading: "lido", situation: "emprestado" })
     ).toEqual([lentRead]);
     expect(
-      shelfChips([lentRead, lentUnread]).find((c) => c.k === "lido")?.count
-    ).toBe(1);
+      filterBooks(three, { ...all, reading: "todos", situation: "emprestado" })
+    ).toEqual([lentRead, lentUnread]);
     const withFav = [...books.slice(0, 3), makeBook({ favorite: true })];
     expect(
-      filterBooks(withFav, { q: "", status: "fav", facet: null })
+      filterBooks(withFav, { ...all, reading: "fav", situation: "todas" })
     ).toHaveLength(1);
   });
 
   it("aplica facetas", () => {
     const kafka = filterBooks(books, {
       q: "",
-      status: "todos",
+      reading: "todos",
+      situation: "todas",
       facet: { kind: "autor", value: "Franz Kafka" },
     });
     expect(titles(kafka)).toEqual(["A metamorfose", "O processo"]);
     const genre = filterBooks(books, {
       q: "",
-      status: "todos",
+      reading: "todos",
+      situation: "todas",
       facet: { kind: "genero", value: "Terror e gótico" },
     });
     expect(titles(genre)).toEqual(["Frankenstein", "Drácula"]);
@@ -73,14 +93,16 @@ describe("filterBooks", () => {
       [makeBook({ genre: null }), makeBook({ genre: "Romance" })],
       {
         q: "",
-        status: "todos",
+        reading: "todos",
+        situation: "todas",
         facet: { kind: "genero", value: "Não informado" },
       }
     );
     expect(noGenre).toHaveLength(1);
     const read2023 = filterBooks(books, {
       q: "",
-      status: "lido",
+      reading: "lido",
+      situation: "todas",
       facet: { kind: "lidos-em", value: "2023" },
     });
     expect(titles(read2023)).toEqual(["1984", "Quarto de despejo"]);
@@ -149,15 +171,37 @@ describe("sortBooks", () => {
 });
 
 describe("chips", () => {
-  it("conta por status", () => {
-    const chips = shelfChips(books);
-    expect(chips[0]).toMatchObject({ k: "todos", count: 30 });
-    expect(chips.find((c) => c.k === "lido")?.count).toBe(16);
-    expect(chips.at(-1)).toMatchObject({
+  it("conta por Leitura e por Situação", () => {
+    const chips = shelfChips(books, { reading: "todos", situation: "todas" });
+    expect(chips.reading[0]).toMatchObject({ k: "todos", count: 30 });
+    expect(chips.reading.find((c) => c.k === "lido")?.count).toBe(16);
+    expect(chips.reading.at(-1)).toMatchObject({
       k: "fav",
       label: "♥ Favoritos",
       count: 0,
     });
+    expect(chips.situation.map((c) => [c.k, c.count])).toEqual([
+      ["todas", 30],
+      ["em-casa", 25],
+      ["emprestado", 3],
+      ["doado", 2],
+    ]);
+  });
+
+  it("cada linha conta dentro do filtro escolhido na outra", () => {
+    const three = [
+      makeBook({ reading: "lido", situation: "emprestado" }),
+      makeBook({ situation: "emprestado" }),
+      makeBook({ reading: "lido" }),
+    ];
+    const chips = shelfChips(three, {
+      reading: "lido",
+      situation: "emprestado",
+    });
+    expect(chips.reading.find((c) => c.k === "lido")?.count).toBe(1);
+    expect(chips.reading[0].count).toBe(2);
+    expect(chips.situation.find((c) => c.k === "em-casa")?.count).toBe(1);
+    expect(chips.situation[0].count).toBe(2);
   });
 });
 
@@ -181,7 +225,8 @@ describe("facetas e URL", () => {
     expect(toShelfParams(DEFAULT_SHELF).toString()).toBe("");
     const state = {
       q: "kafka",
-      status: "lendo" as const,
+      reading: "lendo" as const,
+      situation: "emprestado" as const,
       facet: { kind: "editora" as const, value: "Record" },
       sort: "paginas" as const,
       view: "list" as const,
@@ -189,12 +234,20 @@ describe("facetas e URL", () => {
     };
     const params = toShelfParams(state);
     expect(parseShelfParams(params)).toEqual(state);
-    expect(shelfHref({ status: "emprestado" })).toBe(
-      "/estante?status=emprestado"
+    expect(params.get("leitura")).toBe("lendo");
+    expect(params.get("situacao")).toBe("emprestado");
+    expect(shelfHref({ situation: "emprestado" })).toBe(
+      "/estante?situacao=emprestado"
     );
     expect(
-      parseShelfParams(new URLSearchParams("status=bogus&ordem=bogus"))
+      parseShelfParams(
+        new URLSearchParams("leitura=bogus&situacao=bogus&ordem=bogus")
+      )
     ).toEqual(DEFAULT_SHELF);
+    // Links antigos com ?status= deixam de filtrar (ADR 0001).
+    expect(parseShelfParams(new URLSearchParams("status=lido"))).toEqual(
+      DEFAULT_SHELF
+    );
   });
 });
 
@@ -203,13 +256,20 @@ describe("estante × standalone", () => {
     const { loadStandalone } = await import("@/tests/support/standalone");
     const { SORT_KEYS } = await import("./shelf");
     const oracle = loadStandalone({ state: { limit: 1000, page: "estante" } });
+    // Status do standalone → filtros de hoje: lá, "Não lido" excluía emprestados e doados.
     const cases = [
-      { q: "", status: "todos" as const },
-      { q: "a", status: "todos" as const },
-      { q: "", status: "lido" as const },
-      { q: "kafka", status: "todos" as const },
-      { q: "", status: "nao-lido" as const },
-    ];
+      { q: "", status: "todos", reading: "todos", situation: "todas" },
+      { q: "a", status: "todos", reading: "todos", situation: "todas" },
+      { q: "", status: "lido", reading: "lido", situation: "todas" },
+      { q: "kafka", status: "todos", reading: "todos", situation: "todas" },
+      { q: "", status: "nao-lido", reading: "nao-lido", situation: "em-casa" },
+      {
+        q: "",
+        status: "emprestado",
+        reading: "todos",
+        situation: "emprestado",
+      },
+    ] as const;
     for (const sort of SORT_KEYS) {
       for (const c of cases) {
         Object.assign(oracle.state, {
@@ -222,7 +282,12 @@ describe("estante × standalone", () => {
           oracle.estante(oracle.state.books) as { books: { title: string }[] }
         ).books.map((b) => b.title);
         const ours = sortBooks(
-          filterBooks(books, { q: c.q, status: c.status, facet: null }),
+          filterBooks(books, {
+            q: c.q,
+            reading: c.reading,
+            situation: c.situation,
+            facet: null,
+          }),
           sort
         ).map((b) => b.title);
         expect(ours, `${sort} / ${JSON.stringify(c)}`).toEqual(expected);

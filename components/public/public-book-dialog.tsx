@@ -3,7 +3,7 @@
 import { ShuffleIcon } from "lucide-react";
 
 import { Modal, ModalClose } from "@/components/ui/dialog";
-import { stat } from "@/lib/domain/status";
+import { readingInfo } from "@/lib/domain/book-state";
 import { nf } from "@/lib/domain/text";
 import type { PublicBook } from "@/lib/domain/types";
 
@@ -91,7 +91,7 @@ export function PublicBookDialog({
   onCopy: () => void;
   onByAuthor: () => void;
 }) {
-  const s = book ? stat(book.status) : null;
+  const s = book ? readingInfo(book.reading) : null;
   return (
     <Modal
       className="max-w-[680px]"

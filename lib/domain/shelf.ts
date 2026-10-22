@@ -1,7 +1,7 @@
 /** Filtros, facetas e ordenação da Estante (porta de `estante()` do standalone). */
-import { isBookStatus, isRead, STATUS } from "./status";
+import { isReading, isSituation, READINGS, SITUATIONS } from "./book-state";
 import { cmp, norm } from "./text";
-import type { Book, BookStatus } from "./types";
+import type { Book, Reading, Situation } from "./types";
 
 // --- Facetas --------------------------------------------------------------
 
@@ -165,12 +165,16 @@ export function sortBooks(books: readonly Book[], sort: SortKey): Book[] {
 
 // --- Filtros --------------------------------------------------------------
 
-export type StatusFilter = "todos" | "fav" | BookStatus;
+/** Linha de cima dos chips: Leitura, mais os Favoritos. */
+export type ReadingFilter = "todos" | "fav" | Reading;
+/** Linha de baixo dos chips: Situação. */
+export type SituationFilter = "todas" | Situation;
 
 export interface ShelfFilters {
   facet: Facet | null;
   q: string;
-  status: StatusFilter;
+  reading: ReadingFilter;
+  situation: SituationFilter;
 }
 
 /** Campos pesquisados pela busca global. */
@@ -184,54 +188,75 @@ const SEARCH_FIELDS = [
   "notes",
 ] as const;
 
-/** "Lido" segue `isRead` (inclui emprestado já lido), como Painel e Dados contam. */
-export function matchesStatus(b: Book, status: StatusFilter): boolean {
-  if (status === "todos") {
+export function matchesReading(b: Book, reading: ReadingFilter): boolean {
+  if (reading === "todos") {
     return true;
   }
-  if (status === "fav") {
-    return b.favorite;
-  }
-  return status === "lido" ? isRead(b) : b.status === status;
+  return reading === "fav" ? b.favorite : b.reading === reading;
+}
+
+export function matchesSituation(b: Book, situation: SituationFilter): boolean {
+  return situation === "todas" || b.situation === situation;
 }
 
 export function filterBooks(
   books: readonly Book[],
-  { q, status, facet }: ShelfFilters
+  { q, reading, situation, facet }: ShelfFilters
 ): Book[] {
   const ql = norm(q);
   const test = facet ? facetTest(facet) : null;
   return books.filter(
     (b) =>
       (!test || test(b)) &&
-      matchesStatus(b, status) &&
+      matchesReading(b, reading) &&
+      matchesSituation(b, situation) &&
       (!ql || SEARCH_FIELDS.some((k) => norm(b[k]).includes(ql)))
   );
 }
 
-export interface Chip {
+export interface Chip<K extends string> {
   count: number;
   dot: string | null;
-  k: StatusFilter;
+  k: K;
   label: string;
 }
 
-export function shelfChips(books: readonly Book[]): Chip[] {
-  return [
-    { k: "todos", label: "Todos", dot: null, count: books.length },
-    ...STATUS.map((s) => ({
-      k: s.k,
-      label: s.plural,
-      dot: s.dot,
-      count: books.filter((b) => matchesStatus(b, s.k)).length,
-    })),
-    {
-      k: "fav",
-      label: "♥ Favoritos",
-      dot: null,
-      count: books.filter((b) => b.favorite).length,
-    },
-  ];
+/**
+ * Chips das duas linhas. A contagem de cada linha respeita o filtro escolhido na
+ * outra, já que as duas se combinam (Lidos que estão emprestados, por exemplo).
+ */
+export function shelfChips(
+  books: readonly Book[],
+  { reading, situation }: Pick<ShelfFilters, "reading" | "situation">
+): { reading: Chip<ReadingFilter>[]; situation: Chip<SituationFilter>[] } {
+  const inSituation = books.filter((b) => matchesSituation(b, situation));
+  const inReading = books.filter((b) => matchesReading(b, reading));
+  return {
+    reading: [
+      { k: "todos", label: "Todos", dot: null, count: inSituation.length },
+      ...READINGS.map((s) => ({
+        k: s.k,
+        label: s.plural,
+        dot: s.dot,
+        count: inSituation.filter((b) => b.reading === s.k).length,
+      })),
+      {
+        k: "fav",
+        label: "♥ Favoritos",
+        dot: null,
+        count: inSituation.filter((b) => b.favorite).length,
+      },
+    ],
+    situation: [
+      { k: "todas", label: "Todas", dot: null, count: inReading.length },
+      ...SITUATIONS.map((s) => ({
+        k: s.k,
+        label: s.plural,
+        dot: s.dot,
+        count: inReading.filter((b) => b.situation === s.k).length,
+      })),
+    ],
+  };
 }
 
 // --- Estado na URL --------------------------------------------------------
@@ -246,7 +271,8 @@ export interface ShelfState extends ShelfFilters {
 
 export const DEFAULT_SHELF: ShelfState = {
   q: "",
-  status: "todos",
+  reading: "todos",
+  situation: "todas",
   facet: null,
   sort: "recentes",
   view: "grid",
@@ -256,14 +282,16 @@ export const DEFAULT_SHELF: ShelfState = {
 type ParamSource = { get(name: string): string | null };
 
 export function parseShelfParams(params: ParamSource): ShelfState {
-  const status = params.get("status");
+  const reading = params.get("leitura");
+  const situation = params.get("situacao");
   const sort = params.get("ordem");
   const view = params.get("vista");
   const rawPage = params.get("pagina");
   const page = rawPage && /^\d+$/.test(rawPage) ? Number(rawPage) : 1;
   return {
     q: params.get("q") ?? "",
-    status: status === "fav" || isBookStatus(status) ? status : "todos",
+    reading: reading === "fav" || isReading(reading) ? reading : "todos",
+    situation: isSituation(situation) ? situation : "todas",
     facet: parseFacet(params.get("faceta")),
     sort: SORT_KEYS.includes(sort as SortKey)
       ? (sort as SortKey)
@@ -279,8 +307,11 @@ export function toShelfParams(state: Partial<ShelfState>): URLSearchParams {
   if (state.q) {
     p.set("q", state.q);
   }
-  if (state.status && state.status !== "todos") {
-    p.set("status", state.status);
+  if (state.reading && state.reading !== "todos") {
+    p.set("leitura", state.reading);
+  }
+  if (state.situation && state.situation !== "todas") {
+    p.set("situacao", state.situation);
   }
   if (state.facet) {
     p.set("faceta", serializeFacet(state.facet));

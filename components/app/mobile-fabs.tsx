@@ -5,6 +5,7 @@ import { ShuffleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useBooks } from "@/hooks/use-books";
+import { readyToRead } from "@/lib/domain/surprise";
 
 import { useApp } from "./app-provider";
 import { useToastVisible } from "./toast";
@@ -48,7 +49,7 @@ export function MobileFabs() {
   // Com um toast na tela os botões ficam visíveis: o toast se alinha ao lado deles.
   const toastVisible = useToastVisible();
   const hidden = useHideOnScroll() && !toastVisible;
-  const canSurprise = books.some((b) => b.status === "nao-lido");
+  const canSurprise = books.some(readyToRead);
 
   return (
     <div

@@ -28,6 +28,7 @@
   --status-emprestado: oklch(0.72 0.13 75);
   --status-abandonado: oklch(0.58 0.15 30);
   --status-doado: oklch(0.58 0.12 250);
+  --status-em-casa: oklch(0.55 0.05 60);
 
   --success-bg: oklch(0.95 0.04 150);
   --success-fg: oklch(0.42 0.1 150);

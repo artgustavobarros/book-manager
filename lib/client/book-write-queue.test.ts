@@ -45,11 +45,11 @@ describe("createBookWriteQueue", () => {
     const q = createBookWriteQueue();
     const sent: string[] = [];
     const held = deferred();
-    void q.run("a", { status: "lido" }, () => {
+    void q.run("a", { reading: "lido" }, () => {
       sent.push("a");
       return held.promise;
     });
-    const b = q.run("b", { status: "lendo" }, () => {
+    const b = q.run("b", { reading: "lendo" }, () => {
       sent.push("b");
       return Promise.resolve("ok");
     });
@@ -79,13 +79,13 @@ describe("createBookWriteQueue", () => {
     const d1 = deferred();
     const seenOnResolve: unknown[] = [];
     const first = q
-      .run("a", { status: "lido", yearRead: 2026 }, () => d1.promise)
+      .run("a", { reading: "lido", yearRead: 2026 }, () => d1.promise)
       .then(() => seenOnResolve.push(q.pendingFields("a")));
-    void q.run("a", { status: "lendo" }, () => new Promise(() => undefined));
+    void q.run("a", { reading: "lendo" }, () => new Promise(() => undefined));
     void q.run("a", { favorite: true }, () => new Promise(() => undefined));
 
     expect(q.pendingFields("a")).toEqual({
-      status: "lendo",
+      reading: "lendo",
       yearRead: 2026,
       favorite: true,
     });
@@ -93,7 +93,7 @@ describe("createBookWriteQueue", () => {
 
     d1.resolve();
     await first;
-    expect(seenOnResolve).toEqual([{ status: "lendo", favorite: true }]);
+    expect(seenOnResolve).toEqual([{ reading: "lendo", favorite: true }]);
   });
 
   it("a falha também tira o patch dos pendentes antes de rejeitar", async () => {

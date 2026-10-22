@@ -172,7 +172,7 @@ function SurpriseBody() {
                 className="h-11 rounded-lg border-0 bg-acc px-4 font-semibold text-onacc text-sm hover:bg-acc2 active:scale-[.98]"
                 onClick={() => {
                   app.setSurpriseOpen(false);
-                  void update(sb.id, { status: "lendo", borrower: null }).then(
+                  void update(sb.id, { reading: "lendo" }).then(
                     (ok) => ok && toast("Boa leitura: " + sb.title)
                   );
                 }}

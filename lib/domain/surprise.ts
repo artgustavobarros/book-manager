@@ -7,11 +7,16 @@ export interface GenreOption {
   value: string;
 }
 
+/** Livro que dá para pegar e ler agora: não lido e em casa. */
+export function readyToRead(b: Book): boolean {
+  return b.reading === "nao-lido" && b.situation === "em-casa";
+}
+
 export function surpriseGenres(books: readonly Book[]): {
   unread: number;
   options: GenreOption[];
 } {
-  const unread = books.filter((b) => b.status === "nao-lido");
+  const unread = books.filter(readyToRead);
   const gm = new Map<string, { label: string; n: number }>();
   for (const b of unread) {
     const k = norm(b.genre);
@@ -35,8 +40,7 @@ export function surpriseGenres(books: readonly Book[]): {
 
 export function surprisePool(books: readonly Book[], genre: string): Book[] {
   return books.filter(
-    (b) =>
-      b.status === "nao-lido" && (genre === "todos" || norm(b.genre) === genre)
+    (b) => readyToRead(b) && (genre === "todos" || norm(b.genre) === genre)
   );
 }
 

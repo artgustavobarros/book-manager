@@ -56,24 +56,34 @@ describe("exportCsv × standalone", () => {
     vi.restoreAllMocks();
   });
 
-  it("gera o mesmo CSV, mais a coluna Cor/etnia", async () => {
+  it("gera o mesmo CSV, com Leitura e Situação e mais a coluna Cor/etnia", async () => {
     const oracle = loadStandalone();
     (oracle as any).toast = () => {};
     (oracle as any).exportCsv();
     const theirs = await captured!.text();
     const ours = exportCsv(referenceBooks());
-    const dropEthnicity = (csv: string) =>
+    // O standalone tem um "Status" único: a Situação fora de casa, senão a Leitura.
+    const toStandalone = (csv: string) =>
       csv
         .split("\r\n")
         .map((line) => {
           const cells = parseCSV(line)[0] ?? [];
-          return cells.length === 16
-            ? line.split(";").toSpliced(11, 1).join(";")
-            : line;
+          if (cells.length !== 17) {
+            return line;
+          }
+          const parts = line.split(";");
+          const [reading, situation] = [parts[4], parts[5]];
+          const status =
+            reading === "Leitura"
+              ? "Status"
+              : situation === "Em casa"
+                ? reading
+                : situation;
+          return parts.toSpliced(12, 1).toSpliced(4, 2, status).join(";");
         })
         .join("\r\n");
     expect(ours.startsWith("﻿")).toBe(true);
-    expect(dropEthnicity(ours.slice(1))).toBe(theirs.replace(/^﻿/, ""));
+    expect(toStandalone(ours.slice(1))).toBe(theirs.replace(/^﻿/, ""));
   });
 
   it("escapa ; e aspas", () => {

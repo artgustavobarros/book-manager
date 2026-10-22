@@ -8,9 +8,9 @@ import type { Book, BookFields } from "@/lib/domain/types";
 
 type Patch = Partial<BookFields>;
 
-/** Patch efetivo de uma edição: sair de "emprestado" limpa o `borrower`. */
+/** Patch efetivo de uma edição: sair de Emprestado limpa o `borrower`. */
 export function optimisticFields(patch: Patch): Patch {
-  return patch.status && patch.status !== "emprestado"
+  return patch.situation && patch.situation !== "emprestado"
     ? { ...patch, borrower: null }
     : patch;
 }

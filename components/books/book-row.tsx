@@ -6,10 +6,10 @@ import { useApp } from "@/components/app/app-provider";
 import { fmtDate } from "@/lib/domain/text";
 import type { Book } from "@/lib/domain/types";
 
-import { LentBadge } from "./lent-badge";
 import { MiniCover } from "./mini-cover";
-import { StatusActionIcon, statusActionLabel } from "./status-action";
-import { StatusSelect } from "./status-select";
+import { ReadingActionIcon, readingActionLabel } from "./reading-action";
+import { ReadingSelect } from "./reading-select";
+import { SituationBadge } from "./situation-badge";
 
 export const LIST_COLUMNS =
   "grid grid-cols-[40px_36px_minmax(0,2fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_52px_100px_128px_96px] gap-3 px-5 py-3 max-[640px]:grid-cols-[40px_minmax(0,1fr)_auto] max-[640px]:gap-x-3 max-[640px]:gap-y-1 max-[640px]:px-3";
@@ -28,7 +28,7 @@ export function BookRow({
 }) {
   const app = useApp();
   const author = b.author || "Autor desconhecido";
-  const statusLabel = statusActionLabel(b.status);
+  const readingLabel = readingActionLabel(b.reading);
   return (
     <div
       className={
@@ -59,14 +59,11 @@ export function BookRow({
         >
           {b.title}
         </button>
-        {b.status === "emprestado" && b.borrower ? (
-          <LentBadge
-            borrower={b.borrower}
-            className="py-px"
-            lentAt={b.lentAt}
-            onReturn={() => app.returnBook(b)}
-          />
-        ) : null}
+        <SituationBadge
+          book={b}
+          className="py-px"
+          onReturn={() => app.returnBook(b)}
+        />
       </span>
       <button
         className="truncate border-0 bg-transparent p-0 text-left text-ink text-sm hover:text-acc hover:underline max-[640px]:col-span-2 max-[640px]:col-start-2 max-[640px]:row-start-2"
@@ -92,24 +89,24 @@ export function BookRow({
       <span className="text-mute tabular-nums max-[640px]:hidden">
         {fmtDate(b.acquiredOn)}
       </span>
-      <StatusSelect
+      <ReadingSelect
         className="min-w-0 max-[640px]:col-start-2 max-[640px]:row-start-3"
-        onChange={(k) => app.setStatus(b, k)}
+        onChange={(k) => app.setReading(b, k)}
         selectClassName="min-w-0 flex-1"
-        value={b.status}
+        value={b.reading}
       />
       <span className="flex justify-end gap-1 max-[640px]:col-start-3 max-[640px]:row-start-3">
         <button
-          aria-label={statusLabel}
+          aria-label={readingLabel}
           className="flex size-7 items-center justify-center rounded-md border border-line2 bg-card text-ink hover:border-ink max-[640px]:size-9"
           onClick={(e) => {
             e.stopPropagation();
-            app.cycleStatus(b);
+            app.cycleReading(b);
           }}
-          title={statusLabel}
+          title={readingLabel}
           type="button"
         >
-          <StatusActionIcon className="size-3.5" status={b.status} />
+          <ReadingActionIcon className="size-3.5" reading={b.reading} />
         </button>
         <button
           aria-label="Editar"

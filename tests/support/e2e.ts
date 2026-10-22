@@ -65,8 +65,23 @@ export async function signIn(page: Page, email: string, password: string) {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
 }
 
-/** Escolhe um status no primeiro seletor "Status" da página (Select do Base UI). */
-export async function chooseFirstStatus(page: Page, label: string) {
-  await page.getByRole("combobox", { name: "Status" }).first().click();
+/** Escolhe a Leitura no primeiro seletor "Leitura" da página (Select do Base UI). */
+export async function chooseFirstReading(page: Page, label: string) {
+  await page.getByRole("combobox", { name: "Leitura" }).first().click();
   await page.getByRole("option", { name: label, exact: true }).click();
+}
+
+/** Abre a ficha do primeiro livro da página e escolhe a Situação nela. */
+export async function chooseFirstSituation(page: Page, label: string) {
+  await page.locator("[data-bid]").first().click();
+  await page
+    .getByRole("dialog")
+    .getByRole("combobox", { name: "Situação" })
+    .click();
+  await page.getByRole("option", { name: label, exact: true }).click();
+}
+
+/** Pedido de "com quem?" aberto ao escolher Emprestado. */
+export function lendDialog(page: Page) {
+  return page.getByRole("dialog", { name: "Emprestado para quem?" });
 }

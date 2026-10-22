@@ -1,6 +1,7 @@
 /** Seletores do Painel (porta de `painel()` do standalone). */
+
+import { isRead } from "./book-state";
 import { wallClock, yearFraction } from "./clock";
-import { isRead } from "./status";
 import { nf } from "./text";
 import type { Book } from "./types";
 
@@ -80,7 +81,7 @@ export function dashboard(
   const acqY = books.filter((b) =>
     (b.acquiredOn || "").startsWith(String(Y))
   ).length;
-  const lent = books.filter((b) => b.status === "emprestado").length;
+  const lent = books.filter((b) => b.situation === "emprestado").length;
 
   const kpis: Kpi[] = [
     {
@@ -125,7 +126,7 @@ export function dashboard(
   const monthsLeft = 12 - clock.month;
   const expectedN = Math.round(goal * frac);
   const onPace = done >= expectedN;
-  const reading = books.filter((b) => b.status === "lendo");
+  const reading = books.filter((b) => b.reading === "lendo");
   const recent = [...books]
     .sort((a, b) => (b.acquiredOn || "").localeCompare(a.acquiredOn || ""))
     .slice(0, 5);

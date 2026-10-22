@@ -29,6 +29,13 @@
       "when": 1792002389434,
       "tag": "0003_public_shelf",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792639300964,
+      "tag": "0004_leitura_e_situacao",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { AUTH_STATE, chooseFirstStatus } from "../support/e2e";
+import { AUTH_STATE, chooseFirstSituation, lendDialog } from "../support/e2e";
 
 test.use({ storageState: AUTH_STATE });
 
@@ -298,13 +298,14 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/estante?q=frankenstein");
-    await chooseFirstStatus(page, "Emprestado");
-    const lend = page.getByRole("dialog");
+    await chooseFirstSituation(page, "Emprestado");
+    const lend = lendDialog(page);
     await expect(
       lend.getByRole("heading", { name: "Emprestado para quem?" })
     ).toBeVisible();
     await lend.getByLabel("Nome da pessoa").fill("Joana");
     await lend.getByRole("button", { name: "Marcar como emprestado" }).click();
+    await page.keyboard.press("Escape");
     await expect(page.getByText(/Com Joana/)).toBeVisible();
     await page.reload();
     await expect(page.getByText(/Com Joana/)).toBeVisible();
@@ -324,7 +325,11 @@ test.describe("acervo", () => {
   test("filtros e ordenação ficam na URL", async ({ page }) => {
     await page.goto("/estante");
     await page.getByRole("button", { name: /^Lidos/ }).click();
-    await expect(page).toHaveURL(/status=lido/);
+    await expect(page).toHaveURL(/leitura=lido/);
+    await page.getByRole("button", { name: /^Emprestados/ }).click();
+    await expect(page).toHaveURL(/leitura=lido&situacao=emprestado/);
+    await page.getByRole("button", { name: /^Todas/ }).click();
+    await expect(page).not.toHaveURL(/situacao=/);
     await page.getByRole("button", { name: /Ordenar/ }).click();
     await page.getByRole("button", { name: "Maiores" }).click();
     await expect(page).toHaveURL(/ordem=paginas/);
@@ -359,7 +364,7 @@ test.describe("acervo", () => {
     expect(json.suggestedFilename()).toMatch(/\.json$/);
   });
 
-  test("ações rápidas de status na Estante e no Painel", async ({ page }) => {
+  test("ações rápidas de Leitura na Estante e no Painel", async ({ page }) => {
     // 1. No Painel: "Ler" nos últimos adicionados inicia a leitura
     await page.goto("/");
     const lerBtn = page
@@ -370,7 +375,7 @@ test.describe("acervo", () => {
       await expect(page.getByText(/Boa leitura:/)).toBeVisible();
     }
 
-    // 2. Na lista da Estante: alternar status com botão de ciclo rápido
+    // 2. Na lista da Estante: alternar a Leitura com botão de ciclo rápido
     await page.goto("/estante?vista=lista");
     const cycleBtn = page
       .locator("[data-bid]")

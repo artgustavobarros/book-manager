@@ -11,7 +11,7 @@ import {
 } from "@/lib/domain/shelf";
 
 /**
- * Estado da Estante na URL (?q, status, faceta, ordem, vista). Na própria Estante,
+ * Estado da Estante na URL (?q, leitura, situacao, faceta, ordem, vista). Na própria Estante,
  * atualiza com history.replaceState (sincronizado com useSearchParams, sem ida ao
  * servidor); de outras páginas, navega para /estante.
  */

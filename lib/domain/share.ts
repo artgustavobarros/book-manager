@@ -4,51 +4,51 @@
  * imagem OG) e no cliente (modal do dono e página do visitante).
  */
 import { coverColors, hash } from "./cover";
-import type { Facet, StatusFilter } from "./shelf";
+import type { Facet, ReadingFilter } from "./shelf";
 import { cmp, nf, norm } from "./text";
 import type { Book, PublicBook } from "./types";
 
 // --- Recorte ------------------------------------------------------------------
 
-/** Status que o visitante pode filtrar (os demais aparecem só em "Todos"). */
-export const PUBLIC_STATUSES = ["lido", "lendo", "nao-lido"] as const;
-export type PublicStatus = (typeof PUBLIC_STATUSES)[number];
+/** Leituras que o visitante pode filtrar (Abandonado aparece só em "Todos"). */
+export const PUBLIC_READINGS = ["lido", "lendo", "nao-lido"] as const;
+export type PublicReading = (typeof PUBLIC_READINGS)[number];
 
-/** Rótulo do status no recorte ("Livros lidos na estante de Ana"). */
-export const STATUS_SHORT: Record<PublicStatus, string> = {
+/** Rótulo da Leitura no recorte ("Livros lidos na estante de Ana"). */
+export const READING_SHORT: Record<PublicReading, string> = {
   lido: "Livros lidos",
   lendo: "Lendo agora",
   "nao-lido": "Ainda não lidos",
 };
 
-/** Rótulo do status no controle segmentado e nos chips. */
-export const STATUS_TAB: Record<PublicStatus, string> = {
+/** Rótulo da Leitura no controle segmentado e nos chips. */
+export const READING_TAB: Record<PublicReading, string> = {
   lido: "Lidos",
   lendo: "Lendo",
   "nao-lido": "Não lidos",
 };
 
-const STATUS_PHRASE: Record<PublicStatus, string> = {
+const READING_PHRASE: Record<PublicReading, string> = {
   lido: "os livros que já leu",
   lendo: "o que está lendo agora",
   "nao-lido": "os livros que ainda não leu",
 };
 
-/** O que o link mostra ao abrir: gênero (slug), status e/ou um livro. Vazio = nada. */
+/** O que o link mostra ao abrir: gênero (slug), Leitura e/ou um livro. Vazio = nada. */
 export interface PublicSelection {
   bookId: string;
   genre: string;
-  status: PublicStatus | "";
+  reading: PublicReading | "";
 }
 
 export const EMPTY_SELECTION: PublicSelection = {
   genre: "",
-  status: "",
+  reading: "",
   bookId: "",
 };
 
-export function isPublicStatus(v: unknown): v is PublicStatus {
-  return PUBLIC_STATUSES.includes(v as PublicStatus);
+export function isPublicReading(v: unknown): v is PublicReading {
+  return PUBLIC_READINGS.includes(v as PublicReading);
 }
 
 /** Nome → trecho de URL: sem acento, minúsculo, hífens no lugar do resto. */
@@ -70,7 +70,7 @@ export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? "";
 }
 
-/** Caminho público do recorte, com os parâmetros sempre na ordem genero, status, livro. */
+/** Caminho público do recorte, com os parâmetros sempre na ordem genero, leitura, livro. */
 export function publicPath(
   slug: string,
   sel: Partial<PublicSelection>
@@ -79,8 +79,8 @@ export function publicPath(
   if (sel.genre) {
     q.set("genero", sel.genre);
   }
-  if (sel.status) {
-    q.set("status", sel.status);
+  if (sel.reading) {
+    q.set("leitura", sel.reading);
   }
   if (sel.bookId) {
     q.set("livro", sel.bookId);
@@ -91,7 +91,7 @@ export function publicPath(
 
 /**
  * Caminho canônico da imagem OG do recorte, com a versão atual do acervo em `v`.
- * A imagem de um livro ignora gênero e status, então eles saem da URL.
+ * A imagem de um livro ignora gênero e Leitura, então eles saem da URL.
  */
 export function ogImagePath(
   slug: string,
@@ -102,7 +102,7 @@ export function ogImagePath(
   return "/og" + path + (path.includes("?") ? "&" : "?") + "v=" + version;
 }
 
-/** Mantém do recorte só o gênero e o livro que existem na estante (o status já é válido). */
+/** Mantém do recorte só o gênero e o livro que existem na estante (a Leitura já é válida). */
 export function resolvePublicSelection(
   sel: PublicSelection,
   books: readonly PublicBook[]
@@ -112,17 +112,17 @@ export function resolvePublicSelection(
       sel.genre && books.some((b) => slugify(b.genre) === sel.genre)
         ? sel.genre
         : "",
-    status: sel.status,
+    reading: sel.reading,
     bookId:
       sel.bookId && books.some((b) => b.id === sel.bookId) ? sel.bookId : "",
   };
 }
 
-/** Projeção pública dos livros do dono (mesmos campos e exclusão do servidor). */
+/** Projeção pública dos livros do dono (mesmos campos e exclusão do servidor; sem a Situação). */
 export function toPublicBooks(books: readonly Book[]): PublicBook[] {
   const out: PublicBook[] = [];
   for (const b of books) {
-    if (b.status === "doado") {
+    if (b.situation === "doado") {
       continue;
     }
     out.push({
@@ -133,7 +133,7 @@ export function toPublicBooks(books: readonly Book[]): PublicBook[] {
       pages: b.pages,
       publisher: b.publisher,
       yearPublished: b.yearPublished,
-      status: b.status,
+      reading: b.reading,
       coverUrl: b.coverUrl,
     });
   }
@@ -176,20 +176,20 @@ export function genreLabel(books: readonly PublicBook[], slug: string): string {
 export interface PublicFilters {
   genre: string;
   q: string;
-  status: PublicStatus | "";
+  reading: PublicReading | "";
 }
 
 /** Livros visíveis com busca (título ou autor) e filtros, ordenados por título. */
 export function filterPublicBooks(
   books: readonly PublicBook[],
-  { genre, status, q }: PublicFilters
+  { genre, reading, q }: PublicFilters
 ): PublicBook[] {
   const qn = norm(q);
   return books
     .filter(
       (b) =>
         (!genre || slugify(b.genre) === genre) &&
-        (!status || b.status === status) &&
+        (!reading || b.reading === reading) &&
         (!qn || norm(b.title + " " + (b.author ?? "")).includes(qn))
     )
     .sort((a, b) => cmp(a.title, b.title));
@@ -226,14 +226,14 @@ export function sharedNotice(
     );
   }
   const g = from.genre ? genreLabel(books, from.genre) : "";
-  if (!(g || from.status)) {
+  if (!(g || from.reading)) {
     return "";
   }
   let what = g
     ? "os livros de " + g
-    : STATUS_PHRASE[from.status as PublicStatus];
-  if (g && from.status) {
-    what += " (" + STATUS_SHORT[from.status].toLowerCase() + ")";
+    : READING_PHRASE[from.reading as PublicReading];
+  if (g && from.reading) {
+    what += " (" + READING_SHORT[from.reading].toLowerCase() + ")";
   }
   return (
     first +
@@ -254,7 +254,7 @@ export interface OgCover {
 }
 
 export interface OgData {
-  /** Recorte (gênero, status) ou "Toda a estante"; autor no card de livro. */
+  /** Recorte (gênero, Leitura) ou "Toda a estante"; autor no card de livro. */
   accent: string;
   covers: OgCover[];
   description: string;
@@ -280,13 +280,13 @@ function ogCover(b: PublicBook): OgCover {
   };
 }
 
-/** Rótulo do recorte de gênero e/ou status ("Romance", "Livros lidos", "Romance (livros lidos)"). */
+/** Rótulo do recorte de gênero e/ou Leitura ("Romance", "Livros lidos", "Romance (livros lidos)"). */
 function selectionLabel(
   books: readonly PublicBook[],
   sel: PublicSelection
 ): string {
   const g = sel.genre ? genreLabel(books, sel.genre) : "";
-  const s = sel.status ? STATUS_SHORT[sel.status] : "";
+  const s = sel.reading ? READING_SHORT[sel.reading] : "";
   if (g && s) {
     return g + " (" + s.toLowerCase() + ")";
   }
@@ -394,31 +394,31 @@ export function shareTargets(url: string, og: OgData): ShareTarget[] {
 
 // --- Modal do dono ------------------------------------------------------------
 
-export type ShareKind = "todos" | "genero" | "status" | "livro";
+export type ShareKind = "todos" | "genero" | "leitura" | "livro";
 
 export interface ShareScope {
   bookId?: string;
   genre?: string;
   kind: ShareKind;
-  status?: PublicStatus;
+  reading?: PublicReading;
 }
 
 /** Recorte enviado para o escopo escolhido (só o campo do tipo ativo vale). */
 export function selectionOf(scope: ShareScope): PublicSelection {
   return {
     genre: scope.kind === "genero" ? (scope.genre ?? "") : "",
-    status: scope.kind === "status" ? (scope.status ?? "") : "",
+    reading: scope.kind === "leitura" ? (scope.reading ?? "") : "",
     bookId: scope.kind === "livro" ? (scope.bookId ?? "") : "",
   };
 }
 
 /** Escopo inicial do modal a partir do chip e da faceta da Estante. */
 export function scopeFromShelf(
-  state: { status: StatusFilter; facet: Facet | null },
+  state: { reading: ReadingFilter; facet: Facet | null },
   books: readonly PublicBook[]
 ): ShareScope {
-  if (isPublicStatus(state.status)) {
-    return { kind: "status", status: state.status };
+  if (isPublicReading(state.reading)) {
+    return { kind: "leitura", reading: state.reading };
   }
   if (state.facet?.kind === "genero") {
     const slug = slugify(state.facet.value);

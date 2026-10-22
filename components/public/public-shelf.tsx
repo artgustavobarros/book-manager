@@ -16,20 +16,20 @@ import {
 } from "@/components/ui/combobox";
 import { Segmented } from "@/components/ui/segmented";
 import { copyText } from "@/lib/client/clipboard";
+import { readingInfo } from "@/lib/domain/book-state";
 import {
   booksLabel,
   drawPoolLabel,
   filterPublicBooks,
   firstName,
   genreCounts,
-  PUBLIC_STATUSES,
+  PUBLIC_READINGS,
+  type PublicReading,
   type PublicSelection,
-  type PublicStatus,
   publicPath,
-  STATUS_TAB,
+  READING_TAB,
   sharedNotice,
 } from "@/lib/domain/share";
-import { stat } from "@/lib/domain/status";
 import { drawBook } from "@/lib/domain/surprise";
 import { cmp, initialsOf, nf, norm } from "@/lib/domain/text";
 import type { PublicBook, PublicOwner } from "@/lib/domain/types";
@@ -47,9 +47,9 @@ interface GenreOption {
   value: string;
 }
 
-const STATUS_OPTIONS: readonly (readonly [PublicStatus | "", string])[] = [
+const READING_OPTIONS: readonly (readonly [PublicReading | "", string])[] = [
   ["", "Todos"],
-  ...PUBLIC_STATUSES.map((k) => [k, STATUS_TAB[k]] as const),
+  ...PUBLIC_READINGS.map((k) => [k, READING_TAB[k]] as const),
 ];
 
 const outline =
@@ -110,7 +110,7 @@ export function PublicShelf({
 }) {
   const [q, setQ] = useState("");
   const [genre, setGenre] = useState(initial.genre);
-  const [status, setStatus] = useState<PublicStatus | "">(initial.status);
+  const [reading, setReading] = useState<PublicReading | "">(initial.reading);
   const [limit, setLimit] = useState(PAGE);
   const [bookId, setBookId] = useState(initial.bookId);
   const [drawId, setDrawId] = useState<string | null>(null);
@@ -121,8 +121,8 @@ export function PublicShelf({
 
   const first = firstName(owner.name);
   const list = useMemo(
-    () => filterPublicBooks(books, { q, genre, status }),
-    [books, q, genre, status]
+    () => filterPublicBooks(books, { q, genre, reading }),
+    [books, q, genre, reading]
   );
   const genreOptions = useMemo<GenreOption[]>(
     () => [
@@ -139,7 +139,7 @@ export function PublicShelf({
     () => sharedNotice(owner.name, initial, books),
     [owner.name, initial, books]
   );
-  const filtered = !!(genre || status || q);
+  const filtered = !!(genre || reading || q);
   const shown = list.slice(0, limit);
   const book = bookId ? (books.find((b) => b.id === bookId) ?? null) : null;
   const drawn = drawId ? (books.find((b) => b.id === drawId) ?? null) : null;
@@ -154,7 +154,7 @@ export function PublicShelf({
     change(() => {
       setQ("");
       setGenre("");
-      setStatus("");
+      setReading("");
     });
   const draw = () => {
     const id = drawBook(list, lastDrawId.current)?.id ?? null;
@@ -222,7 +222,7 @@ export function PublicShelf({
             <button
               className={outline}
               onClick={() =>
-                void copyText(abs({ genre, status })).then(setCopied)
+                void copyText(abs({ genre, reading })).then(setCopied)
               }
               type="button"
             >
@@ -286,13 +286,13 @@ export function PublicShelf({
               </ComboboxContent>
             </Combobox>
           </div>
-          <Segmented<PublicStatus | "">
+          <Segmented<PublicReading | "">
             className="flex-wrap rounded-lg p-1"
             itemClassName="h-8 rounded-md px-3 text-sm whitespace-nowrap"
-            label="Status"
-            onChange={(k) => change(() => setStatus(k))}
-            options={STATUS_OPTIONS}
-            value={status}
+            label="Leitura"
+            onChange={(k) => change(() => setReading(k))}
+            options={READING_OPTIONS}
+            value={reading}
           />
           {filtered ? (
             <button
@@ -311,7 +311,7 @@ export function PublicShelf({
               Nenhum livro nesta seleção
             </span>
             <span className="text-mute text-sm">
-              Tente outro gênero, status ou busca.
+              Tente outro gênero, leitura ou busca.
             </span>
             <button
               className="mt-3 h-10 rounded-lg border border-ink bg-transparent px-4 font-semibold text-ink text-sm transition-[background-color,color] duration-200 hover:bg-ink hover:text-card"
@@ -327,7 +327,7 @@ export function PublicShelf({
             className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-x-5 gap-y-7 p-0 max-[641px]:grid-cols-2 max-[641px]:gap-x-3"
           >
             {shown.map((b) => {
-              const s = stat(b.status);
+              const s = readingInfo(b.reading);
               return (
                 <li className="min-w-0" key={b.id}>
                   <button
@@ -397,7 +397,7 @@ export function PublicShelf({
           change(() => {
             setQ(author);
             setGenre("");
-            setStatus("");
+            setReading("");
           });
         }}
         onClose={() => setBookId("")}
