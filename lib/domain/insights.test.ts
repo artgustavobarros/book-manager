@@ -3,7 +3,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { makeBook, referenceBooks } from "@/tests/support/reference";
 import { loadStandalone } from "@/tests/support/standalone";
 
-import { groupBy, insights } from "./insights";
+import { groupBy, insights, scopeShelfStatus } from "./insights";
+import { filterBooks } from "./shelf";
 import type { Book } from "./types";
 
 const NOW = new Date("2026-06-15T18:00:00Z");
@@ -279,5 +280,63 @@ describe("dataKpis", () => {
 
   it("não muda com o escopo dos gráficos", () => {
     expect(kpis(books, "lidos")).toEqual(kpis(books, "todos"));
+  });
+});
+
+describe("atalho dos gráficos para a Estante", () => {
+  const list = [
+    makeBook({ genre: "Romance", status: "lido", yearRead: 2024 }),
+    makeBook({ genre: "Romance", status: "nao-lido" }),
+    makeBook({ genre: "Romance", status: "emprestado", yearRead: 2023 }),
+    makeBook({ genre: "Romance", status: "emprestado" }),
+  ];
+
+  for (const scope of ["lidos", "todos"] as const) {
+    it(`mostra os livros contados no gênero com escopo ${scope}`, () => {
+      const [bar] = insights(list, {
+        scope,
+        expanded: {},
+        assignAll: false,
+        assignMore: false,
+        year: 2026,
+      }).genre.list;
+      const shown = filterBooks(list, {
+        q: "",
+        status: scopeShelfStatus(scope),
+        facet: { kind: "genero", value: bar.label },
+      });
+      expect(shown).toHaveLength(bar.count);
+      expect(bar.count).toBe(scope === "lidos" ? 2 : 4);
+    });
+  }
+});
+
+describe("donut de status", () => {
+  it("conta cada status pela regra do chip que o clique abre", () => {
+    const list = [
+      makeBook({ status: "lido", yearRead: 2024 }),
+      makeBook({ status: "emprestado", yearRead: 2023 }),
+      makeBook({ status: "emprestado" }),
+      makeBook({ status: "nao-lido" }),
+    ];
+    const d = insights(list, {
+      scope: "todos",
+      expanded: {},
+      assignAll: false,
+      assignMore: false,
+      year: 2026,
+    });
+    for (const s of d.statusSeg) {
+      expect(s.count).toBe(
+        filterBooks(list, { q: "", status: s.k, facet: null }).length
+      );
+    }
+    expect(d.statusSeg.map((s) => [s.k, s.count])).toEqual([
+      ["nao-lido", 1],
+      ["lido", 2],
+      ["emprestado", 2],
+    ]);
+    // O anel fecha em 100% mesmo com o emprestado já lido nas duas linhas.
+    expect(d.donutBg).toMatch(/ 100%\)$/);
   });
 });

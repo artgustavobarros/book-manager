@@ -138,6 +138,16 @@ describe("livros", () => {
       ctx()
     );
     expect(empty.status).toBe(400);
+    const invalidDate = await booksRoute.POST(
+      req("/api/books", {
+        method: "POST",
+        cookie: ana.cookie,
+        json: { title: "Data impossível", acquiredOn: "2024-02-31" },
+      }),
+      ctx()
+    );
+    expect(invalidDate.status).toBe(400);
+    expect((await body(invalidDate)).error).toBe("Data inválida.");
   });
 
   it("atualiza e limpa 'emprestado para' ao sair do empréstimo", async () => {
@@ -222,6 +232,48 @@ describe("livros", () => {
       await booksRoute.GET(req("/api/books", { cookie: bia.cookie }), ctx())
     );
     expect(biaList.books[0].coverUrl).toBeNull();
+  });
+
+  it("lote de capa automática não substitui uma capa manual gravada antes", async () => {
+    const created = await booksRoute.POST(
+      req("/api/books", {
+        method: "POST",
+        cookie: ana.cookie,
+        json: { title: "Capa manual" },
+      }),
+      ctx()
+    );
+    const id = (await body<{ book: Book }>(created)).book.id;
+    await bookById.PATCH(
+      req(`/api/books/${id}`, {
+        method: "PATCH",
+        cookie: ana.cookie,
+        json: { coverUrl: "https://manual.example/capa.jpg" },
+      }),
+      ctx({ id })
+    );
+    const guarded = await booksRoute.PATCH(
+      req("/api/books", {
+        method: "PATCH",
+        cookie: ana.cookie,
+        json: [
+          {
+            id,
+            onlyIfNoCover: true,
+            coverUrl: "https://auto.example/capa.jpg",
+            coverCheckedAt: "2026-06-15T12:00:00.000Z",
+          },
+        ],
+      }),
+      ctx()
+    );
+    expect(guarded.status).toBe(200);
+    expect((await body(guarded)).books).toEqual([]);
+    const [saved] = await db
+      .select({ coverUrl: books.coverUrl })
+      .from(books)
+      .where(eq(books.id, id));
+    expect(saved.coverUrl).toBe("https://manual.example/capa.jpg");
   });
 
   it("exclui", async () => {

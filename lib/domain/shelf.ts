@@ -1,5 +1,5 @@
 /** Filtros, facetas e ordenação da Estante (porta de `estante()` do standalone). */
-import { isBookStatus, STATUS } from "./status";
+import { isBookStatus, isRead, STATUS } from "./status";
 import { cmp, norm } from "./text";
 import type { Book, BookStatus } from "./types";
 
@@ -184,6 +184,17 @@ const SEARCH_FIELDS = [
   "notes",
 ] as const;
 
+/** "Lido" segue `isRead` (inclui emprestado já lido), como Painel e Dados contam. */
+export function matchesStatus(b: Book, status: StatusFilter): boolean {
+  if (status === "todos") {
+    return true;
+  }
+  if (status === "fav") {
+    return b.favorite;
+  }
+  return status === "lido" ? isRead(b) : b.status === status;
+}
+
 export function filterBooks(
   books: readonly Book[],
   { q, status, facet }: ShelfFilters
@@ -193,9 +204,7 @@ export function filterBooks(
   return books.filter(
     (b) =>
       (!test || test(b)) &&
-      (status === "todos" ||
-        b.status === status ||
-        (status === "fav" && b.favorite)) &&
+      matchesStatus(b, status) &&
       (!ql || SEARCH_FIELDS.some((k) => norm(b[k]).includes(ql)))
   );
 }
@@ -214,7 +223,7 @@ export function shelfChips(books: readonly Book[]): Chip[] {
       k: s.k,
       label: s.plural,
       dot: s.dot,
-      count: books.filter((b) => b.status === s.k).length,
+      count: books.filter((b) => matchesStatus(b, s.k)).length,
     })),
     {
       k: "fav",

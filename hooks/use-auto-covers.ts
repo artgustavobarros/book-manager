@@ -12,14 +12,19 @@ const MAX_ACTIVE = 2;
 const FLUSH_MS = 2000;
 const FLUSH_SIZE = 20;
 
-type Pending = { id: string; coverUrl?: string; coverCheckedAt: string };
+type Pending = {
+  id: string;
+  coverUrl?: string;
+  coverCheckedAt: string;
+  onlyIfNoCover: true;
+};
 type Deps = {
   qc: QueryClient;
   patchLocal: (id: string, patch: Partial<BookFields>) => void;
 };
 
 /** Fila de busca de capas + buffer de gravação em lote (independente do render). */
-function createCoverQueue() {
+export function createCoverQueue() {
   let deps: Deps | null = null;
   const getDeps = () => deps!;
   const queued = new Set<string>();
@@ -33,7 +38,13 @@ function createCoverQueue() {
 
   function flush(keepalive = false) {
     clearTimeout(timer);
-    const items = buffer.splice(0);
+    const items = buffer.splice(0).filter((item) => {
+      const current = bookById(item.id);
+      return (
+        current?.coverCheckedAt === item.coverCheckedAt &&
+        (!current.coverUrl || current.coverUrl === item.coverUrl)
+      );
+    });
     if (!items.length) {
       return;
     }
@@ -68,13 +79,17 @@ function createCoverQueue() {
       active++;
       findCover(book)
         .then((r) => {
-          if (!r.ok) {
+          const current = bookById(id);
+          if (!(r.ok && current)) {
+            return;
+          }
+          if (current.coverUrl || current.coverCheckedAt) {
             return;
           }
           const coverCheckedAt = new Date().toISOString();
           const cover = r.url ? { coverUrl: r.url } : {};
           getDeps().patchLocal(id, { coverCheckedAt, ...cover });
-          record({ id, coverCheckedAt, ...cover });
+          record({ id, coverCheckedAt, onlyIfNoCover: true, ...cover });
         })
         .catch(() => {})
         .finally(() => {

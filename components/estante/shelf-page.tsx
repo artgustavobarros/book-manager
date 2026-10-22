@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import { LayoutGridIcon, ListIcon } from "lucide-react";
+import { LayoutGridIcon, ListIcon, Share2Icon } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useEffect, useMemo, useState } from "react";
 
@@ -17,6 +17,7 @@ import { useBackup } from "@/hooks/use-backup";
 import { useBookActions, useBooks } from "@/hooks/use-books";
 import { useDragScroll } from "@/hooks/use-drag-scroll";
 import { useShelfState } from "@/hooks/use-shelf-state";
+import { scopeFromShelf, toPublicBooks } from "@/lib/domain/share";
 import {
   DEFAULT_SHELF,
   facetLabel,
@@ -193,6 +194,18 @@ export function ShelfPage() {
         </div>
         {shelfEmpty ? null : (
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              aria-label="Compartilhar"
+              className="flex h-9 items-center gap-2 rounded-full border border-line2 bg-card px-4 font-semibold text-ink text-sm transition-[border-color] duration-200 hover:border-ink max-[640px]:size-11 max-[640px]:justify-center max-[640px]:px-0"
+              onClick={() =>
+                app.openShare(scopeFromShelf(state, toPublicBooks(books)))
+              }
+              title="Compartilhar o que está filtrado"
+              type="button"
+            >
+              <Share2Icon aria-hidden="true" className="size-4" />
+              <span className="max-[640px]:sr-only">Compartilhar</span>
+            </button>
             <SortMenu onSort={(sort) => setShelf({ sort })} sort={state.sort} />
             <Segmented<ShelfView>
               className="rounded-lg p-1 max-[640px]:hidden"

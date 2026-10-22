@@ -31,7 +31,6 @@ pnpm-debug.log*
 
 
 #ai
-openspec
 .agent
 .agents
 .claude

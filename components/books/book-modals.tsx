@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "cn";
+import { Share2Icon } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {
   Controller,
@@ -39,7 +40,7 @@ import { searchCatalogs } from "@/lib/client/lookup";
 import { coverColors, coverImage } from "@/lib/domain/cover";
 import { GENRES, suggestions } from "@/lib/domain/genres";
 import type { LookupResult } from "@/lib/domain/lookup";
-import { STATUS, stat } from "@/lib/domain/status";
+import { readingYearForStatus, STATUS, stat } from "@/lib/domain/status";
 import { capitalize, fmtDate, nf, norm } from "@/lib/domain/text";
 import { BOOK_STATUSES, type Book } from "@/lib/domain/types";
 import {
@@ -244,13 +245,29 @@ function ViewModal({ book }: { book: Book }) {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <DeleteButton onConfirm={() => del(book)} />
-          <button
-            className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
-            onClick={() => app.openEdit(book.id)}
-            type="button"
-          >
-            Editar ficha
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {/* Livro doado não aparece na estante pública. */}
+            {book.status === "doado" ? null : (
+              <button
+                className="flex h-10 items-center gap-2 rounded-lg border border-line2 bg-card px-4 font-semibold text-ink text-sm transition-[border-color] duration-150 hover:border-ink"
+                onClick={() =>
+                  app.openShare({ kind: "livro", bookId: book.id })
+                }
+                title="Compartilhar este livro"
+                type="button"
+              >
+                <Share2Icon aria-hidden="true" className="size-4" />
+                Compartilhar
+              </button>
+            )}
+            <button
+              className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
+              onClick={() => app.openEdit(book.id)}
+              type="button"
+            >
+              Editar ficha
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -789,8 +806,14 @@ function EditModal({ book }: { book: Book | null }) {
                     key={k}
                     onClick={() => {
                       setValue("status", k, { shouldDirty: true });
-                      if (k === "lido" && !form.getValues("yearRead")) {
-                        setValue("yearRead", String(app.year));
+                      const current = form.getValues("yearRead");
+                      const next = readingYearForStatus(
+                        current,
+                        k,
+                        String(app.year)
+                      );
+                      if (next !== current) {
+                        setValue("yearRead", next ?? "", { shouldDirty: true });
                       }
                     }}
                     role="radio"

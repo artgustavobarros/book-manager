@@ -41,11 +41,11 @@ export function surprisePool(books: readonly Book[], genre: string): Book[] {
 }
 
 /** Sorteia evitando repetir o último quando há mais de uma opção. */
-export function drawBook(
-  pool: readonly Book[],
+export function drawBook<T extends { id: string }>(
+  pool: readonly T[],
   lastId: string | null,
   random: () => number = Math.random
-): Book | null {
+): T | null {
   const cands = pool.length > 1 ? pool.filter((b) => b.id !== lastId) : pool;
   return cands.length ? cands[Math.floor(random() * cands.length)] : null;
 }

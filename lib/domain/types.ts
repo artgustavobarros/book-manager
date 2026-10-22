@@ -75,3 +75,25 @@ export const EMPTY_BOOK_FIELDS: BookFields = {
   favorite: false,
   coverCheckedAt: null,
 };
+
+/**
+ * Livro na estante pública: só os campos que o dono aceita mostrar a visitantes.
+ * Tipo próprio (sem herdar de `Book`) para que nada privado passe por engano.
+ */
+export interface PublicBook {
+  author: string | null;
+  coverUrl: string | null;
+  genre: string | null;
+  id: string;
+  pages: number | null;
+  publisher: string | null;
+  status: Exclude<BookStatus, "doado">;
+  title: string;
+  yearPublished: number | null;
+}
+
+/** Dono da estante pública, como os visitantes o veem. */
+export interface PublicOwner {
+  image: string | null;
+  name: string;
+}

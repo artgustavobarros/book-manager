@@ -103,7 +103,16 @@ test.describe("acervo (desktop)", () => {
       page,
     }) => {
       await page.goto("/estante?vista=lista");
-      const covers = page.locator("[data-bid]");
+      const covers = page
+        .locator("[data-bid]")
+        .locator("..")
+        .filter({
+          hasNot: page.getByRole("button", {
+            name: "Dom Casmurro",
+            exact: true,
+          }),
+        })
+        .locator("[data-bid]");
       const [idA, idB] = await Promise.all([
         covers.nth(0).getAttribute("data-bid"),
         covers.nth(1).getAttribute("data-bid"),
@@ -248,9 +257,12 @@ test.describe("SEO (sem sessão)", () => {
     const sitemap = await (await request.get("/sitemap.xml")).text();
     expect(sitemap).toContain(`<loc>${baseURL}/entrar</loc>`);
     expect(sitemap.match(/<loc>/g)).toHaveLength(1);
-    expect(await (await request.get("/robots.txt")).text()).toMatch(
-      /Disallow: \/\n/
-    );
+    const robots = await (await request.get("/robots.txt")).text();
+    expect(robots).toMatch(/Disallow: \/\n/);
+    // Estantes públicas e suas imagens OG ficam abertas aos robôs de preview; /estante não.
+    expect(robots).toContain("Allow: /estante/\n");
+    expect(robots).toContain("Allow: /og/\n");
+    expect(robots).not.toMatch(/Allow: \/estante\n/);
   });
 
   test("a entrada é indexável e tem metadados de compartilhamento", async ({
@@ -452,6 +464,10 @@ test.describe("tempo do empréstimo (BP-06)", () => {
     page,
   }) => {
     await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+    const restore = await page.request.post("/api/books/import", {
+      data: referenceBooks,
+    });
+    expect(restore.ok()).toBe(true);
     // Dom Casmurro foi emprestado 5 dias antes de FIXED_NOW (fixture de referência).
     const badge = page.getByText(/Com Ana · há 5 dias/).first();
     await page.goto("/estante?q=dom casmurro");

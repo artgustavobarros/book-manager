@@ -72,16 +72,7 @@ export async function findCover(b: {
   const tries = [
     () => srcApple(q),
     async () =>
-      (await getJson(lookupUrls.googleCover(b.title, b.author))).items?.map(
-        (it: {
-          volumeInfo?: { title?: string; imageLinks?: { thumbnail?: string } };
-        }) => ({
-          title: it.volumeInfo?.title,
-          cover: (it.volumeInfo?.imageLinks?.thumbnail || "")
-            .replace("http:", "https:")
-            .replace("&edge=curl", ""),
-        })
-      ) ?? [],
+      fromGoogle(await getJson(lookupUrls.googleCover(b.title, b.author))),
     () => srcOL(q, null),
   ];
   let answered = false;

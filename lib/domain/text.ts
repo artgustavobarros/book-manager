@@ -47,6 +47,17 @@ export function fmtDate(d: string | null | undefined): string {
     .replace(".", "");
 }
 
+/** Iniciais do avatar (até 2, do nome ou, sem nome, do e-mail). */
+export function initialsOf(name: string, email = ""): string {
+  return (name || email || "L")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
+
 /** Número formatado em pt-BR (separador de milhar). */
 export function nf(x: number): string {
   return Number(x).toLocaleString("pt-BR");

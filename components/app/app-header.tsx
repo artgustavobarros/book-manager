@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import { XIcon } from "lucide-react";
+import { Share2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -17,7 +17,7 @@ import { Avatar } from "./avatar";
 const TABS = [
   ["/", "Painel"],
   ["/estante", "Estante"],
-  ["/dados", "Dados do acervo"],
+  ["/dados", "Dados"],
 ] as const;
 
 /** Abas Painel / Estante / Dados (controle segmentado). */
@@ -92,6 +92,25 @@ function AccountButton({ className }: { className?: string }) {
   );
 }
 
+/** Abre o modal "Compartilhar" com a estante toda. */
+function ShareButton({ className }: { className?: string }) {
+  const app = useApp();
+  return (
+    <button
+      aria-label="Compartilhar estante"
+      className={cn(
+        "flex size-10 flex-none items-center justify-center rounded-lg border border-line2 bg-card text-ink transition-[border-color] duration-150 hover:border-ink focus-visible:shadow-[0_0_0_3px_rgba(127,120,110,.35)] focus-visible:outline-none",
+        className
+      )}
+      onClick={() => app.openShare()}
+      title="Compartilhar estante"
+      type="button"
+    >
+      <Share2Icon aria-hidden="true" className="size-4" />
+    </button>
+  );
+}
+
 const searchClass =
   "w-full rounded-lg border bg-card text-ink outline-none placeholder:text-[light-dark(#757575,#a9a9a9)]";
 
@@ -143,6 +162,7 @@ function WideHeader({ search }: { search: HeaderSearch }) {
         >
           + Registrar livro
         </button>
+        <ShareButton />
         <ThemeToggle initial={app.theme} />
         <AccountButton />
       </div>
@@ -192,6 +212,7 @@ function NarrowHeader({ search }: { search: HeaderSearch }) {
               <span className="absolute top-[9px] left-[11px] h-[7px] w-0.5 -rotate-45 rounded-[1px] bg-current" />
             </span>
           </button>
+          <ShareButton className="size-11" />
           <ThemeToggle className="size-11 flex-none" initial={app.theme} />
           <AccountButton className="size-11" />
         </div>

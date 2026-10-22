@@ -12,6 +12,10 @@ export const settingsSchema = z.object({
   sheetUrl: z.string().trim().max(2000).nullable(),
 });
 
+export const publicShelfSchema = z.object({
+  enabled: z.boolean(),
+});
+
 export const sheetSyncSchema = z.object({
   sheetUrl: z.string().trim().min(1).max(2000).optional(),
 });

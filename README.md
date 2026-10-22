@@ -1,10 +1,10 @@
 # Bodega Literária
 
-Catálogo pessoal dos livros de casa: **Painel** (indicadores, meta anual, leituras em andamento), **Estante** (capas ou lista, busca, filtros, facetas, ordenação) e **Dados do acervo** (gráficos), com contas de usuário, sincronização com Google Sheets, busca de livros e capas online, exportação em CSV e backup em JSON.
+Catálogo pessoal dos livros de casa: **Painel** (indicadores, meta anual, leituras em andamento), **Estante** (capas ou lista, busca, filtros, facetas, ordenação) e **Dados** (gráficos), com contas de usuário, sincronização com Google Sheets, busca de livros e capas online, exportação em CSV, backup em JSON e uma **estante pública** opcional para compartilhar o acervo nas redes sociais.
 
 Quem cria uma conta com e-mail e senha pode usar o acervo imediatamente. Um aviso lembra da confirmação do endereço até que o link enviado por e-mail seja aberto; os dados criados nesse período ficam salvos.
 
-O app reproduz pixel a pixel o design do handoff em [`design/handoff/`](design/handoff/README.md), verificado por uma suíte visual que compara cada tela com o standalone original. O plano de implementação (proposta, specs, design e tasks) está em [`openspec/changes/bodega-literaria-app/`](openspec/changes/bodega-literaria-app/).
+O app reproduz pixel a pixel o design do handoff em [`design/handoff/`](design/handoff/README.md), verificado por uma suíte visual que compara cada tela com o standalone original.
 
 ## Stack
 
@@ -22,8 +22,8 @@ O app reproduz pixel a pixel o design do handoff em [`design/handoff/`](design/h
 ## Estrutura
 
 ```
-app/                  rotas: (auth) entrar/cadastro/senha · verifique-email · (app) Painel/Estante/Dados · api/
-components/           app (shell, modais), books, estante, dados, painel, auth, ui (primitivos)
+app/                  rotas: (auth) entrar/cadastro/senha · verifique-email · (app) Painel/Estante/Dados · (public) estante/[slug] · og/ · api/
+components/           app (shell, modais), books, estante, dados, painel, auth, share, public, custom, ui (primitivos)
 lib/domain/           lógica pura portada do standalone (filtros, Painel, Dados, CSV, planilha, backup…)
 lib/services/         acesso ao banco por usuário (livros, metas, configurações, planilha)
 lib/validation/       schemas Zod compartilhados entre formulários e API
@@ -79,6 +79,10 @@ Todas as contas são criadas com a senha `senha-forte-123`:
 
 Com `EMAIL_TRANSPORT=console`, os e-mails de verificação e de redefinição de senha são impressos no terminal do `pnpm dev`, com o link.
 
+### Estante pública
+
+A estante começa privada. Pelo ícone de compartilhar (cabeçalho, Estante ou ficha do livro), quem já confirmou o e-mail publica a estante em `/estante/{slug}` (o slug vem do nome e não muda depois) e pode torná-la privada de novo. Visitantes sem conta veem só capa, título, autor, gênero, páginas, editora, ano e status; anotações, empréstimos, datas de aquisição e livros doados nunca saem do servidor. Cada link traz metadados Open Graph e uma imagem gerada em `/og/estante/{slug}`; as estantes públicas declaram `noindex`.
+
 ## Variáveis de ambiente
 
 Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.example`](.env.example).
@@ -102,6 +106,8 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 | `pnpm test` | Unidade e integração (Vitest). Os cálculos do domínio são comparados com a lógica do próprio standalone |
 | `pnpm test:e2e` | Fluxos no navegador e auditoria de acessibilidade (axe) contra a build de produção, com PGlite descartável |
 | `pnpm test:visual` | Compara 10 telas e modais com o standalone (1440×900 e 390×844, claro e escuro; tolerância de 1%) e as telas novas com linhas de base próprias |
+
+Os testes Playwright criam banco PGlite, caixa de e-mail e sessão em um diretório temporário exclusivo por execução, removido ao terminar. Não apagam `.data/dev` nem `.data/e2e`; a porta de teste (`E2E_PORT`, padrão 3100) precisa estar livre.
 
 `pnpm test:visual --update-snapshots` regrava as linhas de base das telas que não existem no design.
 

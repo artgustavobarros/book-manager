@@ -5,12 +5,14 @@ import { cookies } from "next/headers";
 import { AppProvider } from "@/components/app/app-provider";
 import { AppShell } from "@/components/app/app-shell";
 import { env } from "@/env";
+import { appUrl } from "@/lib/app-url";
 import { googleEnabled } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { account, user as userTable } from "@/lib/db/schema";
 import { currentYear, safeTimeZone } from "@/lib/domain/clock";
 import { listBooks } from "@/lib/services/books";
 import { getGoal } from "@/lib/services/goals";
+import { getPublicShelfState } from "@/lib/services/public-shelf";
 import { getSettings } from "@/lib/services/settings";
 import { requirePageSession } from "@/lib/session";
 import { parseTheme, THEME_COOKIE, TZ_COOKIE } from "@/lib/theme";
@@ -33,20 +35,22 @@ export default async function AppLayout({
   const now = env.FIXED_NOW ? new Date(env.FIXED_NOW) : new Date();
   const year = currentYear(now, tz);
 
-  const [books, goal, settings, accounts, profile] = await Promise.all([
-    listBooks(db, user.id),
-    getGoal(db, user.id, year),
-    getSettings(db, user.id),
-    db
-      .select({ providerId: account.providerId })
-      .from(account)
-      .where(eq(account.userId, user.id)),
-    db
-      .select({ image: userTable.image })
-      .from(userTable)
-      .where(eq(userTable.id, user.id))
-      .limit(1),
-  ]);
+  const [books, goal, settings, accounts, profile, publicShelf] =
+    await Promise.all([
+      listBooks(db, user.id),
+      getGoal(db, user.id, year),
+      getSettings(db, user.id),
+      db
+        .select({ providerId: account.providerId })
+        .from(account)
+        .where(eq(account.userId, user.id)),
+      db
+        .select({ image: userTable.image })
+        .from(userTable)
+        .where(eq(userTable.id, user.id))
+        .limit(1),
+      getPublicShelfState(db, user.id),
+    ]);
 
   return (
     <AppProvider
@@ -61,6 +65,8 @@ export default async function AppLayout({
         books,
         goal,
         sheetUrl: settings.sheetUrl,
+        publicShelf,
+        origin: appUrl,
         year,
         tz,
         now: now.toISOString(),

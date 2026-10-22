@@ -6,9 +6,6 @@ test.use({ storageState: AUTH_STATE });
 
 test.describe.configure({ mode: "serial" });
 
-/** Livros não lidos de "Romance" no acervo de referência. */
-const ROMANCES = ["Madame Bovary", "Amada", "Americanah"];
-
 async function openSurprise(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: "Me surpreenda" }).first().click();
@@ -28,13 +25,25 @@ test.describe("Me surpreenda: filtro por gênero", () => {
 
     await field.click();
     const romance = page.getByRole("option", { name: /^Romance \(\d+\)$/ });
-    await expect(page.getByRole("option")).toHaveCount(3);
+    await expect(romance).toBeVisible();
     await romance.click();
 
     await expect(page.getByRole("listbox")).toHaveCount(0);
     await expect(field).toHaveValue(/^Romance \(\d+\)$/);
     const title = await dialog.getByRole("heading", { level: 2 }).innerText();
-    expect(ROMANCES).toContain(title);
+    const booksResponse = await page.request.get("/api/books");
+    expect(booksResponse.ok()).toBe(true);
+    const { books } = (await booksResponse.json()) as {
+      books: { title: string; genre: string | null; status: string }[];
+    };
+    expect(
+      books.some(
+        (book) =>
+          book.title === title &&
+          book.genre === "Romance" &&
+          book.status === "nao-lido"
+      )
+    ).toBe(true);
   });
 
   test("digitar filtra sem diferenciar acentos e mostra o vazio", async ({

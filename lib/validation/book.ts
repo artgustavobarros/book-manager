@@ -5,6 +5,7 @@
  */
 import { z } from "zod";
 
+import { toIsoDate } from "@/lib/domain/backup";
 import {
   AUTHOR_GENDERS,
   BOOK_INT_MAX,
@@ -37,10 +38,7 @@ const positiveInt = (label: string, max: number) =>
 const isoDate = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida.")
-  .refine(
-    (s) => !Number.isNaN(new Date(s + "T00:00:00Z").getTime()),
-    "Data inválida."
-  )
+  .refine((s) => toIsoDate(s) === s, "Data inválida.")
   .nullable();
 
 const coverUrlText = z
@@ -95,7 +93,12 @@ export const bookPatchSchema = bookFieldsSchema
 
 /** Atualização em lote (capas automáticas, ano lido): até 100 livros. */
 export const bookBatchSchema = z
-  .array(bookFieldsSchema.partial().extend({ id: z.uuid() }))
+  .array(
+    bookFieldsSchema.partial().extend({
+      id: z.uuid(),
+      onlyIfNoCover: z.boolean().optional(),
+    })
+  )
   .min(1)
   .max(100);
 
