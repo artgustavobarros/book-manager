@@ -31,6 +31,14 @@ async function renderPng(
   }).arrayBuffer();
 }
 
+/** `If-None-Match` pode trazer lista, ETag fraco (`W/`) ou `*`. */
+function matchesEtag(header: string | null, etag: string): boolean {
+  return (header ?? "").split(",").some((tag) => {
+    const t = tag.trim();
+    return t === "*" || t.replace(/^W\//, "") === etag;
+  });
+}
+
 /**
  * Imagem Open Graph do recorte da estante pública (mesmos parâmetros da página).
  * Só a URL canônica (recorte válido + `v` da versão atual) renderiza; qualquer outra
@@ -66,7 +74,7 @@ export async function GET(
     "Cache-Control": "public, no-cache",
     ETag: `"${shelf.version}"`,
   };
-  if (request.headers.get("if-none-match") === headers.ETag) {
+  if (matchesEtag(request.headers.get("if-none-match"), headers.ETag)) {
     return new Response(null, { status: 304, headers });
   }
   const png = await memoOgImage(shelf.ownerId + path, () =>

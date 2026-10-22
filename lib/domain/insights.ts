@@ -1,6 +1,11 @@
 /** Seletores de "Dados do acervo" (porta de `dados()` do standalone). */
 import { distinctCount, type Kpi } from "./dashboard";
-import { groupKey, NOT_INFORMED, type StatusFilter } from "./shelf";
+import {
+  groupKey,
+  matchesStatus,
+  NOT_INFORMED,
+  type StatusFilter,
+} from "./shelf";
 import { isRead, STATUS, type StatusInfo } from "./status";
 import { cmp, nf } from "./text";
 import type { Book } from "./types";
@@ -210,15 +215,21 @@ export function insights(
   ];
   const thermo = estFull ? Math.min(100, (readPages / estFull) * 100) : 0;
 
+  // Mesma regra dos chips da Estante, que o clique abre: emprestado já lido conta em
+  // Lido e em Emprestado, então o anel se divide pela soma das linhas.
   const counts = STATUS.map((s) => ({
     ...s,
-    count: base.filter((b) => b.status === s.k).length,
+    count: base.filter((b) => matchesStatus(b, s.k)).length,
   })).filter((s) => s.count);
   const bmax = Math.max(1, ...counts.map((s) => s.count));
+  const ring = Math.max(
+    1,
+    counts.reduce((sum, s) => sum + s.count, 0)
+  );
   let acc = 0;
   const stops = counts.map((s) => {
     const a = acc;
-    acc += (s.count / Math.max(1, base.length)) * 100;
+    acc += (s.count / ring) * 100;
     return s.dot + " " + a + "% " + acc + "%";
   });
 

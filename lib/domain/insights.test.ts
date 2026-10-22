@@ -310,3 +310,33 @@ describe("atalho dos gráficos para a Estante", () => {
     });
   }
 });
+
+describe("donut de status", () => {
+  it("conta cada status pela regra do chip que o clique abre", () => {
+    const list = [
+      makeBook({ status: "lido", yearRead: 2024 }),
+      makeBook({ status: "emprestado", yearRead: 2023 }),
+      makeBook({ status: "emprestado" }),
+      makeBook({ status: "nao-lido" }),
+    ];
+    const d = insights(list, {
+      scope: "todos",
+      expanded: {},
+      assignAll: false,
+      assignMore: false,
+      year: 2026,
+    });
+    for (const s of d.statusSeg) {
+      expect(s.count).toBe(
+        filterBooks(list, { q: "", status: s.k, facet: null }).length
+      );
+    }
+    expect(d.statusSeg.map((s) => [s.k, s.count])).toEqual([
+      ["nao-lido", 1],
+      ["lido", 2],
+      ["emprestado", 2],
+    ]);
+    // O anel fecha em 100% mesmo com o emprestado já lido nas duas linhas.
+    expect(d.donutBg).toMatch(/ 100%\)$/);
+  });
+});

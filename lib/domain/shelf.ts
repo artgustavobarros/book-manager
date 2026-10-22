@@ -185,7 +185,7 @@ const SEARCH_FIELDS = [
 ] as const;
 
 /** "Lido" segue `isRead` (inclui emprestado já lido), como Painel e Dados contam. */
-function matchesStatus(b: Book, status: StatusFilter): boolean {
+export function matchesStatus(b: Book, status: StatusFilter): boolean {
   if (status === "todos") {
     return true;
   }

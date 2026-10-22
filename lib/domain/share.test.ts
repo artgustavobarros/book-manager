@@ -6,6 +6,7 @@ import {
   EMPTY_SELECTION,
   filterPublicBooks,
   ogFor,
+  ogImagePath,
   ogVersion,
   ownerSlugBase,
   publicPath,
@@ -74,6 +75,22 @@ describe("recorte público", () => {
     expect(
       publicPath("ana", { bookId: "9", status: "lido", genre: "romance" })
     ).toBe("/estante/ana?genero=romance&status=lido&livro=9");
+  });
+
+  it("imagem OG de um livro ignora gênero e status na URL", () => {
+    expect(
+      ogImagePath(
+        "ana",
+        { bookId: "9", status: "lido", genre: "romance" },
+        "v1"
+      )
+    ).toBe("/og/estante/ana?livro=9&v=v1");
+    expect(ogImagePath("ana", { status: "lido", genre: "romance" }, "v1")).toBe(
+      "/og/estante/ana?genero=romance&status=lido&v=v1"
+    );
+    expect(ogImagePath("ana", EMPTY_SELECTION, "v1")).toBe(
+      "/og/estante/ana?v=v1"
+    );
   });
 
   it("mantém só gênero e livro que existem na estante", () => {

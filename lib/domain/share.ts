@@ -89,13 +89,16 @@ export function publicPath(
   return "/estante/" + slug + (qs ? "?" + qs : "");
 }
 
-/** Caminho canônico da imagem OG do recorte, com a versão atual do acervo em `v`. */
+/**
+ * Caminho canônico da imagem OG do recorte, com a versão atual do acervo em `v`.
+ * A imagem de um livro ignora gênero e status, então eles saem da URL.
+ */
 export function ogImagePath(
   slug: string,
   sel: Partial<PublicSelection>,
   version: string
 ): string {
-  const path = publicPath(slug, sel);
+  const path = publicPath(slug, sel.bookId ? { bookId: sel.bookId } : sel);
   return "/og" + path + (path.includes("?") ? "&" : "?") + "v=" + version;
 }
 

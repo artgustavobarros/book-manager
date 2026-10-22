@@ -197,77 +197,91 @@ describe("PUT /api/public-shelf", () => {
 });
 
 describe("imagem OG da estante", () => {
-  const og = (url: string, headers?: HeadersInit) =>
-    ogRoute.GET(req(url, { headers }), ctx({ slug: "gil-reis" }));
   const renders = () => vi.mocked(fetchCoverDataUrl).mock.calls.length;
+  const location = (res: Response) => res.headers.get("location") ?? "";
 
-  it("gera PNG 1200×630 sem sessão só na URL canônica", async () => {
-    const g = await createUserSession("Gil Reis");
-    await addBook(g.userId, {
+  /** Estante própria de cada teste, publicada com um livro com capa. */
+  async function publishedShelf(name: string) {
+    const owner = await createUserSession(name);
+    await addBook(owner.userId, {
       title: "Kindred",
       genre: "Romance",
       coverUrl: "https://127.0.0.1/capa.jpg",
     });
-    await setPublished(db, g.userId, true);
+    const { slug } = await setPublished(db, owner.userId, true);
+    const og = (query: string, headers?: HeadersInit) =>
+      ogRoute.GET(
+        req(`/og/estante/${slug}${query}`, { headers }),
+        ctx({ slug: slug as string })
+      );
+    const canonical = async (query = "?genero=romance&v=a") =>
+      new URL(location(await og(query))).search;
+    return { ...owner, slug, og, canonical };
+  }
 
-    const toCanonical = await og("/og/estante/gil-reis?v=a&genero=romance");
+  it("gera PNG 1200×630 sem sessão só na URL canônica", async () => {
+    const { slug, og } = await publishedShelf("Gil Reis");
+    const toCanonical = await og("?v=a&genero=romance");
     expect(toCanonical.status).toBe(307);
     expect(toCanonical.headers.get("cache-control")).toBe("no-store");
-    const canonical = new URL(toCanonical.headers.get("location") ?? "");
-    expect(canonical.pathname + canonical.search).toMatch(
-      /^\/og\/estante\/gil-reis\?genero=romance&v=\w+$/
-    );
+    const url = new URL(location(toCanonical));
+    expect(url.pathname).toBe(`/og/estante/${slug}`);
+    expect(url.search).toMatch(/^\?genero=romance&v=\w+$/);
 
-    const ok = await og(canonical.href);
+    const ok = await og(url.search);
     expect(ok.status).toBe(200);
     expect(ok.headers.get("content-type")).toBe("image/png");
     const png = Buffer.from(await ok.arrayBuffer());
     expect(png.readUInt32BE(16)).toBe(1200);
     expect(png.readUInt32BE(20)).toBe(630);
 
-    const book = await og("/og/estante/gil-reis?livro=x");
-    expect(book.status).toBe(307);
-    expect(new URL(book.headers.get("location") ?? "").search).toMatch(
-      /^\?v=\w+$/
+    expect(new URL(location(await og("?livro=x"))).search).toMatch(/^\?v=\w+$/);
+  });
+
+  it("imagem de um livro tem uma só URL, sem gênero nem status", async () => {
+    const { userId, og } = await publishedShelf("Ivo Livro");
+    const [book] = await listPublicBooks(db, userId);
+    const res = await og(`?genero=romance&status=lido&livro=${book.id}&v=a`);
+    expect(res.status).toBe(307);
+    expect(new URL(location(res)).search).toMatch(
+      new RegExp(`^\\?livro=${book.id}&v=\\w+$`)
     );
   });
 
-  it("não renderiza de novo para v arbitrário ou URL repetida", async () => {
+  it("renderiza cada estado uma vez, mesmo com v arbitrário", async () => {
+    const { og, canonical } = await publishedShelf("Hana Memo");
     const before = renders();
     for (const v of ["a", "b", "zzz", ""]) {
-      const res = await og("/og/estante/gil-reis?genero=romance&v=" + v);
-      expect(res.status).toBe(307);
+      expect((await og("?genero=romance&v=" + v)).status).toBe(307);
     }
     expect(renders()).toBe(before);
 
-    const url = (
-      await og("/og/estante/gil-reis?genero=romance&v=a")
-    ).headers.get("location") as string;
-    const first = await og(url);
-    const etag = first.headers.get("etag") as string;
-    expect(etag).toMatch(/^"\w+"$/);
-    // A renderização do teste anterior para o mesmo estado já está guardada.
+    const url = await canonical();
+    const [first, second] = await Promise.all([og(url), og(url)]);
+    expect([first.status, second.status]).toEqual([200, 200]);
     expect((await og(url)).status).toBe(200);
-    expect(renders()).toBe(before);
+    expect(renders()).toBe(before + 1);
 
-    const fresh = await og(url, { "if-none-match": etag });
-    expect(fresh.status).toBe(304);
-    expect(renders()).toBe(before);
+    const etag = first.headers.get("etag") ?? "";
+    expect(etag).toMatch(/^"\w+"$/);
+    for (const header of [etag, `W/${etag}`, `"outra", ${etag}`, "*"]) {
+      expect((await og(url, { "if-none-match": header })).status).toBe(304);
+    }
+    expect((await og(url, { "if-none-match": '"outra"' })).status).toBe(200);
+    expect(renders()).toBe(before + 1);
   });
 
   it("muda de versão quando o acervo público muda", async () => {
-    const owner = await findPublicShelf(db, "gil-reis");
-    const old = (
-      await og("/og/estante/gil-reis?genero=romance&v=a")
-    ).headers.get("location") as string;
-    await addBook(owner?.ownerId as string, {
+    const { userId, og, canonical } = await publishedShelf("Jade Nova");
+    const old = await canonical();
+    await addBook(userId, {
       title: "Parentesco",
       genre: "Romance",
       coverUrl: "https://127.0.0.1/outra.jpg",
     });
     const moved = await og(old);
     expect(moved.status).toBe(307);
-    const next = moved.headers.get("location") as string;
+    const next = new URL(location(moved)).search;
     expect(next).not.toBe(old);
     const before = renders();
     expect((await og(next)).status).toBe(200);
@@ -275,17 +289,15 @@ describe("imagem OG da estante", () => {
   });
 
   it("deixa de servir a mesma URL quando a estante fica privada", async () => {
-    const owner = await findPublicShelf(db, "gil-reis");
-    const url = (
-      await og("/og/estante/gil-reis?genero=romance&v=a")
-    ).headers.get("location") as string;
+    const { userId, og, canonical } = await publishedShelf("Lea Privada");
+    const url = await canonical();
     const shared = await og(url);
     expect(shared.status).toBe(200);
     // Caches podem guardar, mas precisam revalidar na origem antes de reusar.
     expect(shared.headers.get("cache-control")).toBe("public, no-cache");
-    const etag = shared.headers.get("etag") as string;
+    const etag = shared.headers.get("etag") ?? "";
 
-    await setPublished(db, owner?.ownerId as string, false);
+    await setPublished(db, userId, false);
     for (const res of [
       await og(url),
       await og(url, { "if-none-match": etag }),
