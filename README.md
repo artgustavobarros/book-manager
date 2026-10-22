@@ -1,6 +1,6 @@
 # Bodega Literária
 
-Catálogo pessoal dos livros de casa: **Painel** (indicadores, meta anual, leituras em andamento), **Estante** (capas ou lista, busca, filtros, facetas, ordenação) e **Dados do acervo** (gráficos), com contas de usuário, sincronização com Google Sheets, busca de livros e capas online, exportação em CSV, backup em JSON e uma **estante pública** opcional para compartilhar o acervo nas redes sociais.
+Catálogo pessoal dos livros de casa: **Painel** (indicadores, meta anual, leituras em andamento), **Estante** (capas ou lista, busca, filtros, facetas, ordenação) e **Dados** (gráficos), com contas de usuário, sincronização com Google Sheets, busca de livros e capas online, exportação em CSV, backup em JSON e uma **estante pública** opcional para compartilhar o acervo nas redes sociais.
 
 Quem cria uma conta com e-mail e senha pode usar o acervo imediatamente. Um aviso lembra da confirmação do endereço até que o link enviado por e-mail seja aberto; os dados criados nesse período ficam salvos.
 

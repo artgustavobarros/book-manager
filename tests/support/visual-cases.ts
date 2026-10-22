@@ -24,7 +24,7 @@ export interface Case {
   name: string;
   /** Rota do app e aba do standalone ("Painel" é o padrão nos dois). */
   route: string;
-  tab?: "Estante" | "Dados do acervo";
+  tab?: "Estante" | "Dados";
 }
 
 const openFicha = async (page: Page) => {
@@ -47,7 +47,7 @@ export const CASES: Case[] = [
     tab: "Estante",
     act: (p) => p.getByRole("button", { name: /^Emprestados/ }).click(),
   },
-  { name: "dados", route: "/dados", tab: "Dados do acervo" },
+  { name: "dados", route: "/dados", tab: "Dados" },
   { name: "ficha", route: "/estante", tab: "Estante", act: openFicha },
   {
     name: "edicao",

@@ -119,7 +119,7 @@ function EmptyInsights() {
   const backup = useBackup();
   return (
     <PageMain>
-      <h1 className="m-0 font-bold font-title text-3xl">Dados do acervo</h1>
+      <h1 className="m-0 font-bold font-title text-3xl">Dados</h1>
       <div className="flex min-h-[360px] flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-line bg-card px-5 py-16 text-center">
         <span aria-hidden="true" className="mb-2 flex h-11 items-end gap-1">
           <span className="h-5 w-3 rounded-[2px] bg-line2" />
@@ -202,7 +202,7 @@ function FullInsights() {
 
   return (
     <PageMain>
-      <h1 className="m-0 font-bold font-title text-3xl">Dados do acervo</h1>
+      <h1 className="m-0 font-bold font-title text-3xl">Dados</h1>
 
       <div
         {...kpiCar.trackProps}

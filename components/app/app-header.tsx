@@ -17,7 +17,7 @@ import { Avatar } from "./avatar";
 const TABS = [
   ["/", "Painel"],
   ["/estante", "Estante"],
-  ["/dados", "Dados do acervo"],
+  ["/dados", "Dados"],
 ] as const;
 
 /** Abas Painel / Estante / Dados (controle segmentado). */

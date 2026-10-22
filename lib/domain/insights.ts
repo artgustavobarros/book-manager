@@ -1,4 +1,4 @@
-/** Seletores de "Dados do acervo" (porta de `dados()` do standalone). */
+/** Seletores de "Dados" (porta de `dados()` do standalone). */
 import { distinctCount, type Kpi } from "./dashboard";
 import {
   groupKey,

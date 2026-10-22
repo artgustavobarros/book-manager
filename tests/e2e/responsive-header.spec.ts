@@ -16,7 +16,7 @@ test("celular e tablet compartilham cabeçalho, ícones e ações", async ({
     await page.goto("/estante");
     const header = page.locator("header:visible");
     await expect(header).toHaveCount(1);
-    for (const label of ["Painel", "Estante", "Dados do acervo"]) {
+    for (const label of ["Painel", "Estante", "Dados"]) {
       await expect(header.getByRole("link", { name: label })).toBeVisible();
     }
     await expect(
