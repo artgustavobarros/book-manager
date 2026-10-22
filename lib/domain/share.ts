@@ -89,6 +89,16 @@ export function publicPath(
   return "/estante/" + slug + (qs ? "?" + qs : "");
 }
 
+/** Caminho canônico da imagem OG do recorte, com a versão atual do acervo em `v`. */
+export function ogImagePath(
+  slug: string,
+  sel: Partial<PublicSelection>,
+  version: string
+): string {
+  const path = publicPath(slug, sel);
+  return "/og" + path + (path.includes("?") ? "&" : "?") + "v=" + version;
+}
+
 /** Mantém do recorte só o gênero e o livro que existem na estante (o status já é válido). */
 export function resolvePublicSelection(
   sel: PublicSelection,

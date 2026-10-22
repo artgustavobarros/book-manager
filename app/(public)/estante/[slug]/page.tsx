@@ -6,6 +6,7 @@ import { PublicShelf } from "@/components/public/public-shelf";
 import { appUrl } from "@/lib/app-url";
 import {
   ogFor,
+  ogImagePath,
   type PublicSelection,
   publicPath,
   resolvePublicSelection,
@@ -43,8 +44,7 @@ export async function generateMetadata({
   const sel = await selectionFrom(searchParams, shelf.books);
   const og = ogFor(shelf.books, shelf.owner.name, sel);
   const path = publicPath(slug, sel);
-  const image =
-    "/og" + path + (path.includes("?") ? "&" : "?") + "v=" + shelf.version;
+  const image = ogImagePath(slug, sel, shelf.version);
   return {
     title: og.title,
     description: og.description,

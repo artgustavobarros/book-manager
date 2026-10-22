@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import * as route from "@/app/api/public-shelf/route";
 import * as ogRoute from "@/app/og/estante/[slug]/route";
@@ -16,6 +16,13 @@ import {
 
 import { setupTestDb } from "../support/db";
 import { createUserSession, ctx, req } from "../support/session";
+
+// Cada renderização da OG busca as capas: o número de buscas mede o trabalho feito.
+vi.mock("@/lib/services/og-covers", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/services/og-covers")>();
+  return { ...actual, fetchCoverDataUrl: vi.fn(actual.fetchCoverDataUrl) };
+});
 
 beforeAll(async () => {
   await setupTestDb();
@@ -190,7 +197,11 @@ describe("PUT /api/public-shelf", () => {
 });
 
 describe("imagem OG da estante", () => {
-  it("gera PNG 1200×630 sem sessão e 404 para estante privada", async () => {
+  const og = (url: string, headers?: HeadersInit) =>
+    ogRoute.GET(req(url, { headers }), ctx({ slug: "gil-reis" }));
+  const renders = () => vi.mocked(fetchCoverDataUrl).mock.calls.length;
+
+  it("gera PNG 1200×630 sem sessão só na URL canônica", async () => {
     const g = await createUserSession("Gil Reis");
     await addBook(g.userId, {
       title: "Kindred",
@@ -198,30 +209,90 @@ describe("imagem OG da estante", () => {
       coverUrl: "https://127.0.0.1/capa.jpg",
     });
     await setPublished(db, g.userId, true);
-    const ok = await ogRoute.GET(
-      req("/og/estante/gil-reis?genero=romance&v=1"),
-      ctx({ slug: "gil-reis" })
+
+    const toCanonical = await og("/og/estante/gil-reis?v=a&genero=romance");
+    expect(toCanonical.status).toBe(307);
+    expect(toCanonical.headers.get("cache-control")).toBe("no-store");
+    const canonical = new URL(toCanonical.headers.get("location") ?? "");
+    expect(canonical.pathname + canonical.search).toMatch(
+      /^\/og\/estante\/gil-reis\?genero=romance&v=\w+$/
     );
+
+    const ok = await og(canonical.href);
     expect(ok.status).toBe(200);
     expect(ok.headers.get("content-type")).toBe("image/png");
-    expect(ok.headers.get("cache-control")).toContain("s-maxage");
     const png = Buffer.from(await ok.arrayBuffer());
     expect(png.readUInt32BE(16)).toBe(1200);
     expect(png.readUInt32BE(20)).toBe(630);
 
-    const book = await ogRoute.GET(
-      req("/og/estante/gil-reis?livro=x"),
-      ctx({ slug: "gil-reis" })
+    const book = await og("/og/estante/gil-reis?livro=x");
+    expect(book.status).toBe(307);
+    expect(new URL(book.headers.get("location") ?? "").search).toMatch(
+      /^\?v=\w+$/
     );
-    expect(book.status).toBe(200);
+  });
 
-    await setPublished(db, g.userId, false);
-    const gone = await ogRoute.GET(
-      req("/og/estante/gil-reis"),
-      ctx({ slug: "gil-reis" })
-    );
-    expect(gone.status).toBe(404);
-    expect(gone.headers.get("cache-control")).toBe("no-store");
+  it("não renderiza de novo para v arbitrário ou URL repetida", async () => {
+    const before = renders();
+    for (const v of ["a", "b", "zzz", ""]) {
+      const res = await og("/og/estante/gil-reis?genero=romance&v=" + v);
+      expect(res.status).toBe(307);
+    }
+    expect(renders()).toBe(before);
+
+    const url = (
+      await og("/og/estante/gil-reis?genero=romance&v=a")
+    ).headers.get("location") as string;
+    const first = await og(url);
+    const etag = first.headers.get("etag") as string;
+    expect(etag).toMatch(/^"\w+"$/);
+    // A renderização do teste anterior para o mesmo estado já está guardada.
+    expect((await og(url)).status).toBe(200);
+    expect(renders()).toBe(before);
+
+    const fresh = await og(url, { "if-none-match": etag });
+    expect(fresh.status).toBe(304);
+    expect(renders()).toBe(before);
+  });
+
+  it("muda de versão quando o acervo público muda", async () => {
+    const owner = await findPublicShelf(db, "gil-reis");
+    const old = (
+      await og("/og/estante/gil-reis?genero=romance&v=a")
+    ).headers.get("location") as string;
+    await addBook(owner?.ownerId as string, {
+      title: "Parentesco",
+      genre: "Romance",
+      coverUrl: "https://127.0.0.1/outra.jpg",
+    });
+    const moved = await og(old);
+    expect(moved.status).toBe(307);
+    const next = moved.headers.get("location") as string;
+    expect(next).not.toBe(old);
+    const before = renders();
+    expect((await og(next)).status).toBe(200);
+    expect(renders()).toBeGreaterThan(before);
+  });
+
+  it("deixa de servir a mesma URL quando a estante fica privada", async () => {
+    const owner = await findPublicShelf(db, "gil-reis");
+    const url = (
+      await og("/og/estante/gil-reis?genero=romance&v=a")
+    ).headers.get("location") as string;
+    const shared = await og(url);
+    expect(shared.status).toBe(200);
+    // Caches podem guardar, mas precisam revalidar na origem antes de reusar.
+    expect(shared.headers.get("cache-control")).toBe("public, no-cache");
+    const etag = shared.headers.get("etag") as string;
+
+    await setPublished(db, owner?.ownerId as string, false);
+    for (const res of [
+      await og(url),
+      await og(url, { "if-none-match": etag }),
+    ]) {
+      expect(res.status).toBe(404);
+      expect(res.headers.get("cache-control")).toBe("no-store");
+    }
   });
 });
 
