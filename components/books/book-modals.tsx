@@ -37,12 +37,17 @@ import { useBookActions, useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { searchCatalogs } from "@/lib/client/lookup";
+import {
+  READINGS,
+  readingYearFor,
+  SITUATIONS,
+  type StateInfo,
+} from "@/lib/domain/book-state";
 import { coverColors, coverImage } from "@/lib/domain/cover";
 import { GENRES, suggestions } from "@/lib/domain/genres";
 import type { LookupResult } from "@/lib/domain/lookup";
-import { readingYearForStatus, STATUS, stat } from "@/lib/domain/status";
 import { capitalize, fmtDate, nf, norm } from "@/lib/domain/text";
-import { BOOK_STATUSES, type Book } from "@/lib/domain/types";
+import type { Book } from "@/lib/domain/types";
 import {
   type BookFormOutput,
   type BookFormValues,
@@ -51,7 +56,11 @@ import {
 
 // --- Peças compartilhadas ----------------------------------------------------
 
-const STATUS_OPTIONS = STATUS.map((s) => ({ label: s.label, value: s.k }));
+const READING_OPTIONS = READINGS.map((s) => ({ label: s.label, value: s.k }));
+const SITUATION_OPTIONS = SITUATIONS.map((s) => ({
+  label: s.label,
+  value: s.k,
+}));
 
 /** Painel da capa (esquerda no desktop, linha no topo abaixo de 640px). */
 function CoverPanel({
@@ -197,27 +206,48 @@ function ViewModal({ book }: { book: Book }) {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Select
-            items={STATUS_OPTIONS}
+            items={READING_OPTIONS}
             onValueChange={(value) => {
               if (value) {
-                app.setStatus(book, value);
+                app.setReading(book, value);
               }
             }}
-            value={book.status}
+            value={book.reading}
           >
             <SelectTrigger
-              aria-label="Status"
+              aria-label="Leitura"
               className="h-9 w-auto min-w-36 font-semibold"
             />
             <SelectContent container={contentRef}>
-              {STATUS.map((s) => (
+              {READINGS.map((s) => (
                 <SelectItem key={s.k} value={s.k}>
                   {s.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {book.status === "emprestado" && book.borrower ? (
+          <Select
+            items={SITUATION_OPTIONS}
+            onValueChange={(value) => {
+              if (value) {
+                app.setSituation(book, value);
+              }
+            }}
+            value={book.situation}
+          >
+            <SelectTrigger
+              aria-label="Situação"
+              className="h-9 w-auto min-w-36 font-semibold"
+            />
+            <SelectContent container={contentRef}>
+              {SITUATIONS.map((s) => (
+                <SelectItem key={s.k} value={s.k}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {book.situation === "emprestado" && book.borrower ? (
             <span className="rounded-full bg-lentbg px-3 py-1 font-semibold text-lentfg text-sm">
               Emprestado para {book.borrower}
             </span>
@@ -247,7 +277,7 @@ function ViewModal({ book }: { book: Book }) {
           <DeleteButton onConfirm={() => del(book)} />
           <div className="flex flex-wrap gap-2">
             {/* Livro doado não aparece na estante pública. */}
-            {book.status === "doado" ? null : (
+            {book.situation === "doado" ? null : (
               <button
                 className="flex h-10 items-center gap-2 rounded-lg border border-line2 bg-card px-4 font-semibold text-ink text-sm transition-[border-color] duration-150 hover:border-ink"
                 onClick={() =>
@@ -279,6 +309,55 @@ function ViewModal({ book }: { book: Book }) {
 const str = (v: string | number | null | undefined) =>
   v == null ? "" : String(v);
 
+/** Pílulas de escolha única da ficha, para a Leitura e para a Situação. */
+function StateRadios<K extends string>({
+  label,
+  options,
+  value,
+  onPick,
+}: {
+  label: string;
+  options: readonly StateInfo<K>[];
+  value: K;
+  onPick: (k: K) => void;
+}) {
+  return (
+    <div className="col-span-full flex flex-col gap-2 font-medium text-mute text-xs">
+      {label}
+      <div
+        aria-label={label}
+        className="flex flex-wrap gap-2"
+        role="radiogroup"
+      >
+        {options.map((s) => {
+          const on = value === s.k;
+          return (
+            <button
+              aria-checked={on}
+              className={cn(
+                "flex h-8 items-center gap-2 rounded-full border px-3 font-medium text-sm active:scale-95",
+                on
+                  ? "border-ink bg-ink text-card"
+                  : "border-line2 bg-card text-ink"
+              )}
+              key={s.k}
+              onClick={() => onPick(s.k)}
+              role="radio"
+              type="button"
+            >
+              <span
+                className="size-2 rounded-full"
+                style={{ background: s.dot }}
+              />
+              {s.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function toFormValues(b: Book | null, orderNo: number): BookFormValues {
   return {
     orderNo: str(b ? b.orderNo : orderNo),
@@ -292,7 +371,8 @@ function toFormValues(b: Book | null, orderNo: number): BookFormValues {
     yearPublished: str(b?.yearPublished),
     pages: str(b?.pages),
     acquiredOn: str(b?.acquiredOn),
-    status: b?.status ?? "nao-lido",
+    reading: b?.reading ?? "nao-lido",
+    situation: b?.situation ?? "em-casa",
     borrower: str(b?.borrower),
     yearRead: str(b?.yearRead),
     notes: str(b?.notes),
@@ -509,9 +589,9 @@ function EditModal({ book }: { book: Book | null }) {
   const requestClose = useModalClose();
   const submitOnce = useSingleFlight();
   useModalDraft(formState.isDirty);
-  const [title, author, coverUrl, status] = useWatch({
+  const [title, author, coverUrl, reading, situation] = useWatch({
     control: form.control,
-    name: ["title", "author", "coverUrl", "status"],
+    name: ["title", "author", "coverUrl", "reading", "situation"],
   });
   const lists = useMemo(
     () => ({
@@ -784,52 +864,26 @@ function EditModal({ book }: { book: Book | null }) {
               placeholder="https://… (preenchido pela busca online)"
             />
           </Field>
-          <div className="col-span-full flex flex-col gap-2 font-medium text-mute text-xs">
-            Status no acervo
-            <div
-              aria-label="Status no acervo"
-              className="flex flex-wrap gap-2"
-              role="radiogroup"
-            >
-              {BOOK_STATUSES.map((k) => {
-                const s = stat(k);
-                const on = status === k;
-                return (
-                  <button
-                    aria-checked={on}
-                    className={cn(
-                      "flex h-8 items-center gap-2 rounded-full border px-3 font-medium text-sm active:scale-95",
-                      on
-                        ? "border-ink bg-ink text-card"
-                        : "border-line2 bg-card text-ink"
-                    )}
-                    key={k}
-                    onClick={() => {
-                      setValue("status", k, { shouldDirty: true });
-                      const current = form.getValues("yearRead");
-                      const next = readingYearForStatus(
-                        current,
-                        k,
-                        String(app.year)
-                      );
-                      if (next !== current) {
-                        setValue("yearRead", next ?? "", { shouldDirty: true });
-                      }
-                    }}
-                    role="radio"
-                    type="button"
-                  >
-                    <span
-                      className="size-2 rounded-full"
-                      style={{ background: s.dot }}
-                    />
-                    {s.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          {status === "emprestado" ? (
+          <StateRadios
+            label="Leitura"
+            onPick={(k) => {
+              setValue("reading", k, { shouldDirty: true });
+              const current = form.getValues("yearRead");
+              const next = readingYearFor(current, k, String(app.year));
+              if (next !== current) {
+                setValue("yearRead", next ?? "", { shouldDirty: true });
+              }
+            }}
+            options={READINGS}
+            value={reading}
+          />
+          <StateRadios
+            label="Situação"
+            onPick={(k) => setValue("situation", k, { shouldDirty: true })}
+            options={SITUATIONS}
+            value={situation}
+          />
+          {situation === "emprestado" ? (
             <label className="col-span-full flex animate-[acv-fade_300ms_both] flex-col gap-2 font-semibold text-lentfg text-xs">
               Emprestado para quem?
               <input

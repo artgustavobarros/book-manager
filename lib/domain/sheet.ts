@@ -15,8 +15,8 @@ import {
   toPositiveInt,
   toText,
 } from "./backup";
+import { fromLegacyStatus, isReading, isSituation } from "./book-state";
 import { parseCSV } from "./csv";
-import { isBookStatus } from "./status";
 import { norm } from "./text";
 import type { Book, BookFields } from "./types";
 
@@ -76,7 +76,10 @@ export function isGoogleSheetsUrl(url: string): boolean {
   }
 }
 
-export function mapHeader(h: string): LegacyKey | null {
+/** Coluna da planilha: um campo legado ou o "Status" único das planilhas antigas. */
+export type SheetKey = LegacyKey | "status";
+
+export function mapHeader(h: string): SheetKey | null {
   const n = norm(h);
   if (!n) {
     return null;
@@ -118,7 +121,13 @@ export function mapHeader(h: string): LegacyKey | null {
   if (n.includes("autor")) {
     return "author";
   }
-  if (n.includes("status") || n.includes("situa")) {
+  if (n.includes("leitura")) {
+    return "reading";
+  }
+  if (n.includes("situa")) {
+    return "situation";
+  }
+  if (n.includes("status")) {
     return "status";
   }
   if (n.includes("capa") || n.includes("imagem")) {
@@ -144,6 +153,7 @@ export function mapHeader(h: string): LegacyKey | null {
   return null;
 }
 
+/** Valor da coluna "Status" antiga → chave do status único (Leitura ou Situação). */
 export function mapStatus(v: string): string {
   const n = norm(v);
   if (!n) {
@@ -168,6 +178,50 @@ export function mapStatus(v: string): string {
     return "lido";
   }
   return "nao-lido";
+}
+
+/** Valor da coluna "Leitura" → chave da Leitura. */
+export function mapReading(v: string): string {
+  const s = mapStatus(v);
+  return isReading(s) ? s : "";
+}
+
+/** Valor da coluna "Situação" → chave da Situação. */
+export function mapSituation(v: string): string {
+  const n = norm(v);
+  if (!n) {
+    return "";
+  }
+  if (n.includes("emprest")) {
+    return "emprestado";
+  }
+  if (n.includes("doad")) {
+    return "doado";
+  }
+  return "em-casa";
+}
+
+/**
+ * Coluna "Status" antiga: vale como Leitura, e Emprestado/Doado nela, como Situação
+ * (com a Leitura que a migração do banco dá a eles). Sem coluna "Situação", o livro
+ * com outro status está em casa. Leitura e Situação já preenchidas têm precedência.
+ */
+function applyLegacyStatus(
+  o: SheetRecord,
+  raw: string,
+  hasSituation: boolean
+): void {
+  const status = mapStatus(raw);
+  if (!status) {
+    return;
+  }
+  const legacy = fromLegacyStatus(status, o.yearRead);
+  if (!o.reading && (isReading(status) || legacy.reading === "lido")) {
+    o.reading = legacy.reading;
+  }
+  if (!o.situation && (legacy.situation !== "em-casa" || !hasSituation)) {
+    o.situation = legacy.situation;
+  }
 }
 
 export function mapDate(input: string): string {
@@ -204,7 +258,7 @@ export type SheetRecord = Partial<Record<LegacyKey, string>>;
 const GENDER_VALUES =
   /^(homem|mulher|nd|n\/d|nao definido|nao binario.*|masculino|feminino|m|f|nb)$/;
 
-/** Lê o CSV da planilha e devolve os registros já normalizados (status, datas, gênero, números). */
+/** Lê o CSV da planilha e devolve os registros já normalizados (Leitura, Situação, datas, gênero, números). */
 export function parseSheet(text: string): SheetRecord[] {
   if (/^\s*</.test(text)) {
     throw new SheetError("html");
@@ -234,17 +288,25 @@ export function parseSheet(text: string): SheetRecord[] {
   if (!map.includes("title")) {
     throw new SheetError("no-title");
   }
+  const hasSituation = map.includes("situation");
   return rows
     .slice(1)
     .map((r) => {
       const o: SheetRecord = {};
+      let status: string | undefined;
       map.forEach((k, i) => {
-        if (k && o[k] === undefined) {
-          o[k] = (r[i] || "").trim();
+        const v = (r[i] || "").trim();
+        if (k === "status") {
+          status ??= v;
+        } else if (k && o[k] === undefined) {
+          o[k] = v;
         }
       });
-      if (o.status !== undefined) {
-        o.status = mapStatus(o.status);
+      if (o.reading !== undefined) {
+        o.reading = mapReading(o.reading);
+      }
+      if (o.situation !== undefined) {
+        o.situation = mapSituation(o.situation);
       }
       if (o.acquired !== undefined) {
         o.acquired = mapDate(o.acquired);
@@ -261,6 +323,13 @@ export function parseSheet(text: string): SheetRecord[] {
       if (o.pages) {
         o.pages = String(Number.parseInt(o.pages, 10) || "");
       }
+      // "Emprestado para" preenchido diz que o livro está emprestado.
+      if (o.borrower && !o.situation) {
+        o.situation = "emprestado";
+      }
+      if (status !== undefined) {
+        applyLegacyStatus(o, status, hasSituation);
+      }
       return o;
     })
     .filter((o) => o.title);
@@ -276,8 +345,10 @@ function legacyValue(key: LegacyKey, v: unknown): BookFields[keyof BookFields] {
       return toPositiveInt(v);
     case "acquired":
       return toIsoDate(v);
-    case "status":
-      return isBookStatus(v) ? v : "nao-lido";
+    case "reading":
+      return isReading(v) ? v : "nao-lido";
+    case "situation":
+      return isSituation(v) ? v : "em-casa";
     case "authorGender":
       return toGender(v);
     case "title":
@@ -345,8 +416,8 @@ export function mergeSheet(
           x[k] = m[k];
         }
       });
-      // Fora do status "emprestado" não há com quem o livro esteja.
-      if (x.status !== "emprestado") {
+      // Fora de Emprestado não há com quem o livro esteja.
+      if (x.situation !== "emprestado") {
         x.borrower = "";
       }
       changed[m.id] = x;
@@ -357,7 +428,7 @@ export function mergeSheet(
       const nonEmpty = Object.fromEntries(
         Object.entries(r).filter(([, v]) => v !== "")
       );
-      added.push({ ...nonEmpty, order: o, status: r.status || "nao-lido" });
+      added.push({ ...nonEmpty, order: o });
     }
   }
 

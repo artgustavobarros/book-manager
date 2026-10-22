@@ -21,20 +21,20 @@ import { useBooks } from "@/hooks/use-books";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { api } from "@/lib/client/api";
 import { copyText } from "@/lib/client/clipboard";
+import { readingInfo } from "@/lib/domain/book-state";
 import {
   genreCounts,
   ogFor,
-  PUBLIC_STATUSES,
-  type PublicStatus,
+  PUBLIC_READINGS,
+  type PublicReading,
   publicPath,
+  READING_TAB,
   type ShareKind,
   type ShareScope,
-  STATUS_TAB,
   selectionOf,
   shareTargets,
   toPublicBooks,
 } from "@/lib/domain/share";
-import { stat } from "@/lib/domain/status";
 import { cmp, norm } from "@/lib/domain/text";
 
 import { ScaledOgCard } from "./scaled-og-card";
@@ -42,7 +42,7 @@ import { ScaledOgCard } from "./scaled-og-card";
 const KINDS: readonly (readonly [ShareKind, string])[] = [
   ["todos", "Estante toda"],
   ["genero", "Um gênero"],
-  ["status", "Um status"],
+  ["leitura", "Uma leitura"],
   ["livro", "Um livro"],
 ];
 
@@ -76,7 +76,7 @@ function ShareBody() {
   const [scope, setScope] = useState<Required<ShareScope>>(() => ({
     kind: start.kind,
     genre: start.genre ?? genres[0]?.slug ?? "",
-    status: start.status ?? "lido",
+    reading: start.reading ?? "lido",
     bookId: start.bookId ?? byTitle[0]?.id ?? "",
   }));
   const [bookQ, setBookQ] = useState("");
@@ -227,10 +227,10 @@ function ShareBody() {
             </div>
           ) : null}
 
-          {scope.kind === "status" ? (
+          {scope.kind === "leitura" ? (
             <div className="flex flex-wrap gap-2">
-              {PUBLIC_STATUSES.map((k: PublicStatus) => {
-                const on = scope.status === k;
+              {PUBLIC_READINGS.map((k: PublicReading) => {
+                const on = scope.reading === k;
                 return (
                   <button
                     aria-pressed={on}
@@ -241,17 +241,17 @@ function ShareBody() {
                         : "border-line2 bg-card text-ink"
                     )}
                     key={k}
-                    onClick={() => update({ status: k })}
+                    onClick={() => update({ reading: k })}
                     type="button"
                   >
                     <span
                       aria-hidden="true"
                       className="inline-block size-2 rounded-full"
-                      style={{ background: stat(k).dot }}
+                      style={{ background: readingInfo(k).dot }}
                     />
-                    <span>{STATUS_TAB[k]}</span>
+                    <span>{READING_TAB[k]}</span>
                     <span className="tabular-nums">
-                      {books.filter((b) => b.status === k).length}
+                      {books.filter((b) => b.reading === k).length}
                     </span>
                   </button>
                 );

@@ -19,6 +19,7 @@ import { useDragScroll } from "@/hooks/use-drag-scroll";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import { scopeFromShelf, toPublicBooks } from "@/lib/domain/share";
 import {
+  type Chip,
   DEFAULT_SHELF,
   facetLabel,
   filterBooks,
@@ -134,6 +135,40 @@ function EmptyCard({
   );
 }
 
+const CHIP_ROW =
+  "scrollbar-none flex flex-wrap items-center gap-2 max-[640px]:mx-[-16px] max-[640px]:cursor-grab max-[640px]:snap-x max-[640px]:scroll-px-4 max-[640px]:flex-nowrap max-[640px]:overflow-x-auto max-[640px]:px-4 max-[640px]:data-[dragging=true]:cursor-grabbing max-[640px]:data-[dragging=true]:select-none max-[640px]:data-[dragging=true]:snap-none";
+
+function FilterChip<K extends string>({
+  chip: c,
+  on,
+  onClick,
+}: {
+  chip: Chip<K>;
+  on: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-pressed={on}
+      className={cn(
+        "flex h-8 flex-none snap-start items-center gap-2 whitespace-nowrap rounded-full border px-3 font-medium text-sm transition-[background-color,color,border-color] duration-200 active:scale-95 max-[640px]:min-h-10",
+        on ? "border-ink bg-ink text-card" : "border-line2 bg-card text-ink"
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {c.dot ? (
+        <span
+          className="inline-block size-2 rounded-full"
+          style={{ background: c.dot }}
+        />
+      ) : null}
+      <span>{c.label}</span>
+      <span className="tabular-nums">{c.count}</span>
+    </button>
+  );
+}
+
 export function ShelfPage() {
   const app = useApp();
   const books = useBooks();
@@ -142,21 +177,30 @@ export function ShelfPage() {
   const { state, setShelf, goShelf } = useShelfState();
   const [toDelete, setToDelete] = useState<Book | null>(null);
   const coverRef = useAutoCovers();
-  const chipDrag = useDragScroll<HTMLDivElement>();
+  const readingDrag = useDragScroll<HTMLDivElement>();
+  const situationDrag = useDragScroll<HTMLDivElement>();
 
   const list = useMemo(
     () =>
       sortBooks(
         filterBooks(books, {
           q: state.q,
-          status: state.status,
+          reading: state.reading,
+          situation: state.situation,
           facet: state.facet,
         }),
         state.sort
       ),
-    [books, state.q, state.status, state.facet, state.sort]
+    [books, state.q, state.reading, state.situation, state.facet, state.sort]
   );
-  const chips = useMemo(() => shelfChips(books), [books]);
+  const chips = useMemo(
+    () =>
+      shelfChips(books, {
+        reading: state.reading,
+        situation: state.situation,
+      }),
+    [books, state.reading, state.situation]
+  );
 
   const byAuthor = (name: string) =>
     goShelf({ facet: { kind: "autor", value: name } });
@@ -223,46 +267,47 @@ export function ShelfPage() {
       </div>
 
       {shelfEmpty ? null : (
-        <div
-          {...chipDrag}
-          className="scrollbar-none flex flex-wrap items-center gap-2 max-[640px]:mx-[-16px] max-[640px]:cursor-grab max-[640px]:snap-x max-[640px]:scroll-px-4 max-[640px]:flex-nowrap max-[640px]:overflow-x-auto max-[640px]:px-4 max-[640px]:data-[dragging=true]:cursor-grabbing max-[640px]:data-[dragging=true]:select-none max-[640px]:data-[dragging=true]:snap-none"
-        >
-          {state.facet ? (
-            <button
-              className="flex h-8 flex-none animate-[acv-fade_300ms_both] snap-start items-center gap-2 whitespace-nowrap rounded-full border-0 bg-acc px-3 font-semibold text-sm text-white active:scale-95"
-              onClick={() => setShelf({ facet: null })}
-              type="button"
-            >
-              <span>{facetLabel(state.facet)}</span>
-              <span className="opacity-80">✕</span>
-            </button>
-          ) : null}
-          {chips.map((c) => {
-            const on = state.status === c.k;
-            return (
+        <div className="flex flex-col gap-2">
+          <div
+            {...readingDrag}
+            aria-label="Leitura"
+            className={CHIP_ROW}
+            role="group"
+          >
+            {state.facet ? (
               <button
-                aria-pressed={on}
-                className={cn(
-                  "flex h-8 flex-none snap-start items-center gap-2 whitespace-nowrap rounded-full border px-3 font-medium text-sm transition-[background-color,color,border-color] duration-200 active:scale-95 max-[640px]:min-h-10",
-                  on
-                    ? "border-ink bg-ink text-card"
-                    : "border-line2 bg-card text-ink"
-                )}
-                key={c.k}
-                onClick={() => setShelf({ status: c.k })}
+                className="flex h-8 flex-none animate-[acv-fade_300ms_both] snap-start items-center gap-2 whitespace-nowrap rounded-full border-0 bg-acc px-3 font-semibold text-sm text-white active:scale-95"
+                onClick={() => setShelf({ facet: null })}
                 type="button"
               >
-                {c.dot ? (
-                  <span
-                    className="inline-block size-2 rounded-full"
-                    style={{ background: c.dot }}
-                  />
-                ) : null}
-                <span>{c.label}</span>
-                <span className="tabular-nums">{c.count}</span>
+                <span>{facetLabel(state.facet)}</span>
+                <span className="opacity-80">✕</span>
               </button>
-            );
-          })}
+            ) : null}
+            {chips.reading.map((c) => (
+              <FilterChip
+                chip={c}
+                key={c.k}
+                on={state.reading === c.k}
+                onClick={() => setShelf({ reading: c.k })}
+              />
+            ))}
+          </div>
+          <div
+            {...situationDrag}
+            aria-label="Situação"
+            className={CHIP_ROW}
+            role="group"
+          >
+            {chips.situation.map((c) => (
+              <FilterChip
+                chip={c}
+                key={c.k}
+                on={state.situation === c.k}
+                onClick={() => setShelf({ situation: c.k })}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -303,7 +348,14 @@ export function ShelfPage() {
         >
           <button
             className="mt-3 h-10 rounded-lg border border-ink bg-transparent px-4 font-semibold text-ink text-sm transition-[background-color,color] duration-200 hover:bg-ink hover:text-card"
-            onClick={() => setShelf({ q: "", status: "todos", facet: null })}
+            onClick={() =>
+              setShelf({
+                q: "",
+                reading: "todos",
+                situation: "todas",
+                facet: null,
+              })
+            }
             type="button"
           >
             Limpar filtros
@@ -390,7 +442,7 @@ export function ShelfPage() {
                 <span>Gênero / país</span>
                 <span>Ano</span>
                 <span>Aquisição</span>
-                <span>Status</span>
+                <span>Leitura</span>
                 <span />
               </div>
               {visible.map((b) => (

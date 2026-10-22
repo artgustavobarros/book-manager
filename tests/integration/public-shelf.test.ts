@@ -114,7 +114,7 @@ describe("projeção pública", () => {
     await addBook(d.userId, {
       title: "Kindred",
       author: "Octavia E. Butler",
-      status: "emprestado",
+      situation: "emprestado",
       borrower: "Carla",
       notes: "anotação secreta",
       acquiredOn: "2020-01-01",
@@ -122,7 +122,7 @@ describe("projeção pública", () => {
       yearRead: 2021,
       nationality: "estadunidense",
     });
-    await addBook(d.userId, { title: "Doado", status: "doado" });
+    await addBook(d.userId, { title: "Doado", situation: "doado" });
     const list = await listPublicBooks(db, d.userId);
     expect(list).toHaveLength(1);
     expect(Object.keys(list[0]).sort()).toEqual([
@@ -132,7 +132,7 @@ describe("projeção pública", () => {
       "id",
       "pages",
       "publisher",
-      "status",
+      "reading",
       "title",
       "yearPublished",
     ]);
@@ -238,10 +238,10 @@ describe("imagem OG da estante", () => {
     expect(new URL(location(await og("?livro=x"))).search).toMatch(/^\?v=\w+$/);
   });
 
-  it("imagem de um livro tem uma só URL, sem gênero nem status", async () => {
+  it("imagem de um livro tem uma só URL, sem gênero nem Leitura", async () => {
     const { userId, og } = await publishedShelf("Ivo Livro");
     const [book] = await listPublicBooks(db, userId);
-    const res = await og(`?genero=romance&status=lido&livro=${book.id}&v=a`);
+    const res = await og(`?genero=romance&leitura=lido&livro=${book.id}&v=a`);
     expect(res.status).toBe(307);
     expect(new URL(location(res)).search).toMatch(
       new RegExp(`^\\?livro=${book.id}&v=\\w+$`)

@@ -87,7 +87,7 @@ describe("livros", () => {
       title: "Torto arado",
       pages: 264,
       orderNo: 1,
-      status: "nao-lido",
+      reading: "nao-lido",
       favorite: false,
     });
 
@@ -157,15 +157,23 @@ describe("livros", () => {
         ctx({ id })
       );
     const lent = await body(
-      await patch({ status: "emprestado", borrower: "Rafael" })
+      await patch({ situation: "emprestado", borrower: "Rafael" })
     );
     expect(lent.book).toMatchObject({
-      status: "emprestado",
+      situation: "emprestado",
       borrower: "Rafael",
     });
-    const back = await body(await patch({ status: "lido", yearRead: 2026 }));
+    const read = await body(await patch({ reading: "lido", yearRead: 2026 }));
+    expect(read.book).toMatchObject({
+      reading: "lido",
+      situation: "emprestado",
+      borrower: "Rafael",
+      yearRead: 2026,
+    });
+    const back = await body(await patch({ situation: "em-casa" }));
     expect(back.book).toMatchObject({
-      status: "lido",
+      reading: "lido",
+      situation: "em-casa",
       borrower: null,
       yearRead: 2026,
     });
@@ -318,22 +326,27 @@ describe("início do empréstimo", () => {
   it("grava ao emprestar e limpa ao devolver", async () => {
     const b = await create({ title: "Água viva" });
     expect(b.lentAt).toBeNull();
-    const lent = await patch(b.id, { status: "emprestado", borrower: "Caio" });
+    const lent = await patch(b.id, {
+      situation: "emprestado",
+      borrower: "Caio",
+    });
     expect(recent(lent.lentAt)).toBe(true);
-    const back = await patch(b.id, { status: "lido" });
+    const read = await patch(b.id, { reading: "lido" });
+    expect(read.lentAt).toBe(lent.lentAt);
+    const back = await patch(b.id, { situation: "em-casa" });
     expect(back.lentAt).toBeNull();
   });
 
   it("outras edições não reiniciam o empréstimo", async () => {
     const b = await create({ title: "Vidas secas" });
-    await patch(b.id, { status: "emprestado", borrower: "Caio" });
+    await patch(b.id, { situation: "emprestado", borrower: "Caio" });
     await backdate(b.id);
     for (const json of [
       { favorite: true },
       { notes: "Cobrar em junho" },
       { coverCheckedAt: "2026-06-15T12:00:00.000Z" },
       { borrower: "Caio Prado" },
-      { status: "emprestado", borrower: "Caio Prado" },
+      { situation: "emprestado", borrower: "Caio Prado" },
     ]) {
       expect((await patch(b.id, json)).lentAt).toBe(PAST.toISOString());
     }
@@ -341,17 +354,20 @@ describe("início do empréstimo", () => {
 
   it("reemprestar depois da devolução grava um novo início", async () => {
     const b = await create({ title: "Macunaíma" });
-    await patch(b.id, { status: "emprestado", borrower: "Caio" });
+    await patch(b.id, { situation: "emprestado", borrower: "Caio" });
     await backdate(b.id);
-    await patch(b.id, { status: "nao-lido" });
-    const again = await patch(b.id, { status: "emprestado", borrower: "Lia" });
+    await patch(b.id, { situation: "em-casa" });
+    const again = await patch(b.id, {
+      situation: "emprestado",
+      borrower: "Lia",
+    });
     expect(recent(again.lentAt)).toBe(true);
   });
 
   it("criar já emprestado grava o início", async () => {
     const b = await create({
       title: "Capitães da areia",
-      status: "emprestado",
+      situation: "emprestado",
       borrower: "Lia",
     });
     expect(recent(b.lentAt)).toBe(true);
@@ -360,7 +376,7 @@ describe("início do empréstimo", () => {
   it("ignora lentAt vindo do cliente", async () => {
     const b = await create({
       title: "Iracema",
-      status: "emprestado",
+      situation: "emprestado",
       borrower: "Lia",
       lentAt: "2020-01-01T00:00:00.000Z",
     });
@@ -389,7 +405,7 @@ describe("início do empréstimo", () => {
 
   it("segue as mesmas regras no lote", async () => {
     const kept = await create({ title: "O cortiço" });
-    await patch(kept.id, { status: "emprestado", borrower: "Caio" });
+    await patch(kept.id, { situation: "emprestado", borrower: "Caio" });
     await backdate(kept.id);
     const fresh = await create({ title: "Dom Casmurro" });
     const res = await body<{ books: Book[] }>(
@@ -399,7 +415,7 @@ describe("início do empréstimo", () => {
           cookie: ana.cookie,
           json: [
             { id: kept.id, coverUrl: "https://capa/2.jpg" },
-            { id: fresh.id, status: "emprestado", borrower: "Lia" },
+            { id: fresh.id, situation: "emprestado", borrower: "Lia" },
           ],
         }),
         ctx()
@@ -412,25 +428,25 @@ describe("início do empréstimo", () => {
 
   it("segue as mesmas regras no merge da planilha", async () => {
     const kept = await create({ title: "A hora da estrela" });
-    await patch(kept.id, { status: "emprestado", borrower: "Caio" });
+    await patch(kept.id, { situation: "emprestado", borrower: "Caio" });
     await backdate(kept.id);
     const fresh = await create({ title: "Sagarana" });
     const back = await create({ title: "Quincas Borba" });
-    await patch(back.id, { status: "emprestado", borrower: "Lia" });
+    await patch(back.id, { situation: "emprestado", borrower: "Lia" });
     await applyMerge(db, ana.userId, {
       updates: [
         {
           id: kept.id,
-          fields: { status: "emprestado", notes: "via planilha" },
+          fields: { situation: "emprestado", notes: "via planilha" },
         },
-        { id: fresh.id, fields: { status: "emprestado" } },
-        { id: back.id, fields: { status: "lido" } },
+        { id: fresh.id, fields: { situation: "emprestado" } },
+        { id: back.id, fields: { situation: "em-casa" } },
       ],
       inserts: [
         {
           ...EMPTY_BOOK_FIELDS,
           title: "Nova emprestada",
-          status: "emprestado",
+          situation: "emprestado",
         },
       ],
     });
@@ -448,9 +464,9 @@ describe("início do empréstimo", () => {
 
   it("o merge da planilha limpa quem pegou quando o livro sai de emprestado", async () => {
     const back = await create({ title: "Memórias póstumas" });
-    await patch(back.id, { status: "emprestado", borrower: "Lia" });
+    await patch(back.id, { situation: "emprestado", borrower: "Lia" });
     await applyMerge(db, ana.userId, {
-      updates: [{ id: back.id, fields: { status: "lido" } }],
+      updates: [{ id: back.id, fields: { situation: "em-casa" } }],
       inserts: [],
     });
     const list = (
@@ -459,7 +475,7 @@ describe("início do empréstimo", () => {
       )
     ).books;
     expect(list.find((b) => b.id === back.id)).toMatchObject({
-      status: "lido",
+      situation: "em-casa",
       borrower: null,
       lentAt: null,
     });
@@ -598,12 +614,12 @@ describe("importar backup", () => {
     const res = await importAs(ana.cookie, [
       {
         title: "Com data",
-        status: "emprestado",
+        situation: "emprestado",
         borrower: "Ana",
         lentAt: twentyDaysAgo,
       },
-      { title: "Sem data", status: "emprestado", borrower: "Bia" },
-      { title: "Devolvido", status: "lido", lentAt: twentyDaysAgo },
+      { title: "Sem data", situation: "emprestado", borrower: "Bia" },
+      { title: "Devolvido", reading: "lido", lentAt: twentyDaysAgo },
     ]);
     expect(res.status).toBe(200);
     const byTitle = new Map(

@@ -1,20 +1,16 @@
 /** Seletores de "Dados" (porta de `dados()` do standalone). */
+
+import { isRead, READINGS, SITUATIONS, type StateInfo } from "./book-state";
 import { distinctCount, type Kpi } from "./dashboard";
-import {
-  groupKey,
-  matchesStatus,
-  NOT_INFORMED,
-  type StatusFilter,
-} from "./shelf";
-import { isRead, STATUS, type StatusInfo } from "./status";
+import { groupKey, NOT_INFORMED, type ReadingFilter } from "./shelf";
 import { cmp, nf } from "./text";
-import type { Book } from "./types";
+import type { Book, Reading, Situation } from "./types";
 
 export type InsightScope = "todos" | "lidos";
 export type BarField = "genre" | "nationality" | "publisher";
 
-/** Status da Estante que mostra os mesmos livros contados no escopo dos gráficos. */
-export function scopeShelfStatus(scope: InsightScope): StatusFilter {
+/** Leitura da Estante que mostra os mesmos livros contados no escopo dos gráficos. */
+export function scopeShelfReading(scope: InsightScope): ReadingFilter {
   return scope === "lidos" ? "lido" : "todos";
 }
 
@@ -33,7 +29,7 @@ export interface Bars {
   total: number;
 }
 
-export interface StatusSegment extends StatusInfo {
+export interface StateSegment<K extends string> extends StateInfo<K> {
   bar: string;
   count: number;
   pct: string;
@@ -68,7 +64,8 @@ export interface Insights {
   genre: Bars;
   nat: Bars;
   pub: Bars;
-  statusSeg: StatusSegment[];
+  readingSeg: StateSegment<Reading>[];
+  situationSeg: StateSegment<Situation>[];
   thermoLabel: string;
   thermoPct: string;
   thermoPctLabel: string;
@@ -183,6 +180,23 @@ function paceKpi(read: readonly Book[], Y: number): Kpi {
   };
 }
 
+/** Linhas com livros de um bloco (Leitura ou Situação), com barra relativa à maior. */
+function segments<K extends string>(
+  base: readonly Book[],
+  infos: readonly StateInfo<K>[],
+  key: (b: Book) => K
+): StateSegment<K>[] {
+  const counts = infos
+    .map((s) => ({ ...s, count: base.filter((b) => key(b) === s.k).length }))
+    .filter((s) => s.count);
+  const bmax = Math.max(1, ...counts.map((s) => s.count));
+  return counts.map((s) => ({
+    ...s,
+    bar: (s.count / bmax) * 100 + "%",
+    pct: Math.round((s.count / Math.max(1, base.length)) * 100) + "%",
+  }));
+}
+
 export function insights(
   books: readonly Book[],
   opts: InsightOptions
@@ -215,21 +229,12 @@ export function insights(
   ];
   const thermo = estFull ? Math.min(100, (readPages / estFull) * 100) : 0;
 
-  // Mesma regra dos chips da Estante, que o clique abre: emprestado já lido conta em
-  // Lido e em Emprestado, então o anel se divide pela soma das linhas.
-  const counts = STATUS.map((s) => ({
-    ...s,
-    count: base.filter((b) => matchesStatus(b, s.k)).length,
-  })).filter((s) => s.count);
-  const bmax = Math.max(1, ...counts.map((s) => s.count));
-  const ring = Math.max(
-    1,
-    counts.reduce((sum, s) => sum + s.count, 0)
-  );
+  // Cada livro tem uma Leitura só, então o anel da Leitura soma o escopo inteiro.
+  const readingSeg = segments(base, READINGS, (b) => b.reading);
   let acc = 0;
-  const stops = counts.map((s) => {
+  const stops = readingSeg.map((s) => {
     const a = acc;
-    acc += (s.count / ring) * 100;
+    acc += (s.count / Math.max(1, base.length)) * 100;
     return s.dot + " " + a + "% " + acc + "%";
   });
 
@@ -267,11 +272,8 @@ export function insights(
     donutBg: stops.length
       ? "conic-gradient(" + stops.join(",") + ")"
       : "var(--soft)",
-    statusSeg: counts.map((s) => ({
-      ...s,
-      bar: (s.count / bmax) * 100 + "%",
-      pct: Math.round((s.count / Math.max(1, base.length)) * 100) + "%",
-    })),
+    readingSeg,
+    situationSeg: segments(base, SITUATIONS, (b) => b.situation),
     genre: bars(base, "genre", "gêneros", !!expanded.genre),
     nat: bars(base, "nationality", "países", !!expanded.nationality),
     pub: bars(base, "publisher", "editoras", !!expanded.publisher),

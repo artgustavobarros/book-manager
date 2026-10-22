@@ -10,6 +10,7 @@ import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { useBooks } from "@/hooks/use-books";
 import { type HeaderSearch, useHeaderSearch } from "@/hooks/use-header-search";
+import { readyToRead } from "@/lib/domain/surprise";
 
 import { useApp } from "./app-provider";
 import { Avatar } from "./avatar";
@@ -118,7 +119,7 @@ const searchClass =
 function WideHeader({ search }: { search: HeaderSearch }) {
   const app = useApp();
   const books = useBooks();
-  const canSurprise = books.some((b) => b.status === "nao-lido");
+  const canSurprise = books.some(readyToRead);
 
   return (
     <header className="sticky top-0 z-[8] border-line border-b bg-hdr backdrop-blur-[10px] max-[1025px]:hidden">

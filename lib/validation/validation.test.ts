@@ -20,7 +20,8 @@ const form = {
   yearPublished: "2019",
   pages: "264",
   acquiredOn: "2022-02-11",
-  status: "lido" as const,
+  reading: "lido" as const,
+  situation: "em-casa" as const,
   borrower: "Ana",
   yearRead: "",
   notes: "",
@@ -70,9 +71,13 @@ describe("API", () => {
   });
   it("patch e lote", () => {
     expect(bookPatchSchema.safeParse({}).success).toBe(false);
-    expect(bookPatchSchema.parse({ status: "lendo" })).toEqual({
-      status: "lendo",
+    expect(bookPatchSchema.parse({ reading: "lendo" })).toEqual({
+      reading: "lendo",
     });
+    expect(bookPatchSchema.safeParse({ reading: "emprestado" }).success).toBe(
+      false
+    );
+    expect(bookPatchSchema.safeParse({ status: "lido" }).success).toBe(false);
     expect(
       bookBatchSchema.safeParse([{ id: "x", coverUrl: "https://a" }]).success
     ).toBe(false);

@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import referenceBooks from "../fixtures/reference-books.json";
-import { AUTH_STATE, chooseFirstStatus } from "../support/e2e";
+import { AUTH_STATE, chooseFirstSituation, lendDialog } from "../support/e2e";
 
 /** Correções da change fix-bugs-seo-mobile: bugs, SEO, teclado e layout mobile. */
 
@@ -99,7 +99,7 @@ test.describe("acervo (desktop)", () => {
       ).toBeVisible();
     });
 
-    test("falha ao mudar o status de um livro não desfaz a mudança feita em outro", async ({
+    test("falha ao mudar a Leitura de um livro não desfaz a mudança feita em outro", async ({
       page,
     }) => {
       await page.goto("/estante?vista=lista");
@@ -431,12 +431,12 @@ test.describe("layout mobile", () => {
 
       const firstCard = cards.first().locator("..");
       const favorite = firstCard.getByRole("button", { name: /favoritos/ });
-      const status = firstCard.getByRole("combobox", { name: "Status" });
+      const reading = firstCard.getByRole("combobox", { name: "Leitura" });
       await expect(favorite).toBeVisible();
-      await expect(status).toBeVisible();
-      // O seletor de status ocupa a largura toda do card, sem botão ao lado.
+      await expect(reading).toBeVisible();
+      // O seletor de Leitura ocupa a largura toda do card, sem botão ao lado.
       const cardBox = await firstCard.boundingBox();
-      const box = await status.boundingBox();
+      const box = await reading.boundingBox();
       expect(Math.abs(box!.x - cardBox!.x)).toBeLessThanOrEqual(1);
       expect(Math.abs(box!.width - cardBox!.width)).toBeLessThanOrEqual(1);
     });
@@ -525,10 +525,11 @@ test.describe("devolução de empréstimo (BP-07)", () => {
     const before = await goalDone.textContent();
 
     await page.goto("/estante?q=macunaima");
-    await chooseFirstStatus(page, "Emprestado");
-    const lend = page.getByRole("dialog");
+    await chooseFirstSituation(page, "Emprestado");
+    const lend = lendDialog(page);
     await lend.getByLabel("Nome da pessoa").fill("Rita");
     await lend.getByRole("button", { name: "Marcar como emprestado" }).click();
+    await page.keyboard.press("Escape");
     await expect(page.getByText(/Com Rita/).first()).toBeVisible();
 
     await page.goto("/");
@@ -542,12 +543,13 @@ test.describe("devolução de empréstimo (BP-07)", () => {
       })
       .first()
       .click();
-    await expect(page.getByText("Macunaíma devolvido (Lido)")).toBeVisible();
+    await expect(page.getByText("Macunaíma devolvido")).toBeVisible();
 
     await page.reload();
     await expect(
-      page.getByRole("combobox", { name: "Status" }).first()
+      page.getByRole("combobox", { name: "Leitura" }).first()
     ).toHaveText("Lido");
+    await expect(page.getByText(/Com Rita/)).toHaveCount(0);
     await page.goto("/");
     await expect(goalDone).toHaveText(before ?? "");
     await expect(inYearReads).toHaveCount(1);

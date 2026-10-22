@@ -1,5 +1,5 @@
 /** CSV: parser da planilha (porta de `parseCSV`) e exportação "Exportar Excel (CSV)". */
-import { stat } from "./status";
+import { readingInfo, situationInfo } from "./book-state";
 import type { Book } from "./types";
 
 /**
@@ -64,7 +64,8 @@ export const CSV_COLUMNS: readonly Column[] = [
   ["Título", (b) => b.title],
   ["Autor(a)", (b) => b.author],
   ["Editora", (b) => b.publisher],
-  ["Status", (b) => stat(b.status).label],
+  ["Leitura", (b) => readingInfo(b.reading).label],
+  ["Situação", (b) => situationInfo(b.situation).label],
   ["Emprestado para", (b) => b.borrower],
   ["Gênero da obra", (b) => b.genre],
   ["Páginas", (b) => b.pages],

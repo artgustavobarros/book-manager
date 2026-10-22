@@ -81,7 +81,7 @@ Com `EMAIL_TRANSPORT=console`, os e-mails de verificação e de redefinição de
 
 ### Estante pública
 
-A estante começa privada. Pelo ícone de compartilhar (cabeçalho, Estante ou ficha do livro), quem já confirmou o e-mail publica a estante em `/estante/{slug}` (o slug vem do nome e não muda depois) e pode torná-la privada de novo. Visitantes sem conta veem só capa, título, autor, gênero, páginas, editora, ano e status; anotações, empréstimos, datas de aquisição e livros doados nunca saem do servidor. Cada link traz metadados Open Graph e uma imagem gerada em `/og/estante/{slug}`; as estantes públicas declaram `noindex`.
+A estante começa privada. Pelo ícone de compartilhar (cabeçalho, Estante ou ficha do livro), quem já confirmou o e-mail publica a estante em `/estante/{slug}` (o slug vem do nome e não muda depois) e pode torná-la privada de novo. Visitantes sem conta veem só capa, título, autor, gênero, páginas, editora, ano e Leitura (não lido, lendo, lido, abandonado); a Situação (emprestado, doado), anotações, datas de aquisição e livros doados nunca saem do servidor. Cada link traz metadados Open Graph e uma imagem gerada em `/og/estante/{slug}`; as estantes públicas declaram `noindex`.
 
 ## Variáveis de ambiente
 

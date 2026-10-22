@@ -27,14 +27,14 @@ const byId = (books: Book[], id: string) => books.find((b) => b.id === id);
 describe("rollback de edição", () => {
   it("falha em A preserva B editado, criado e excluído depois", () => {
     const [a, b, c] = [makeBook(), makeBook(), makeBook()];
-    const m = mutate([a, b, c], a.id, { status: "lido" });
+    const m = mutate([a, b, c], a.id, { reading: "lido" });
     const novo = makeBook({ title: "Novo" });
     let books = applyBookPatch(m.books, b.id, { favorite: true });
     books = [novo, ...books.filter((x) => x.id !== c.id)];
 
     books = m.fail(books);
 
-    expect(byId(books, a.id)?.status).toBe("nao-lido");
+    expect(byId(books, a.id)?.reading).toBe("nao-lido");
     expect(byId(books, b.id)?.favorite).toBe(true);
     expect(byId(books, novo.id)).toEqual(novo);
     expect(byId(books, c.id)).toBeUndefined();
@@ -57,33 +57,33 @@ describe("rollback de edição", () => {
 
   it("campo do patch mudado depois no mesmo livro não é revertido", () => {
     const a = makeBook();
-    const m1 = mutate([a], a.id, { favorite: true, status: "lido" });
-    const m2 = mutate(m1.books, a.id, { status: "lendo" });
+    const m1 = mutate([a], a.id, { favorite: true, reading: "lido" });
+    const m2 = mutate(m1.books, a.id, { reading: "lendo" });
 
     const books = m1.fail(m2.books);
 
     expect(byId(books, a.id)).toMatchObject({
       favorite: false,
-      status: "lendo",
+      reading: "lendo",
     });
   });
 
   it("devolve o borrower limpo pela saída de emprestado", () => {
-    const a = makeBook({ status: "emprestado", borrower: "Bia" });
-    const m = mutate([a], a.id, { status: "lido" });
+    const a = makeBook({ situation: "emprestado", borrower: "Bia" });
+    const m = mutate([a], a.id, { situation: "em-casa" });
     expect(byId(m.books, a.id)?.borrower).toBeNull();
 
     const books = m.fail(m.books);
 
     expect(byId(books, a.id)).toMatchObject({
-      status: "emprestado",
+      situation: "emprestado",
       borrower: "Bia",
     });
   });
 
   it("não faz nada se o livro saiu do cache", () => {
     const [a, b] = [makeBook(), makeBook()];
-    const m = mutate([a, b], a.id, { status: "lido" });
+    const m = mutate([a, b], a.id, { reading: "lido" });
     const books = [b];
 
     expect(m.fail(books)).toEqual([b]);
@@ -122,15 +122,15 @@ describe("resposta de edição", () => {
   });
 
   it("mantém por cima os campos das edições pendentes no mesmo livro", () => {
-    const a = makeBook({ favorite: false, status: "nao-lido" });
-    // Edição 1 (favorito) respondeu; edição 2 (status) ainda está pendente.
+    const a = makeBook({ favorite: false, reading: "nao-lido" });
+    // Edição 1 (favorito) respondeu; edição 2 (Leitura) ainda está pendente.
     let books = applyBookPatch([a], a.id, { favorite: true });
-    books = applyBookPatch(books, a.id, { status: "lendo" });
+    books = applyBookPatch(books, a.id, { reading: "lendo" });
     const server = { ...a, favorite: true, updatedAt: "2026-10-12T12:00:00Z" };
 
-    books = settleBook(books, server, { status: "lendo" });
+    books = settleBook(books, server, { reading: "lendo" });
 
-    expect(byId(books, a.id)).toEqual({ ...server, status: "lendo" });
+    expect(byId(books, a.id)).toEqual({ ...server, reading: "lendo" });
   });
 
   it("a resposta da edição 1 não volta o favorito da edição 2", () => {

@@ -14,12 +14,25 @@ describe("me surpreenda", () => {
       label: "Todos os gêneros (4)",
     });
   });
+  it("só sorteia livro não lido que está em casa", () => {
+    const home = makeBook({ reading: "nao-lido" });
+    const pool = surprisePool(
+      [
+        home,
+        makeBook({ reading: "nao-lido", situation: "emprestado" }),
+        makeBook({ reading: "nao-lido", situation: "doado" }),
+        makeBook({ reading: "lendo" }),
+      ],
+      "todos"
+    );
+    expect(pool).toEqual([home]);
+  });
   it("não repete o último sorteado quando há outras opções", () => {
     const pool = surprisePool(books, "todos");
     for (let i = 0; i < 20; i++) {
       expect(drawBook(pool, pool[0].id)?.id).not.toBe(pool[0].id);
     }
-    const single = [makeBook({ status: "nao-lido" })];
+    const single = [makeBook({ reading: "nao-lido" })];
     expect(drawBook(single, single[0].id)).toBe(single[0]);
     expect(drawBook([], null)).toBeNull();
   });

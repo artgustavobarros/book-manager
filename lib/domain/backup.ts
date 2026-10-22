@@ -5,8 +5,9 @@
  * chaves `order`, `year`, `acquired`, `cover`, `fav`, `coverTried`. Aqui o backup é
  * convertido para os tipos do modelo, e o modelo é exportado de volta no mesmo formato.
  */
+
+import { fromLegacyStatus, isReading, isSituation } from "./book-state";
 import { withOrders } from "./orders";
-import { isBookStatus } from "./status";
 import { clean } from "./text";
 import {
   AUTHOR_GENDERS,
@@ -34,7 +35,10 @@ export interface BackupBook {
   order: string;
   pages: string;
   publisher: string;
-  status: string;
+  reading: string;
+  situation: string;
+  /** Status único dos backups antigos e do standalone; lido só quando faltam os dois acima. */
+  status?: string;
   title: string;
   year: string;
   yearRead: string;
@@ -122,7 +126,7 @@ export function fromBackup(
     .map((b): RestoredBook => {
       const fields = legacyToFields(b, now);
       const lentAt =
-        fields.status === "emprestado"
+        fields.situation === "emprestado"
           ? toPastInstant(b.lentAt, now)
           : undefined;
       return lentAt ? { ...fields, lentAt } : fields;
@@ -133,12 +137,23 @@ export function fromBackup(
   return withOrders(books);
 }
 
+/** Leitura e Situação do backup; sem elas, as do status único antigo. */
+function state(b: Record<string, unknown>) {
+  if (b.reading === undefined && b.situation === undefined) {
+    return fromLegacyStatus(b.status, toPositiveInt(b.yearRead));
+  }
+  return {
+    reading: isReading(b.reading) ? b.reading : "nao-lido",
+    situation: isSituation(b.situation) ? b.situation : "em-casa",
+  } as const;
+}
+
 /** Converte um livro no formato legado (strings) para os campos do modelo. */
 export function legacyToFields(
   b: Record<string, unknown>,
   now: Date = new Date()
 ): BookFields {
-  const status = isBookStatus(b.status) ? b.status : "nao-lido";
+  const { reading, situation } = state(b);
   return {
     orderNo: toPositiveInt(b.order ?? b.orderNo, BOOK_INT_MAX.orderNo),
     title: toText(b.title) ?? "",
@@ -154,8 +169,9 @@ export function legacyToFields(
     ),
     pages: toPositiveInt(b.pages, BOOK_INT_MAX.pages),
     acquiredOn: toIsoDate(b.acquired ?? b.acquiredOn),
-    status,
-    borrower: status === "emprestado" ? toText(b.borrower) : null,
+    reading,
+    situation,
+    borrower: situation === "emprestado" ? toText(b.borrower) : null,
     yearRead: toPositiveInt(b.yearRead, BOOK_INT_MAX.yearRead),
     notes: toText(b.notes),
     coverUrl: toText(b.cover ?? b.coverUrl),
@@ -173,7 +189,8 @@ export const LEGACY_FIELD = {
   publisher: "publisher",
   year: "yearPublished",
   acquired: "acquiredOn",
-  status: "status",
+  reading: "reading",
+  situation: "situation",
   notes: "notes",
   cover: "coverUrl",
   pages: "pages",
@@ -200,7 +217,8 @@ export function toBackup(books: readonly Book[]): BackupBook[] {
     publisher: str(b.publisher),
     year: str(b.yearPublished),
     acquired: str(b.acquiredOn),
-    status: b.status,
+    reading: b.reading,
+    situation: b.situation,
     notes: str(b.notes),
     cover: str(b.coverUrl),
     pages: str(b.pages),
@@ -211,6 +229,6 @@ export function toBackup(books: readonly Book[]): BackupBook[] {
     authorEthnicity: str(b.authorEthnicity),
     ...(b.favorite ? { fav: true } : {}),
     ...(b.coverCheckedAt ? { coverTried: 1 } : {}),
-    ...(b.status === "emprestado" && b.lentAt ? { lentAt: b.lentAt } : {}),
+    ...(b.situation === "emprestado" && b.lentAt ? { lentAt: b.lentAt } : {}),
   }));
 }

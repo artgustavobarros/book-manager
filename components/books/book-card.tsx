@@ -12,8 +12,8 @@ import { useApp } from "@/components/app/app-provider";
 import { coverColors, coverImage } from "@/lib/domain/cover";
 import type { Book } from "@/lib/domain/types";
 
-import { LentBadge } from "./lent-badge";
-import { StatusSelect } from "./status-select";
+import { ReadingSelect } from "./reading-select";
+import { SituationBadge } from "./situation-badge";
 
 /** Card da vista "Capas" (capa 2:3 com ações no hover + metadados). */
 export function BookCard({
@@ -39,9 +39,9 @@ export function BookCard({
     ],
     [
       CheckIcon,
-      b.status === "lido" ? "Marcar como não lido" : "Marcar como lido",
+      b.reading === "lido" ? "Marcar como não lido" : "Marcar como lido",
       () => app.toggleRead(b),
-      b.status === "lido",
+      b.reading === "lido",
     ],
     [PencilIcon, "Editar", () => app.openEdit(b.id), false],
   ];
@@ -67,7 +67,7 @@ export function BookCard({
           className="absolute inset-0 bg-center bg-cover"
           style={{ backgroundImage: coverImage(b.coverUrl) }}
         />
-        {/* Sem selo de status sobre a capa (cobria o autor): o status fica no seletor abaixo. */}
+        {/* Sem selo sobre a capa (cobria o autor): a Leitura fica no seletor abaixo. */}
         {b.favorite ? (
           <span className="absolute top-2 right-2 text-sm text-white [text-shadow:0_1px_3px_rgba(0,0,0,.4)] group-hover:hidden max-[641px]:hidden">
             ♥
@@ -128,20 +128,17 @@ export function BookCard({
         <span className="truncate text-mute text-xs">
           {[b.publisher, b.nationality, b.genre].filter(Boolean).join(" · ")}
         </span>
-        {b.status === "emprestado" && b.borrower ? (
-          <LentBadge
-            borrower={b.borrower}
-            className="mt-0.5 py-0.5"
-            lentAt={b.lentAt}
-            onReturn={() => app.returnBook(b)}
-          />
-        ) : null}
-        {/* O seletor já troca o status; o card não repete a ação rápida da lista. */}
-        <StatusSelect
+        <SituationBadge
+          book={b}
+          className="mt-0.5 py-0.5"
+          onReturn={() => app.returnBook(b)}
+        />
+        {/* O seletor já troca a Leitura; o card não repete a ação rápida da lista. */}
+        <ReadingSelect
           className="mt-2 w-full"
-          onChange={(k) => app.setStatus(b, k)}
+          onChange={(k) => app.setReading(b, k)}
           selectClassName="w-full"
-          value={b.status}
+          value={b.reading}
         />
       </div>
     </div>

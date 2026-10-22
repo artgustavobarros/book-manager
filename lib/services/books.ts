@@ -7,8 +7,8 @@ import type { RestoredBook } from "@/lib/domain/backup";
 import {
   type Book,
   type BookFields,
-  type BookStatus,
   EMPTY_BOOK_FIELDS,
+  type Situation,
 } from "@/lib/domain/types";
 
 export function rowToBook(r: BookRow): Book {
@@ -25,7 +25,8 @@ export function rowToBook(r: BookRow): Book {
     yearPublished: r.yearPublished,
     pages: r.pages,
     acquiredOn: r.acquiredOn,
-    status: r.status,
+    reading: r.reading,
+    situation: r.situation,
     borrower: r.borrower,
     lentAt: r.lentAt ? r.lentAt.toISOString() : null,
     yearRead: r.yearRead,
@@ -49,43 +50,43 @@ function toValues(fields: Partial<BookFields>): Values {
   if (coverCheckedAt !== undefined) {
     values.coverCheckedAt = coverCheckedAt ? new Date(coverCheckedAt) : null;
   }
-  // Fora do status "emprestado" não há com quem o livro esteja.
-  if (fields.status !== undefined && fields.status !== "emprestado") {
+  // Fora de Emprestado não há com quem o livro esteja.
+  if (fields.situation !== undefined && fields.situation !== "emprestado") {
     values.borrower = null;
   }
   return values;
 }
 
 /**
- * Início do empréstimo num UPDATE: entrar em "emprestado" grava o instante atual,
- * continuar emprestado mantém o valor e sair do status limpa. No SET, `books.status`
+ * Início do empréstimo num UPDATE: entrar em Emprestado grava o instante atual,
+ * continuar emprestado mantém o valor e sair da Situação limpa. No SET, `books.situation`
  * ainda é o valor antigo da linha, então a transição sai sem leitura extra.
  */
-function lentAtOnUpdate(status: BookStatus | undefined): {
+function lentAtOnUpdate(situation: Situation | undefined): {
   lentAt?: SQL | null;
 } {
-  if (status === undefined) {
+  if (situation === undefined) {
     return {};
   }
-  if (status !== "emprestado") {
+  if (situation !== "emprestado") {
     return { lentAt: null };
   }
   return {
-    lentAt: sql`case when ${books.status} = 'emprestado' then coalesce(${books.lentAt}, now()) else now() end`,
+    lentAt: sql`case when ${books.situation} = 'emprestado' then coalesce(${books.lentAt}, now()) else now() end`,
   };
 }
 
 /** Valores de um UPDATE: campos do modelo mais a regra do início do empréstimo. */
 function toUpdateValues(fields: Partial<BookFields>) {
-  return { ...toValues(fields), ...lentAtOnUpdate(fields.status) };
+  return { ...toValues(fields), ...lentAtOnUpdate(fields.situation) };
 }
 
-/** Início do empréstimo num INSERT: o informado (backup), ou agora; null fora de "emprestado". */
+/** Início do empréstimo num INSERT: o informado (backup), ou agora; null fora de Emprestado. */
 function lentAtOnInsert(
-  status: BookStatus | undefined,
+  situation: Situation | undefined,
   lentAt?: string
 ): Date | null {
-  if (status !== "emprestado") {
+  if (situation !== "emprestado") {
     return null;
   }
   return lentAt ? new Date(lentAt) : new Date();
@@ -118,7 +119,7 @@ export async function createBook(
     .insert(books)
     .values({
       ...toValues({ ...EMPTY_BOOK_FIELDS, ...fields }),
-      lentAt: lentAtOnInsert(fields.status ?? EMPTY_BOOK_FIELDS.status),
+      lentAt: lentAtOnInsert(fields.situation ?? EMPTY_BOOK_FIELDS.situation),
       title: fields.title,
       orderNo,
       userId,
@@ -200,7 +201,7 @@ export async function replaceBooks(
       await tx.insert(books).values(
         list.slice(i, i + CHUNK).map(({ lentAt, ...f }) => ({
           ...toValues(f),
-          lentAt: lentAtOnInsert(f.status, lentAt),
+          lentAt: lentAtOnInsert(f.situation, lentAt),
           title: f.title,
           userId,
         }))
@@ -247,7 +248,7 @@ export async function applyMerge(
           return {
             ...rest,
             coverCheckedAt: coverCheckedAt ? new Date(coverCheckedAt) : null,
-            lentAt: lentAtOnInsert(f.status),
+            lentAt: lentAtOnInsert(f.situation),
             title: f.title,
             userId,
           };

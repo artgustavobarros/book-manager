@@ -6,7 +6,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { FIXED_NOW } from "../../playwright.config";
-import { AUTH_STATE, chooseFirstStatus } from "../support/e2e";
+import { AUTH_STATE, chooseFirstSituation } from "../support/e2e";
 
 const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 900 },
@@ -68,7 +68,7 @@ for (const vp of VIEWPORTS) {
       test("emprestado para quem?", async ({ page }) => {
         await prepare(page);
         await page.goto("/estante?q=frankenstein");
-        await chooseFirstStatus(page, "Emprestado");
+        await chooseFirstSituation(page, "Emprestado");
         await snap(page, `emprestado-para-quem-${vp.name}`);
       });
 

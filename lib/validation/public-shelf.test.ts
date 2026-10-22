@@ -24,20 +24,26 @@ describe("endereço da estante pública", () => {
 
   it("lê os parâmetros bem formados", () => {
     expect(
-      read({ genero: "ficcao-cientifica", status: "lido", livro: ID })
+      read({ genero: "ficcao-cientifica", leitura: "lido", livro: ID })
     ).toEqual({
       genre: "ficcao-cientifica",
-      status: "lido",
+      reading: "lido",
       bookId: ID,
     });
   });
 
   it("descarta valores fora do formato sem falhar", () => {
-    expect(read({ genero: "Romance!", status: "doado", livro: "1" })).toEqual({
+    expect(read({ genero: "Romance!", leitura: "doado", livro: "1" })).toEqual({
       genre: "",
-      status: "",
+      reading: "",
       bookId: "",
     });
-    expect(read({})).toEqual({ genre: "", status: "", bookId: "" });
+    expect(read({})).toEqual({ genre: "", reading: "", bookId: "" });
+    // Links antigos com ?status= deixam de filtrar (ADR 0001).
+    expect(read({ status: "lido" })).toEqual({
+      genre: "",
+      reading: "",
+      bookId: "",
+    });
   });
 });

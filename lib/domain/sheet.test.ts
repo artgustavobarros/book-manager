@@ -9,6 +9,8 @@ import {
   mapDate,
   mapGender,
   mapHeader,
+  mapReading,
+  mapSituation,
   mapStatus,
   mergeSheet,
   parseSheet,
@@ -76,6 +78,13 @@ describe("mapeamentos", () => {
     expect(mapHeader("#")).toBe("order");
   });
   it("normaliza status, datas e gênero", () => {
+    expect(mapReading("Emprestado")).toBe("");
+    expect(mapReading("Abandonado")).toBe("abandonado");
+    expect(mapSituation("Em casa")).toBe("em-casa");
+    expect(mapSituation("emprestado")).toBe("emprestado");
+    expect(mapHeader("Leitura")).toBe("reading");
+    expect(mapHeader("Situação")).toBe("situation");
+    expect(mapHeader("Status")).toBe("status");
     expect(mapStatus("Não lido")).toBe("nao-lido");
     expect(mapStatus("SIM")).toBe("lido");
     expect(mapStatus("")).toBe("");
@@ -95,7 +104,8 @@ describe("parseSheet", () => {
       authorGender: "Homem",
       genre: "Distopia",
       acquired: "2023-04-12",
-      status: "lido",
+      reading: "lido",
+      situation: "em-casa",
     });
   });
   it("rejeita HTML, planilha vazia e planilha sem título", () => {
@@ -183,7 +193,8 @@ describe("mergeSheet × standalone", () => {
       title: "A",
       authorEthnicity: "Parda",
       orderNo: 1,
-      status: "nao-lido",
+      reading: "nao-lido",
+      situation: "em-casa",
     });
   });
 });
@@ -195,26 +206,29 @@ describe("mergeSheet: quem pegou emprestado (BP-14)", () => {
     const book = makeBook({
       title: "A",
       author: "B",
-      status: "emprestado",
+      reading: "lido",
+      situation: "emprestado",
       borrower: "Joana",
     });
-    const merge = mergeSheet([book], parseSheet(HEAD + "A;B;Lido;Joana"));
+    const merge = mergeSheet([book], parseSheet(HEAD + "A;B;Lido;"));
     expect(merge.updates).toEqual([
-      { id: book.id, fields: { status: "lido", borrower: null } },
+      { id: book.id, fields: { situation: "em-casa", borrower: null } },
     ]);
   });
 
-  it("não grava quem pegou num livro que não está emprestado", () => {
-    const book = makeBook({ title: "A", author: "B", status: "lido" });
-    const merge = mergeSheet([book], parseSheet(HEAD + "A;B;;Joana"));
-    expect(merge.updates).toEqual([]);
+  it("'Emprestado para' preenchido deixa o livro emprestado, com a Leitura do Status", () => {
+    const book = makeBook({ title: "A", author: "B", reading: "lido" });
+    const merge = mergeSheet([book], parseSheet(HEAD + "A;B;Lido;Joana"));
+    expect(merge.updates).toEqual([
+      { id: book.id, fields: { situation: "emprestado", borrower: "Joana" } },
+    ]);
   });
 
   it("limpa um nome que já tinha ficado num livro não emprestado", () => {
     const book = makeBook({
       title: "A",
       author: "B",
-      status: "lido",
+      reading: "lido",
       borrower: "Joana",
     });
     const merge = mergeSheet([book], parseSheet(HEAD + "A;B;Lido;"));
@@ -227,7 +241,7 @@ describe("mergeSheet: quem pegou emprestado (BP-14)", () => {
     const book = makeBook({
       title: "A",
       author: "B",
-      status: "emprestado",
+      situation: "emprestado",
       borrower: "Joana",
     });
     const merge = mergeSheet([book], parseSheet(HEAD + "A;B;;Lucas"));
@@ -240,12 +254,56 @@ describe("mergeSheet: quem pegou emprestado (BP-14)", () => {
     const merge = mergeSheet(
       [],
       parseSheet(
-        HEAD + "Novo lido;C;Lido;Joana\nNovo emprestado;D;Emprestado;Lia"
+        HEAD +
+          "Novo lido;C;Lido;\nNovo emprestado;D;Emprestado;Lia\nLido fora;E;Lido;Bia"
       )
     );
-    expect(merge.inserts.map((f) => [f.title, f.status, f.borrower])).toEqual([
-      ["Novo lido", "lido", null],
-      ["Novo emprestado", "emprestado", "Lia"],
+    expect(
+      merge.inserts.map((f) => [f.title, f.reading, f.situation, f.borrower])
+    ).toEqual([
+      ["Novo lido", "lido", "em-casa", null],
+      ["Novo emprestado", "nao-lido", "emprestado", "Lia"],
+      ["Lido fora", "lido", "emprestado", "Bia"],
+    ]);
+  });
+});
+
+describe("parseSheet: Leitura e Situação (ADR 0001)", () => {
+  it("lê as colunas Leitura e Situação da exportação nova", () => {
+    const [a, b] = parseSheet(
+      "Título;Leitura;Situação;Emprestado para\nA;Lendo;Emprestado;Ana\nB;Lido;Doado;"
+    );
+    expect(a).toMatchObject({
+      reading: "lendo",
+      situation: "emprestado",
+      borrower: "Ana",
+    });
+    expect(b).toMatchObject({ reading: "lido", situation: "doado" });
+  });
+
+  it("Status antigo: Emprestado/Doado viram Situação, com Lido se há ano de leitura", () => {
+    const recs = parseSheet(
+      "Título;Status;Ano em que foi lido\nA;Emprestado;2021\nB;Doado;\nC;Abandonado;"
+    );
+    expect(
+      recs.map(({ reading, situation }) => ({ reading, situation }))
+    ).toEqual([
+      { reading: "lido", situation: "emprestado" },
+      { reading: undefined, situation: "doado" },
+      { reading: "abandonado", situation: "em-casa" },
+    ]);
+  });
+
+  it("coluna Situação tem precedência sobre o Status antigo", () => {
+    const [a] = parseSheet("Título;Status;Situação\nA;Lido;Doado");
+    expect(a).toMatchObject({ reading: "lido", situation: "doado" });
+  });
+
+  it("emprestado no Status mantém a Leitura do livro sem ano de leitura", () => {
+    const book = makeBook({ title: "A", reading: "lendo" });
+    const merge = mergeSheet([book], parseSheet("Título;Status\nA;Emprestado"));
+    expect(merge.updates).toEqual([
+      { id: book.id, fields: { situation: "emprestado" } },
     ]);
   });
 });

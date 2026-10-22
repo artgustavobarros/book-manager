@@ -13,7 +13,7 @@
 import { loadEnvConfig } from "@next/env";
 
 import type { RestoredBook } from "../lib/domain/backup";
-import type { BookFields } from "../lib/domain/types";
+import type { BookFields, Reading, Situation } from "../lib/domain/types";
 
 loadEnvConfig(process.cwd());
 
@@ -127,21 +127,21 @@ function generateWhaleBooks(count = 600) {
     const day = String(1 + ((i * 5) % 28)).padStart(2, "0");
     const acquiredOn = `${2016 + (i % 11)}-${month}-${day}`;
 
-    // Distribuição de status: ~70% lidos, ~18% não-lidos, ~6% lendo, ~6% emprestados
-    let status: "lido" | "nao-lido" | "lendo" | "emprestado" = "lido";
+    // Leitura: ~6% lendo, ~18% não lidos, o resto lido; ~6% emprestados (já lidos).
+    let reading: Reading = "lido";
+    let situation: Situation = "em-casa";
     let borrower: string | null = null;
-    let yearRead: number | null = null;
+    let yearRead: number | null = 2018 + (i % 9); // 2018 a 2026
 
     if (i % 16 === 0) {
-      status = "emprestado";
+      situation = "emprestado";
       borrower = BORROWERS[(i - 1) % BORROWERS.length];
     } else if (i % 16 === 1) {
-      status = "lendo";
+      reading = "lendo";
+      yearRead = null;
     } else if (i % 5 === 0) {
-      status = "nao-lido";
-    } else {
-      status = "lido";
-      yearRead = 2018 + (i % 9); // 2018 a 2026
+      reading = "nao-lido";
+      yearRead = null;
     }
 
     books.push({
@@ -162,7 +162,8 @@ function generateWhaleBooks(count = 600) {
       orderNo: i,
       pages,
       publisher,
-      status,
+      reading,
+      situation,
       title: `Volume ${i}: Odisseia Literária ${author.name.split(" ")[0]}`,
       yearPublished,
       yearRead,
@@ -180,13 +181,9 @@ function generateLendingBooks(count = 45) {
     const yearPublished = 1950 + ((i * 3) % 75);
     const pages = 180 + ((i * 23) % 500);
 
-    // 15 emprestados (1/3 da estante)
+    // 15 emprestados (1/3 da estante), metade já lida
     const isLent = i <= 15;
-    const status: "lido" | "nao-lido" | "emprestado" = isLent
-      ? "emprestado"
-      : i % 2 === 0
-        ? "lido"
-        : "nao-lido";
+    const reading: Reading = i % 2 === 0 ? "lido" : "nao-lido";
     const borrower = isLent ? BORROWERS[(i - 1) % BORROWERS.length] : null;
     // Empréstimos de 1 a 90 dias atrás, para a contagem variar entre "dias" e "meses".
     const lentDaysAgo = 1 + ((i * 37) % 90);
@@ -213,10 +210,11 @@ function generateLendingBooks(count = 45) {
       orderNo: i,
       pages,
       publisher,
-      status,
+      reading,
+      situation: isLent ? "emprestado" : "em-casa",
       title: `Acervo de Empréstimo ${i}: ${author.name}`,
       yearPublished,
-      yearRead: status === "lido" ? 2025 : null,
+      yearRead: reading === "lido" ? 2025 : null,
     });
   }
   return books;
@@ -230,14 +228,14 @@ function generateGoalBooks(count = 80) {
     const publisher = PUBLISHERS[(i - 1) % PUBLISHERS.length];
 
     // 35 lidos em 2026 (batendo meta de 30)
-    let status: "lido" | "lendo" | "nao-lido" = "nao-lido";
+    let reading: Reading = "nao-lido";
     let yearRead: number | null = null;
 
     if (i <= 35) {
-      status = "lido";
+      reading = "lido";
       yearRead = 2026;
     } else if (i <= 45) {
-      status = "lendo";
+      reading = "lendo";
     }
 
     books.push({
@@ -251,11 +249,12 @@ function generateGoalBooks(count = 80) {
       favorite: i % 8 === 0,
       genre,
       nationality: author.country,
-      notes: status === "lido" ? `Meta 2026: Livro ${i}/35 finalizado!` : null,
+      notes: reading === "lido" ? `Meta 2026: Livro ${i}/35 finalizado!` : null,
       orderNo: i,
       pages: 200 + ((i * 19) % 400),
       publisher,
-      status,
+      reading,
+      situation: "em-casa",
       title: `Maratona Literária ${i}: ${genre}`,
       yearPublished: 1990 + (i % 35),
       yearRead,

@@ -3,16 +3,13 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { makeBook, referenceBooks } from "@/tests/support/reference";
 import { loadStandalone } from "@/tests/support/standalone";
 
-import { groupBy, insights, scopeShelfStatus } from "./insights";
+import { groupBy, insights, scopeShelfReading } from "./insights";
 import { filterBooks } from "./shelf";
 import type { Book } from "./types";
 
 const NOW = new Date("2026-06-15T18:00:00Z");
 const books = referenceBooks();
 type Any = any;
-
-const stripColors = (bg: string) =>
-  bg.replace(/(var\(--[a-z-]+\)|#[0-9a-f]+|oklch\([^)]*\))/g, "C");
 
 describe("insights × standalone", () => {
   beforeAll(() => {
@@ -50,14 +47,9 @@ describe("insights × standalone", () => {
       expect(d.bigBooks.map((r) => [r.rank, r.book.title, r.pages])).toEqual(
         e.bigBooks.map((r: Any) => [r.rank, r.title, r.pages])
       );
-      expect([d.baseLabel, d.donutTotal, stripColors(d.donutBg)]).toEqual([
-        e.baseLabel,
-        e.donutTotal,
-        stripColors(e.donutBg),
-      ]);
-      expect(d.statusSeg.map((s) => [s.label, s.count, s.bar, s.pct])).toEqual(
-        e.statusSeg.map((s: Any) => [s.label, s.count, s.bar, s.pct])
-      );
+      // O anel e as barras de status divergem de propósito: o standalone tinha um
+      // status único; aqui são Leitura e Situação (ver describe "Leitura e Situação").
+      expect([d.baseLabel, d.donutTotal]).toEqual([e.baseLabel, e.donutTotal]);
       for (const [ours, theirs] of [
         [d.genre, e.genre],
         [d.nat, e.nat],
@@ -122,17 +114,23 @@ describe("insights", () => {
     expect(d.assignEmpty).toBe(true);
   });
 
-  it("emprestado com ano de leitura conta como lido nos gráficos", () => {
+  it("lido emprestado conta como lido nos gráficos", () => {
     const d = insights(
       [
-        makeBook({ status: "lido", yearRead: 2026, pages: 100 }),
+        makeBook({ reading: "lido", yearRead: 2026, pages: 100 }),
         makeBook({
-          status: "emprestado",
+          reading: "lido",
+          situation: "emprestado",
           borrower: "Joana",
           yearRead: 2026,
           pages: 200,
         }),
-        makeBook({ status: "emprestado", borrower: "Lucas", pages: 50 }),
+        makeBook({
+          situation: "emprestado",
+          borrower: "Lucas",
+          yearRead: 2026,
+          pages: 50,
+        }),
       ],
       {
         scope: "lidos",
@@ -163,7 +161,7 @@ describe("dataKpis", () => {
   };
   const many = (n: number, o: Partial<Book>) =>
     Array.from({ length: n }, () => makeBook(o));
-  const lido = (o: Partial<Book> = {}) => makeBook({ status: "lido", ...o });
+  const lido = (o: Partial<Book> = {}) => makeBook({ reading: "lido", ...o });
 
   it("mostra os 4 KPIs na ordem da spec", () => {
     expect(kpis([makeBook()]).map((k) => k.label)).toEqual([
@@ -196,9 +194,9 @@ describe("dataKpis", () => {
 
   it("gênero mais lido desempata em ordem alfabética", () => {
     const list = [
-      ...many(18, { status: "lido", genre: "Romance" }),
-      ...many(18, { status: "lido", genre: "Ensaio" }),
-      ...many(9, { status: "lido", genre: "Poesia" }),
+      ...many(18, { reading: "lido", genre: "Romance" }),
+      ...many(18, { reading: "lido", genre: "Ensaio" }),
+      ...many(9, { reading: "lido", genre: "Poesia" }),
       ...many(30, { genre: "Conto" }),
     ];
     expect(kpi(list, "Gênero mais lido")).toEqual([
@@ -210,8 +208,8 @@ describe("dataKpis", () => {
 
   it("gênero não informado não conta", () => {
     const list = [
-      ...many(5, { status: "lido" }),
-      ...many(2, { status: "lido", genre: "Poesia" }),
+      ...many(5, { reading: "lido" }),
+      ...many(2, { reading: "lido", genre: "Poesia" }),
     ];
     expect(kpi(list, "Gênero mais lido")).toEqual(["Poesia", "2 dos 7 lidos"]);
   });
@@ -225,7 +223,7 @@ describe("dataKpis", () => {
       "—",
       "nenhum livro lido ainda",
     ]);
-    expect(kpi(many(2, { status: "lido" }), "Gênero mais lido")).toEqual([
+    expect(kpi(many(2, { reading: "lido" }), "Gênero mais lido")).toEqual([
       "—",
       "nenhum lido com gênero informado",
     ]);
@@ -233,29 +231,29 @@ describe("dataKpis", () => {
 
   it("ritmo de leitura desde o primeiro ano registrado", () => {
     const list = [2022, 2023, 2024, 2025, 2026].flatMap((y, i) =>
-      many(i === 0 ? 4 : 3, { status: "lido", yearRead: y })
+      many(i === 0 ? 4 : 3, { reading: "lido", yearRead: y })
     );
     expect(kpi(list, "Ritmo de leitura")).toEqual([
       "3,2",
       "livros por ano desde 2022",
     ]);
     expect(
-      kpi(many(8, { status: "lido", yearRead: 2023 }), "Ritmo de leitura")
+      kpi(many(8, { reading: "lido", yearRead: 2023 }), "Ritmo de leitura")
     ).toEqual(["2", "livros por ano desde 2023"]);
     expect(
-      kpi(many(2, { status: "lido", yearRead: 2023 }), "Ritmo de leitura")
+      kpi(many(2, { reading: "lido", yearRead: 2023 }), "Ritmo de leitura")
     ).toEqual(["0,5", "livro por ano desde 2023"]);
   });
 
   it("ritmo de leitura só no ano atual e sem ano", () => {
     expect(
-      kpi(many(3, { status: "lido", yearRead: 2026 }), "Ritmo de leitura")
+      kpi(many(3, { reading: "lido", yearRead: 2026 }), "Ritmo de leitura")
     ).toEqual(["3", "livros lidos em 2026"]);
     expect(kpi([lido({ yearRead: 2026 })], "Ritmo de leitura")).toEqual([
       "1",
       "livro lido em 2026",
     ]);
-    expect(kpi(many(4, { status: "lido" }), "Ritmo de leitura")).toEqual([
+    expect(kpi(many(4, { reading: "lido" }), "Ritmo de leitura")).toEqual([
       "—",
       "registre o ano de leitura dos lidos",
     ]);
@@ -285,10 +283,15 @@ describe("dataKpis", () => {
 
 describe("atalho dos gráficos para a Estante", () => {
   const list = [
-    makeBook({ genre: "Romance", status: "lido", yearRead: 2024 }),
-    makeBook({ genre: "Romance", status: "nao-lido" }),
-    makeBook({ genre: "Romance", status: "emprestado", yearRead: 2023 }),
-    makeBook({ genre: "Romance", status: "emprestado" }),
+    makeBook({ genre: "Romance", reading: "lido", yearRead: 2024 }),
+    makeBook({ genre: "Romance", reading: "nao-lido" }),
+    makeBook({
+      genre: "Romance",
+      reading: "lido",
+      situation: "emprestado",
+      yearRead: 2023,
+    }),
+    makeBook({ genre: "Romance", situation: "emprestado" }),
   ];
 
   for (const scope of ["lidos", "todos"] as const) {
@@ -302,7 +305,8 @@ describe("atalho dos gráficos para a Estante", () => {
       }).genre.list;
       const shown = filterBooks(list, {
         q: "",
-        status: scopeShelfStatus(scope),
+        reading: scopeShelfReading(scope),
+        situation: "todas",
         facet: { kind: "genero", value: bar.label },
       });
       expect(shown).toHaveLength(bar.count);
@@ -311,32 +315,63 @@ describe("atalho dos gráficos para a Estante", () => {
   }
 });
 
-describe("donut de status", () => {
-  it("conta cada status pela regra do chip que o clique abre", () => {
-    const list = [
-      makeBook({ status: "lido", yearRead: 2024 }),
-      makeBook({ status: "emprestado", yearRead: 2023 }),
-      makeBook({ status: "emprestado" }),
-      makeBook({ status: "nao-lido" }),
-    ];
-    const d = insights(list, {
-      scope: "todos",
-      expanded: {},
-      assignAll: false,
-      assignMore: false,
-      year: 2026,
-    });
-    for (const s of d.statusSeg) {
+describe("Leitura e Situação", () => {
+  const list = [
+    makeBook({ reading: "lido", yearRead: 2024 }),
+    makeBook({ reading: "lido", situation: "emprestado", yearRead: 2023 }),
+    makeBook({ situation: "emprestado" }),
+    makeBook({ reading: "nao-lido" }),
+    makeBook({ reading: "lido", situation: "doado" }),
+  ];
+  const opts = {
+    expanded: {},
+    assignAll: false,
+    assignMore: false,
+    year: 2026,
+  } as const;
+
+  it("cada linha mostra os livros que o clique abre na Estante", () => {
+    const d = insights(list, { ...opts, scope: "todos" });
+    for (const s of d.readingSeg) {
       expect(s.count).toBe(
-        filterBooks(list, { q: "", status: s.k, facet: null }).length
+        filterBooks(list, {
+          q: "",
+          reading: s.k,
+          situation: "todas",
+          facet: null,
+        }).length
       );
     }
-    expect(d.statusSeg.map((s) => [s.k, s.count])).toEqual([
-      ["nao-lido", 1],
-      ["lido", 2],
-      ["emprestado", 2],
+    for (const s of d.situationSeg) {
+      expect(s.count).toBe(
+        filterBooks(list, {
+          q: "",
+          reading: "todos",
+          situation: s.k,
+          facet: null,
+        }).length
+      );
+    }
+    expect(d.readingSeg.map((s) => [s.k, s.count])).toEqual([
+      ["nao-lido", 2],
+      ["lido", 3],
     ]);
-    // O anel fecha em 100% mesmo com o emprestado já lido nas duas linhas.
+    expect(d.situationSeg.map((s) => [s.k, s.count, s.pct])).toEqual([
+      ["em-casa", 2, "40%"],
+      ["emprestado", 2, "40%"],
+      ["doado", 1, "20%"],
+    ]);
+    // Cada livro tem uma Leitura só: o anel fecha em 100%.
     expect(d.donutBg).toMatch(/ 100%\)$/);
+  });
+
+  it("no escopo dos lidos, a Situação mostra onde estão os lidos", () => {
+    const d = insights(list, { ...opts, scope: "lidos" });
+    expect(d.readingSeg.map((s) => [s.k, s.count])).toEqual([["lido", 3]]);
+    expect(d.situationSeg.map((s) => [s.k, s.count])).toEqual([
+      ["em-casa", 1],
+      ["emprestado", 1],
+      ["doado", 1],
+    ]);
   });
 });

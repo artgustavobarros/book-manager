@@ -125,7 +125,7 @@ export function DashboardPage() {
   const { goShelf } = useShelfState();
   const [lentOpen, setLentOpen] = useState(false);
   const lentBooks = useMemo(
-    () => books.filter((b) => b.status === "emprestado"),
+    () => books.filter((b) => b.situation === "emprestado"),
     [books]
   );
   const d = useMemo(
@@ -361,7 +361,7 @@ export function DashboardPage() {
               </div>
             ) : (
               <span className="text-mute text-sm leading-[1.5]">
-                Nenhum livro em leitura. Mude o status de um livro para “Lendo”
+                Nenhum livro em leitura. Mude a Leitura de um livro para “Lendo”
                 ou use “Me surpreenda”.
               </span>
             )}
@@ -405,7 +405,7 @@ export function DashboardPage() {
                       </span>
                     </span>
                   </button>
-                  {b.status === "nao-lido" ? (
+                  {b.reading === "nao-lido" ? (
                     <ActionButton
                       aria-label={`Começar a ler ${b.title}`}
                       className="h-7 rounded-md px-2"
@@ -439,7 +439,7 @@ export function DashboardPage() {
         books={lentBooks}
         onGoShelf={() => {
           setLentOpen(false);
-          goShelf({ status: "emprestado" });
+          goShelf({ situation: "emprestado" });
         }}
         onOpenChange={setLentOpen}
         onReturn={(b) => app.returnBook(b)}

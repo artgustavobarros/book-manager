@@ -92,7 +92,7 @@ describe("dashboard", () => {
 
   it("meta cumprida", () => {
     const books = Array.from({ length: 3 }, () =>
-      makeBook({ status: "lido", yearRead: 2026 })
+      makeBook({ reading: "lido", yearRead: 2026 })
     );
     const m = dashboard(books, { goal: 2, now: NOW, tz: TZ });
     expect(m.pace).toBe("done");
@@ -101,16 +101,17 @@ describe("dashboard", () => {
     expect(m.goalPct).toBe("100%");
   });
 
-  it("emprestado com ano de leitura conta na meta e em Lidos", () => {
+  it("lido emprestado conta na meta e em Lidos; emprestado não lido, não", () => {
     const lent = makeBook({
-      status: "emprestado",
+      reading: "lido",
+      situation: "emprestado",
       borrower: "Joana",
       yearRead: 2026,
     });
     const books = [
-      makeBook({ status: "lido", yearRead: 2026 }),
+      makeBook({ reading: "lido", yearRead: 2026 }),
       lent,
-      makeBook({ status: "emprestado", borrower: "Lucas" }),
+      makeBook({ situation: "emprestado", borrower: "Lucas", yearRead: 2026 }),
     ];
     const d = dashboard(books, { goal: 24, now: NOW, tz: TZ });
     expect(d.goalDone).toBe(2);

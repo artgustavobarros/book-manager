@@ -120,8 +120,10 @@ export async function openApp(
  * a lista da Estante usa ícones do lucide nas ações e Dados não tem a legenda de escopo
  * e usa o bordô em todas as barras, e os KPIs do Painel seguem a tipografia do card da
  * meta, inclusive atrás dos modais de sorteio e planilha; nos cards de capa da Estante,
- * o seletor de status ocupa a largura toda, sem o botão de ação rápida (change
- * polish-shelf-dashboard-insights-ui).
+ * o seletor de Leitura ocupa a largura toda, sem o botão de ação rápida (change
+ * polish-shelf-dashboard-insights-ui). Com Leitura e Situação (ADR 0001), a Estante tem
+ * duas linhas de chips, Dados um bloco de Situação e a ficha (vista e edição) dois
+ * seletores no lugar do status único.
  */
 export const DIVERGED = new Set([
   "painel/desktop",
@@ -134,7 +136,10 @@ export const DIVERGED = new Set([
   "estante-lista/mobile",
   "estante-filtro/mobile",
   "dados/mobile",
+  "ficha/desktop",
   "ficha/mobile",
+  "edicao/desktop",
+  "edicao/mobile",
   "surpresa/desktop",
   "surpresa/mobile",
   "planilha/desktop",

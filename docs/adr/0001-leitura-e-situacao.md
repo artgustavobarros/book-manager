@@ -14,3 +14,6 @@ O livro tinha um só status (não lido, lendo, lido, emprestado, abandonado, doa
 - Lido passa a valer por Leitura, qualquer que seja a Situação: um doado lido conta nos lidos.
 - A estante pública mostra só a Leitura; a Situação (inclusive emprestado) nunca é pública.
 - Os parâmetros de URL passam a `?leitura=` e `?situacao=`; links com `?status=` deixam de filtrar.
+- Na Estante, Leitura e Situação são duas linhas de chips que se combinam (`?leitura=lido&situacao=emprestado`); Favoritos ficam na linha da Leitura (`?leitura=fav`). A pílula do card e da lista é só a Leitura; a Situação aparece num selo ("Com Ana", "Doado") e muda na ficha.
+- A estante pública usa `?leitura=`; links públicos já compartilhados com `?status=` também deixam de filtrar e abrem a estante toda.
+- "Me surpreenda" sorteia só livros Não lidos que estão Em casa.

@@ -91,16 +91,17 @@ test("o visitante vê a estante sem campos privados nem doados", async ({
   ).toHaveAttribute("href", "/entrar?modo=cadastro");
   await expect(page.getByText("Catalogue a sua também →")).toBeVisible();
   await expect(page.getByText("Modo visitante.")).toHaveCount(0);
-  // Emprestado aparece como status, sem o nome de quem pegou.
+  // A Situação nunca é pública: o emprestado aparece só com a sua Leitura.
   const torto = page.getByRole("button", { name: /Torto arado/ });
-  await expect(torto).toContainText("Emprestado");
+  await expect(torto).toContainText("Não lido");
+  await expect(torto).not.toContainText("Emprestado");
   await ctx.close();
 });
 
 test("recorte da URL, busca, filtros, ficha e sorteio", async ({ browser }) => {
   const { ctx, page } = await visitor(browser);
 
-  await page.goto(SHELF + "?status=doado&genero=xyz&livro=1");
+  await page.goto(SHELF + "?leitura=doado&genero=xyz&livro=1");
   await expect(
     page.getByText(PUBLIC_COUNT + " livros", { exact: true })
   ).toBeVisible();
@@ -125,9 +126,9 @@ test("recorte da URL, busca, filtros, ficha e sorteio", async ({ browser }) => {
   ).toHaveCount(1);
   await page.getByRole("button", { name: "Limpar filtros" }).click();
 
-  // Outros specs mudam status do acervo de referência: a contagem vem da própria página.
+  // Outros specs mudam a Leitura do acervo de referência: a contagem vem da própria página.
   await page
-    .getByRole("group", { name: "Status" })
+    .getByRole("group", { name: "Leitura" })
     .getByRole("button", { name: "Lidos", exact: true })
     .click();
   const count = page.getByText(
@@ -141,7 +142,7 @@ test("recorte da URL, busca, filtros, ficha e sorteio", async ({ browser }) => {
     page.getByRole("button", { name: "Link copiado ✓" })
   ).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(
-    new RegExp(SHELF + "\\?status=lido$")
+    new RegExp(SHELF + "\\?leitura=lido$")
   );
 
   await page.getByRole("button", { name: "Sortear para mim" }).click();
@@ -190,7 +191,7 @@ test("recorte da URL, busca, filtros, ficha e sorteio", async ({ browser }) => {
 test("metadados Open Graph no HTML do servidor e imagem OG", async ({
   request,
 }) => {
-  const res = await request.get(SHELF + "?status=lido", {
+  const res = await request.get(SHELF + "?leitura=lido", {
     headers: { cookie: "" },
   });
   expect(res.status()).toBe(200);
@@ -201,7 +202,7 @@ test("metadados Open Graph no HTML do servidor e imagem OG", async ({
     "Livros lidos na estante de Ana Lima"
   );
   expect(meta("property", "og:url")).toMatch(
-    new RegExp(SHELF + "\\?status=lido$")
+    new RegExp(SHELF + "\\?leitura=lido$")
   );
   expect(meta("name", "twitter:card")).toBe("summary_large_image");
   expect(meta("name", "robots")).toBe("noindex, nofollow");
@@ -210,7 +211,7 @@ test("metadados Open Graph no HTML do servidor e imagem OG", async ({
   );
   const image = meta("property", "og:image") ?? "";
   expect(image).toMatch(
-    /^https?:\/\/.+\/og\/estante\/ana-lima\?status=lido&amp;v=|^https?:\/\/.+\/og\/estante\/ana-lima\?status=lido&v=/
+    /^https?:\/\/.+\/og\/estante\/ana-lima\?leitura=lido&amp;v=|^https?:\/\/.+\/og\/estante\/ana-lima\?leitura=lido&v=/
   );
   const png = await request.get(image.replaceAll("&amp;", "&"), {
     maxRedirects: 0,
@@ -230,25 +231,25 @@ test("o dono vê o modo visitante e compartilha da Estante e da ficha", async ({
   await page.getByRole("link", { name: "Voltar ao acervo" }).click();
   await expect(page).toHaveURL("/estante");
 
-  await page.goto("/estante?status=lendo");
+  await page.goto("/estante?leitura=lendo");
   await page.getByRole("button", { name: "Compartilhar", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Compartilhar" });
   await expect(
-    dialog.getByRole("button", { name: "Um status" })
+    dialog.getByRole("button", { name: "Uma leitura" })
   ).toHaveAttribute("aria-pressed", "true");
   await expect(dialog.getByRole("button", { name: /^Lendo/ })).toHaveAttribute(
     "aria-pressed",
     "true"
   );
   await expect(dialog.getByLabel("Link da estante")).toHaveValue(
-    new RegExp(SHELF + "\\?status=lendo$")
+    new RegExp(SHELF + "\\?leitura=lendo$")
   );
   const x = await dialog.getByRole("link", { name: "X" }).getAttribute("href");
   expect(x).toContain(
     "https://x.com/intent/post?text=Lendo%20agora%20na%20estante%20de%20Ana%20Lima&url="
   );
   await dialog.getByRole("link", { name: "Ver como visitante →" }).click();
-  await expect(page).toHaveURL(SHELF + "?status=lendo");
+  await expect(page).toHaveURL(SHELF + "?leitura=lendo");
   await expect(page.getByText("Modo visitante.")).toBeVisible();
 
   await page.goto("/estante?q=kindred");

@@ -17,15 +17,15 @@ import {
 import { BOOKS_KEY, useBookActions } from "@/hooks/use-books";
 import { api } from "@/lib/client/api";
 import { createLatestSaver } from "@/lib/client/latest-saver";
-import type { ShareScope } from "@/lib/domain/share";
 import {
-  nextReadingStatus,
-  readingYearForStatus,
-  returnStatus,
-  stat,
-} from "@/lib/domain/status";
+  nextReading,
+  readingInfo,
+  readingYearFor,
+  situationInfo,
+} from "@/lib/domain/book-state";
+import type { ShareScope } from "@/lib/domain/share";
 import { initialsOf } from "@/lib/domain/text";
-import type { Book, BookStatus } from "@/lib/domain/types";
+import type { Book, Reading, Situation } from "@/lib/domain/types";
 import type { Theme } from "@/lib/theme";
 
 import { toast } from "./toast";
@@ -73,7 +73,8 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   closeModal: () => void;
   closeShare: () => void;
   confirmLend: (book: Book, borrower: string) => void;
-  cycleStatus: (book: Book) => void;
+  /** Ação rápida da Leitura: não lido → lendo → lido → não lido. */
+  cycleReading: (book: Book) => void;
   finish: (book: Book) => void;
   goal: number;
   initials: string;
@@ -87,10 +88,11 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   returnBook: (book: Book) => void;
   setAccountOpen: (v: boolean) => void;
   setPublicShelf: (state: PublicShelfState) => void;
-  setSheetUrl: (url: string | null) => void;
 
-  /** Muda o status (abre o pedido de "com quem?" para Emprestado). */
-  setStatus: (book: Book, status: BookStatus) => void;
+  setReading: (book: Book, reading: Reading) => void;
+  setSheetUrl: (url: string | null) => void;
+  /** Muda a Situação (abre o pedido de "com quem?" para Emprestado). */
+  setSituation: (book: Book, situation: Situation) => void;
   setSurpriseOpen: (v: boolean) => void;
   setSyncOpen: (v: boolean) => void;
   setUser: (patch: Partial<AppUser>) => void;
@@ -170,46 +172,36 @@ function AppState({
     [goal, initial.year, qc, saveGoal]
   );
 
-  const setStatus = useCallback(
-    (book: Book, k: BookStatus) => {
-      if (k === "emprestado") {
-        return setLendFor(book);
-      }
-      const patch: Partial<Book> = { status: k, borrower: null };
-      const yearRead = readingYearForStatus(book.yearRead, k, initial.year);
+  const setReading = useCallback(
+    (book: Book, k: Reading) => {
+      const patch: Partial<Book> = { reading: k };
+      const yearRead = readingYearFor(book.yearRead, k, initial.year);
       if (yearRead !== book.yearRead) {
         patch.yearRead = yearRead;
       }
       void actions
         .update(book.id, patch)
-        .then((ok) => ok && toast(book.title + " → " + stat(k).label));
+        .then((ok) => ok && toast(book.title + " → " + readingInfo(k).label));
     },
     [actions, initial.year]
   );
 
-  const cycleStatus = useCallback(
+  const cycleReading = useCallback(
     (book: Book) => {
-      const nextStatus = nextReadingStatus(book.status);
-      const patch: Partial<Book> = { status: nextStatus };
-      const yearRead = readingYearForStatus(
-        book.yearRead,
-        nextStatus,
-        initial.year
-      );
+      const next = nextReading(book.reading);
+      const patch: Partial<Book> = { reading: next };
+      const yearRead = readingYearFor(book.yearRead, next, initial.year);
       if (yearRead !== book.yearRead) {
         patch.yearRead = yearRead;
-      }
-      if (nextStatus === "nao-lido") {
-        patch.borrower = null;
       }
 
       void actions.update(book.id, patch).then((ok) => {
         if (!ok) {
           return;
         }
-        if (nextStatus === "lido") {
+        if (next === "lido") {
           toast(book.title + " marcado como lido");
-        } else if (nextStatus === "nao-lido") {
+        } else if (next === "nao-lido") {
           toast(book.title + " marcado como não lido");
         } else {
           toast("Boa leitura: " + book.title);
@@ -221,13 +213,8 @@ function AppState({
 
   const undoRead = useCallback(
     (book: Book) => {
-      // Emprestado continua emprestado: só sai da contagem de lidos.
-      const patch: Partial<Book> =
-        book.status === "emprestado"
-          ? { yearRead: null }
-          : { status: "nao-lido", yearRead: null };
       void actions
-        .update(book.id, patch)
+        .update(book.id, { reading: "nao-lido", yearRead: null })
         .then((ok) => ok && toast(book.title + " marcado como não lido"));
     },
     [actions]
@@ -236,26 +223,35 @@ function AppState({
   const startReading = useCallback(
     (book: Book) => {
       void actions
-        .update(book.id, {
-          status: "lendo",
-        })
+        .update(book.id, { reading: "lendo" })
         .then((ok) => ok && toast("Boa leitura: " + book.title));
     },
     [actions]
   );
 
-  /** Devolução: volta a "lido" se o livro tem ano de leitura e nunca apaga esse ano. */
+  /** Devolução: o livro volta a Em casa e a Leitura não muda. */
   const returnBook = useCallback(
     (book: Book) => {
-      const status = returnStatus(book);
-      void actions.update(book.id, { status, borrower: null }).then((ok) => {
-        if (!ok) {
-          return;
-        }
-        toast(book.title + " devolvido (" + stat(status).label + ")");
-      });
+      void actions
+        .update(book.id, { situation: "em-casa" })
+        .then((ok) => ok && toast(book.title + " devolvido"));
     },
     [actions]
+  );
+
+  const setSituation = useCallback(
+    (book: Book, k: Situation) => {
+      if (k === "emprestado") {
+        return setLendFor(book);
+      }
+      if (k === "em-casa") {
+        return returnBook(book);
+      }
+      void actions
+        .update(book.id, { situation: k })
+        .then((ok) => ok && toast(book.title + " → " + situationInfo(k).label));
+    },
+    [actions, returnBook]
   );
 
   const value: AppContextValue = useMemo(
@@ -291,17 +287,20 @@ function AppState({
       setSyncOpen,
       lendFor,
       closeLend: () => setLendFor(null),
-      setStatus,
+      setReading,
+      setSituation,
       returnBook,
       confirmLend: (book, borrower) => {
         setLendFor(null);
         void actions
           .update(book.id, {
-            status: "emprestado",
+            situation: "emprestado",
             borrower: borrower.trim() || null,
           })
           .then(
-            (ok) => ok && toast(book.title + " → " + stat("emprestado").label)
+            (ok) =>
+              ok &&
+              toast(book.title + " → " + situationInfo("emprestado").label)
           );
       },
       toggleFavorite: (book) => {
@@ -318,16 +317,15 @@ function AppState({
           );
       },
       toggleRead: (book) =>
-        setStatus(book, book.status === "lido" ? "nao-lido" : "lido"),
-      cycleStatus,
+        setReading(book, book.reading === "lido" ? "nao-lido" : "lido"),
+      cycleReading,
       undoRead,
       startReading,
       finish: (book) => {
         void actions
           .update(book.id, {
-            status: "lido",
-            borrower: null,
-            yearRead: readingYearForStatus(book.yearRead, "lido", initial.year),
+            reading: "lido",
+            yearRead: readingYearFor(book.yearRead, "lido", initial.year),
           })
           .then((ok) => ok && toast(book.title + " marcado como lido"));
       },
@@ -346,9 +344,10 @@ function AppState({
       accountOpen,
       syncOpen,
       lendFor,
-      setStatus,
+      setReading,
+      setSituation,
       returnBook,
-      cycleStatus,
+      cycleReading,
       undoRead,
       startReading,
       actions,

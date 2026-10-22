@@ -61,6 +61,7 @@
   --color-status-emprestado: var(--status-emprestado);
   --color-status-abandonado: var(--status-abandonado);
   --color-status-doado: var(--status-doado);
+  --color-status-em-casa: var(--status-em-casa);
 
   --color-success-bg: var(--success-bg);
   --color-success-fg: var(--success-fg);

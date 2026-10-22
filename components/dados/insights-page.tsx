@@ -21,7 +21,8 @@ import {
   type Bars,
   type InsightScope,
   insights,
-  scopeShelfStatus,
+  type StateSegment,
+  scopeShelfReading,
 } from "@/lib/domain/insights";
 import type { Facet, FacetKind } from "@/lib/domain/shelf";
 
@@ -114,6 +115,39 @@ function BarCard({
   );
 }
 
+/** Linha de um bloco de Leitura ou Situação; o clique abre a Estante filtrada. */
+function SegmentRow({
+  seg: s,
+  onClick,
+}: {
+  seg: StateSegment<string>;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className="-mx-2 grid grid-cols-[minmax(0,96px)_minmax(0,1fr)_28px_40px] items-center gap-3 rounded-lg border-0 bg-transparent p-2 text-left text-ink text-sm hover:bg-hov"
+      onClick={onClick}
+      type="button"
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        <span
+          className="size-2 flex-none rounded-full"
+          style={{ background: s.dot }}
+        />
+        <span className="truncate">{s.label}</span>
+      </span>
+      <span className="relative h-2 overflow-hidden rounded-full bg-soft">
+        <span
+          className="absolute inset-y-0 left-0 rounded-full"
+          style={{ width: s.bar, background: s.dot }}
+        />
+      </span>
+      <span className="text-right font-semibold tabular-nums">{s.count}</span>
+      <span className="text-right text-mute text-xs tabular-nums">{s.pct}</span>
+    </button>
+  );
+}
+
 function EmptyInsights() {
   const app = useApp();
   const backup = useBackup();
@@ -195,7 +229,7 @@ function FullInsights() {
   const chartCar = useCarousel(6);
 
   const drill = (facet: Facet) =>
-    goShelf({ status: scopeShelfStatus(scope), facet });
+    goShelf({ reading: scopeShelfReading(scope), facet });
   const pick = (kind: FacetKind) => (value: string) => drill({ kind, value });
   const toggle = (k: BarField) => () =>
     setExpanded((e) => ({ ...e, [k]: !e[k] }));
@@ -306,7 +340,7 @@ function FullInsights() {
         </section>
 
         <section className={cn(card, "gap-4")}>
-          <CardHead badge={d.baseLabel} title="Livros por status" />
+          <CardHead badge={d.baseLabel} title="Livros por leitura" />
           <div className="flex flex-wrap items-center gap-6">
             <div
               className="relative size-[152px] flex-none rounded-full"
@@ -323,35 +357,28 @@ function FullInsights() {
               </div>
             </div>
             <div className="flex min-w-0 flex-[1_1_200px] flex-col">
-              {d.statusSeg.map((s) => (
-                <button
-                  className="-mx-2 grid grid-cols-[minmax(0,96px)_minmax(0,1fr)_28px_40px] items-center gap-3 rounded-lg border-0 bg-transparent p-2 text-left text-ink text-sm hover:bg-hov"
+              {d.readingSeg.map((s) => (
+                <SegmentRow
                   key={s.k}
-                  onClick={() => goShelf({ status: s.k })}
-                  type="button"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span
-                      className="size-2 flex-none rounded-full"
-                      style={{ background: s.dot }}
-                    />
-                    <span className="truncate">{s.label}</span>
-                  </span>
-                  <span className="relative h-2 overflow-hidden rounded-full bg-soft">
-                    <span
-                      className="absolute inset-y-0 left-0 rounded-full"
-                      style={{ width: s.bar, background: s.dot }}
-                    />
-                  </span>
-                  <span className="text-right font-semibold tabular-nums">
-                    {s.count}
-                  </span>
-                  <span className="text-right text-mute text-xs tabular-nums">
-                    {s.pct}
-                  </span>
-                </button>
+                  onClick={() => goShelf({ reading: s.k })}
+                  seg={s}
+                />
               ))}
             </div>
+          </div>
+          <div className="flex flex-col border-soft border-t pt-3">
+            <span className="pb-1 font-semibold text-mute text-xs uppercase tracking-[.05em]">
+              Situação
+            </span>
+            {d.situationSeg.map((s) => (
+              <SegmentRow
+                key={s.k}
+                onClick={() =>
+                  goShelf({ reading: scopeShelfReading(scope), situation: s.k })
+                }
+                seg={s}
+              />
+            ))}
           </div>
         </section>
 
@@ -379,7 +406,7 @@ function FullInsights() {
                   key={c.year}
                   onClick={() =>
                     goShelf({
-                      status: "lido",
+                      reading: "lido",
                       facet: { kind: "lidos-em", value: String(c.year) },
                     })
                   }

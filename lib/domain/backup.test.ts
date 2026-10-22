@@ -24,7 +24,8 @@ describe("fromBackup", () => {
       yearPublished: 1949,
       yearRead: 2023,
       acquiredOn: "2023-04-12",
-      status: "lido",
+      reading: "lido",
+      situation: "em-casa",
       authorGender: "Homem",
       favorite: false,
       notes: null,
@@ -32,7 +33,8 @@ describe("fromBackup", () => {
     });
     const lent = books.find((x) => x.title === "Dom Casmurro")!;
     expect(lent).toMatchObject({
-      status: "emprestado",
+      reading: "nao-lido",
+      situation: "emprestado",
       borrower: "Ana",
       notes: "Emprestado em março.",
     });
@@ -54,7 +56,8 @@ describe("fromBackup", () => {
       pages: 416,
       favorite: true,
       coverCheckedAt: now.toISOString(),
-      status: "nao-lido",
+      reading: "nao-lido",
+      situation: "em-casa",
       orderNo: 1,
     });
   });
@@ -89,10 +92,41 @@ describe("fromBackup", () => {
       yearRead: null,
     });
   });
-  it("limpa 'emprestado para' fora do status emprestado", () => {
+  it("limpa 'emprestado para' fora de Emprestado", () => {
+    const [legacy, current] = fromBackup([
+      { title: "A", status: "lido", borrower: "Ana" },
+      { title: "B", reading: "lido", situation: "em-casa", borrower: "Ana" },
+    ]);
+    expect(legacy.borrower).toBeNull();
+    expect(current.borrower).toBeNull();
+  });
+
+  it("separa o status único dos backups antigos em Leitura e Situação", () => {
+    const books = fromBackup([
+      { title: "A", status: "emprestado", yearRead: "2021", borrower: "Ana" },
+      { title: "B", status: "doado" },
+      { title: "C", status: "abandonado" },
+    ]);
     expect(
-      fromBackup([{ title: "A", status: "lido", borrower: "Ana" }])[0].borrower
-    ).toBeNull();
+      books.map(({ reading, situation, borrower }) => ({
+        reading,
+        situation,
+        borrower,
+      }))
+    ).toEqual([
+      { reading: "lido", situation: "emprestado", borrower: "Ana" },
+      { reading: "nao-lido", situation: "doado", borrower: null },
+      { reading: "abandonado", situation: "em-casa", borrower: null },
+    ]);
+  });
+
+  it("lê Leitura e Situação do backup novo, com padrão para valor inválido", () => {
+    const [a, b] = fromBackup([
+      { title: "A", reading: "lendo", situation: "emprestado", status: "lido" },
+      { title: "B", reading: "xyz", situation: "xyz" },
+    ]);
+    expect(a).toMatchObject({ reading: "lendo", situation: "emprestado" });
+    expect(b).toMatchObject({ reading: "nao-lido", situation: "em-casa" });
   });
 
   it("mantém o início do empréstimo só se válido, passado e em livro emprestado", () => {
@@ -112,6 +146,29 @@ describe("fromBackup", () => {
       expect(b).not.toHaveProperty("lentAt");
     }
   });
+
+  it("mantém o início do empréstimo no backup novo", () => {
+    const now = new Date("2026-06-15T12:00:00Z");
+    const [lent, home] = fromBackup(
+      [
+        {
+          title: "A",
+          reading: "lido",
+          situation: "emprestado",
+          lentAt: "2026-05-26T15:00:00Z",
+        },
+        {
+          title: "B",
+          reading: "lido",
+          situation: "em-casa",
+          lentAt: "2026-05-26T15:00:00Z",
+        },
+      ],
+      now
+    );
+    expect(lent.lentAt).toBe("2026-05-26T15:00:00.000Z");
+    expect(home).not.toHaveProperty("lentAt");
+  });
 });
 
 describe("toBackup", () => {
@@ -123,7 +180,8 @@ describe("toBackup", () => {
       pages: 264,
       yearPublished: 2019,
       acquiredOn: "2022-02-11",
-      status: "emprestado",
+      reading: "lendo",
+      situation: "emprestado",
       borrower: "Rafael",
       lentAt: "2026-05-26T15:00:00.000Z",
       favorite: true,
@@ -137,8 +195,11 @@ describe("toBackup", () => {
       acquired: "2022-02-11",
       fav: true,
       authorEthnicity: "Negra",
+      reading: "lendo",
+      situation: "emprestado",
       lentAt: "2026-05-26T15:00:00.000Z",
     });
+    expect(out[0]).not.toHaveProperty("status");
     const back = fromBackup(out)[0];
     const { id: _id, createdAt: _c, updatedAt: _u, ...fields } = book;
     expect(back).toEqual(fields);
@@ -146,8 +207,8 @@ describe("toBackup", () => {
 
   it("só exporta o início do empréstimo de livros emprestados", () => {
     const [returned, lentWithout] = toBackup([
-      makeBook({ status: "lido", lentAt: "2026-05-26T15:00:00.000Z" }),
-      makeBook({ status: "emprestado", borrower: "Ana", lentAt: null }),
+      makeBook({ reading: "lido", lentAt: "2026-05-26T15:00:00.000Z" }),
+      makeBook({ situation: "emprestado", borrower: "Ana", lentAt: null }),
     ]);
     expect(returned).not.toHaveProperty("lentAt");
     expect(lentWithout).not.toHaveProperty("lentAt");
