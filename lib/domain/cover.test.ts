@@ -21,4 +21,12 @@ describe("cover", () => {
     expect(coverImage("https://x/y.jpg")).toBe('url("https://x/y.jpg")');
     expect(coverImage(null)).toBe("none");
   });
+  it('escapa a URL para não sair do url("…")', () => {
+    expect(coverImage('https://x/a.jpg");position:fixed;x:("')).toBe(
+      'url("https://x/a.jpg\\22 );position:fixed;x:(\\22 ")'
+    );
+    expect(coverImage("https://x/a\\b\n.jpg")).toBe(
+      'url("https://x/a\\5c b\\a .jpg")'
+    );
+  });
 });

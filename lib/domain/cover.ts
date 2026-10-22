@@ -32,7 +32,17 @@ export function coverColors(
   return { coverBg: c[0], coverInk: c[1] };
 }
 
-/** Valor de `background-image` para a capa (ou "none"). */
+/**
+ * Valor de `background-image` para a capa (ou "none"). A URL vem do usuário: aspas,
+ * barra invertida e quebras de linha viram escapes CSS para não sair do `url("…")`.
+ */
 export function coverImage(url: string | null | undefined): string {
-  return url ? `url("${url}")` : "none";
+  if (!url) {
+    return "none";
+  }
+  const safe = url.replace(
+    /["\\\n\r\f]/g,
+    (c) => "\\" + c.charCodeAt(0).toString(16) + " "
+  );
+  return `url("${safe}")`;
 }

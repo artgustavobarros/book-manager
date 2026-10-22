@@ -52,6 +52,32 @@ export function isFetchableCover(raw: string): boolean {
   return true;
 }
 
+const MAX_REDIRECTS = 4;
+
+/**
+ * Segue redirecionamentos à mão (a Open Library manda as capas para o archive.org),
+ * aplicando `isFetchableCover` a cada destino para um redirect não levar à rede interna.
+ */
+async function fetchFollowingSafeRedirects(
+  src: string,
+  fetcher: typeof fetch
+): Promise<Response | null> {
+  const signal = AbortSignal.timeout(TIMEOUT_MS);
+  let url = src;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const res = await fetcher(url, { redirect: "manual", signal });
+    const location = res.headers.get("location");
+    if (!(res.status >= 300 && res.status < 400 && location)) {
+      return res;
+    }
+    url = new URL(location, url).href;
+    if (!isFetchableCover(url)) {
+      return null;
+    }
+  }
+  return null;
+}
+
 export async function fetchCoverDataUrl(
   raw: string | null,
   fetcher: typeof fetch = fetch
@@ -62,10 +88,10 @@ export async function fetchCoverDataUrl(
     return null;
   }
   try {
-    const res = await fetcher(src, {
-      redirect: "manual",
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    const res = await fetchFollowingSafeRedirects(src, fetcher);
+    if (!res) {
+      return null;
+    }
     const type = (res.headers.get("content-type") ?? "").split(";")[0].trim();
     if (!(res.ok && TYPES.test(type))) {
       return null;

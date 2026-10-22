@@ -340,4 +340,38 @@ describe("capas remotas da OG", () => {
     expect(await fetchCoverDataUrl("https://c.com/a", boom)).toBeNull();
     expect(await fetchCoverDataUrl(null)).toBeNull();
   });
+
+  it("segue redirecionamentos só para destinos permitidos", async () => {
+    const hops = (routes: Record<string, string>) =>
+      (async (url: string | URL | Request) => {
+        const to = routes[String(url)];
+        return to
+          ? new Response(null, { status: 302, headers: { location: to } })
+          : new Response(new Uint8Array(4), {
+              headers: { "content-type": "image/jpeg" },
+            });
+      }) as typeof fetch;
+    // Como a Open Library: capa → archive.org → servidor do arquivo.
+    expect(
+      await fetchCoverDataUrl(
+        "https://covers.openlibrary.org/b/id/1-L.jpg",
+        hops({
+          "https://covers.openlibrary.org/b/id/1-L.jpg":
+            "https://archive.org/download/x.jpg",
+          "https://archive.org/download/x.jpg": "/view?file=x.jpg",
+        })
+      )
+    ).toBe("data:image/jpeg;base64,AAAAAA==");
+    expect(
+      await fetchCoverDataUrl(
+        "https://c.com/a",
+        hops({ "https://c.com/a": "https://169.254.169.254/latest" })
+      )
+    ).toBeNull();
+    const loop = hops({
+      "https://c.com/1": "https://c.com/2",
+      "https://c.com/2": "https://c.com/1",
+    });
+    expect(await fetchCoverDataUrl("https://c.com/1", loop)).toBeNull();
+  });
 });

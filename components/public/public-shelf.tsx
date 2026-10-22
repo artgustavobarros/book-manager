@@ -2,7 +2,7 @@
 
 import { ShuffleIcon } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Avatar } from "@/components/app/avatar";
 import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
@@ -114,6 +114,8 @@ export function PublicShelf({
   const [limit, setLimit] = useState(PAGE);
   const [bookId, setBookId] = useState(initial.bookId);
   const [drawId, setDrawId] = useState<string | null>(null);
+  // O último sorteado sobrevive ao fechar o diálogo, para o próximo sorteio não repeti-lo.
+  const lastDrawId = useRef<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedBook, setCopiedBook] = useState(false);
 
@@ -154,7 +156,11 @@ export function PublicShelf({
       setGenre("");
       setStatus("");
     });
-  const draw = () => setDrawId(drawBook(list, drawId)?.id ?? null);
+  const draw = () => {
+    const id = drawBook(list, lastDrawId.current)?.id ?? null;
+    lastDrawId.current = id;
+    setDrawId(id);
+  };
   const abs = (sel: Partial<PublicSelection>) => origin + publicPath(slug, sel);
 
   return (

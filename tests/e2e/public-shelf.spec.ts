@@ -164,6 +164,18 @@ test("recorte da URL, busca, filtros, ficha e sorteio", async ({ browser }) => {
   await page.keyboard.press("Escape");
   await expect(ficha).toHaveCount(0);
 
+  // Fechar o sorteio não esquece o último livro: o próximo sorteio traz outro.
+  const drawnTitle = draw
+    .getByRole("heading")
+    .filter({ hasNotText: "Sorteio para você" });
+  await page.getByRole("button", { name: "Sortear para mim" }).click();
+  const firstTitle = (await drawnTitle.textContent()) ?? "";
+  await page.keyboard.press("Escape");
+  await expect(draw).toHaveCount(0);
+  await page.getByRole("button", { name: "Sortear para mim" }).click();
+  await expect(drawnTitle).not.toHaveText(firstTitle);
+  await page.keyboard.press("Escape");
+
   // O link do livro abre a ficha sobre a estante, com o aviso de livro compartilhado.
   await page.goto(bookLink);
   await expect(
