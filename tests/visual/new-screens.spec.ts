@@ -1,5 +1,5 @@
 /**
- * Telas que não existem no standalone (feitas com os componentes do Design System):
+ * Telas novas, feitas com os componentes do Design System depois do design original:
  * snapshots próprios, comparados com a linha de base versionada (tolerância de 1%).
  * Gerar/atualizar a base: pnpm test:visual --update-snapshots
  */

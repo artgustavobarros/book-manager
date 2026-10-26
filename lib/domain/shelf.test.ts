@@ -9,6 +9,7 @@ import {
   filterBooks,
   parseFacet,
   parseShelfParams,
+  SORT_KEYS,
   shelfChips,
   shelfHref,
   sortBooks,
@@ -248,5 +249,29 @@ describe("facetas e URL", () => {
     expect(parseShelfParams(new URLSearchParams("status=lido"))).toEqual(
       DEFAULT_SHELF
     );
+  });
+});
+
+describe("Estante: ordenações × filtros", () => {
+  // Saída completa no acervo de referência (era conferida contra o standalone, que
+  // saiu do repositório). Regravar só de propósito: pnpm test -u
+  it("todas as ordenações com os filtros principais", () => {
+    const cases = [
+      { q: "", reading: "todos", situation: "todas" },
+      { q: "a", reading: "todos", situation: "todas" },
+      { q: "", reading: "lido", situation: "todas" },
+      { q: "kafka", reading: "todos", situation: "todas" },
+      { q: "", reading: "nao-lido", situation: "em-casa" },
+      { q: "", reading: "todos", situation: "emprestado" },
+    ] as const;
+    const out: Record<string, string[]> = {};
+    for (const sort of SORT_KEYS) {
+      for (const c of cases) {
+        out[`${sort} / ${c.q || "-"} / ${c.reading} / ${c.situation}`] = titles(
+          sortBooks(filterBooks(books, { ...c, facet: null }), sort)
+        );
+      }
+    }
+    expect(out).toMatchSnapshot();
   });
 });

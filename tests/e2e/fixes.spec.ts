@@ -1,7 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import referenceBooks from "../fixtures/reference-books.json";
-import { AUTH_STATE, chooseFirstSituation, lendDialog } from "../support/e2e";
+import {
+  AUTH_STATE,
+  chooseFirstSituation,
+  lendDialog,
+  signIn,
+} from "../support/e2e";
 
 /** Correções da change fix-bugs-seo-mobile: bugs, SEO, teclado e layout mobile. */
 
@@ -628,5 +633,26 @@ test.describe("KPI de empréstimos pelo teclado (BP-09)", () => {
       await page.keyboard.press("Escape");
       await expect(heading).toBeHidden();
     }
+  });
+});
+
+test.describe("auth sem rede", () => {
+  test("excluir conta com a rede caída libera o botão e avisa", async ({
+    page,
+  }) => {
+    await signIn(page, "zero.novato@exemplo.com", "senha-forte-123");
+    await expect(page).toHaveURL("/");
+    await page.getByRole("button", { name: "Minha conta" }).first().click();
+    const dialog = page.getByRole("dialog", { name: "Minha conta" });
+    await dialog.getByLabel("Confirme com sua senha").fill("senha-forte-123");
+    await dialog.getByRole("button", { name: "Excluir conta" }).click();
+    // Toda chamada de auth falha como sem internet: a conta não chega a ser excluída.
+    await page.route(/\/api\/auth\//, (r) => r.abort("internetdisconnected"));
+    await dialog.getByRole("button", { name: "Confirmar exclusão" }).click();
+
+    await expect(dialog.getByText("Sem conexão com o servidor.")).toBeVisible();
+    await expect(
+      dialog.getByRole("button", { name: "Excluir conta" })
+    ).toBeEnabled();
   });
 });
