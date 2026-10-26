@@ -10,6 +10,23 @@ CPU realmente limitadas), mediana de 3 execuções por página. O modo padrão (
 incluindo todo o JS baixado antes dele, e num servidor local isso infla o LCP de páginas cujo
 maior elemento é texto.
 
+## Estado em 2026-10-26
+
+Lighthouse mobile, `devtools`, mediana de 3 (perf) e uma execução (demais categorias):
+
+| Página | Perf | A11y | Boas práticas | SEO |
+|---|---|---|---|---|
+| Painel | 97 | 100 | 100 | 63 |
+| Estante | 95 | 100 | 100 | 63 |
+| Dados | 97 | 100 | 100 | 63 |
+| Estante pública | 98 | 100 | 100 | 66 |
+| Entrar | 99 | 100 | 100 | 100 |
+
+SEO abaixo de 100 é o `noindex` proposital das páginas logadas e da estante pública
+(`app/robots.ts`). O que falta para 100 em performance é o FCP (~1,7 s); só o `inlineCss`
+mexeu nele (ver abaixo). react-doctor 0.9.18 (`--scope full`): 75, triagem em
+`.react-doctor/false-positives.md`.
+
 ## Tentativas
 
 | Ideia | Antes → depois | Veredito | Por quê |
