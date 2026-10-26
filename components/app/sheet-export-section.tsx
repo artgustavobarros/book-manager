@@ -16,11 +16,13 @@ const QUERY_KEY = ["sheet-export"] as const;
 const buttonClass =
   "h-9 rounded-lg border border-line2 bg-card px-3 font-semibold text-ink text-sm hover:border-ink disabled:cursor-wait disabled:opacity-60";
 
+const dateFormat = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
+  return dateFormat.format(new Date(value));
 }
 
 export function SheetExportSection() {

@@ -117,15 +117,21 @@ function GoogleButton({
             return;
           }
           setBusy(true);
-          // Em caso de sucesso o navegador sai para o Google; o botão fica travado até lá.
-          const { error } = await authClient.signIn.social({
-            provider: "google",
-            callbackURL,
-            errorCallbackURL: "/entrar",
-          });
-          if (error) {
+          // Em caso de sucesso o navegador sai para o Google; o botão fica travado até lá
+          // e só volta em erro da API ou de rede (o cliente lança quando o fetch falha).
+          try {
+            const { error } = await authClient.signIn.social({
+              provider: "google",
+              callbackURL,
+              errorCallbackURL: "/entrar",
+            });
+            if (error) {
+              setBusy(false);
+              setMsg(authErrorMessage(error));
+            }
+          } catch {
             setBusy(false);
-            setMsg(authErrorMessage(error));
+            setMsg(authErrorMessage({}));
           }
         }}
         type="button"
