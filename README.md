@@ -4,7 +4,7 @@ Catálogo pessoal dos livros de casa: **Painel** (indicadores, meta anual, leitu
 
 Quem cria uma conta com e-mail e senha pode usar o acervo imediatamente. Um aviso lembra da confirmação do endereço até que o link enviado por e-mail seja aberto; os dados criados nesse período ficam salvos.
 
-O app reproduz pixel a pixel o design do handoff em [`design/handoff/`](design/handoff/README.md), verificado por uma suíte visual que compara cada tela com o standalone original.
+O app reproduz o design do handoff em [`design/handoff/`](design/handoff/README.md). Os HTML do standalone ficam fora do repositório.
 
 ## Stack
 
@@ -103,13 +103,13 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 
 | Script | O que faz |
 |---|---|
-| `pnpm test` | Unidade e integração (Vitest). Os cálculos do domínio são comparados com a lógica do próprio standalone |
+| `pnpm test` | Unidade e integração (Vitest) |
 | `pnpm test:e2e` | Fluxos no navegador e auditoria de acessibilidade (axe) contra a build de produção, com PGlite descartável |
-| `pnpm test:visual` | Compara 10 telas e modais com o standalone (1440×900 e 390×844, claro e escuro; tolerância de 1%) e as telas novas com linhas de base próprias |
+| `pnpm test:visual` | Compara telas e modais com linhas de base versionadas (1440×900 e 390×844, claro e escuro; tolerância de 1%) |
 
 Os testes Playwright criam banco PGlite, caixa de e-mail e sessão em um diretório temporário exclusivo por execução, removido ao terminar. Não apagam `.data/dev` nem `.data/e2e`; a porta de teste (`E2E_PORT`, padrão 3100) precisa estar livre.
 
-`pnpm test:visual --update-snapshots` regrava as linhas de base das telas que não existem no design.
+`pnpm test:visual --update-snapshots` regrava as linhas de base.
 
 ## Deploy (Vercel)
 

@@ -1,5 +1,5 @@
 /**
- * Telas que divergem de propósito do standalone em design/handoff (ver DIVERGED em
+ * Telas que divergem de propósito do standalone do design (ver DIVERGED em
  * tests/support/visual-cases.ts): snapshots próprios, comparados com a linha de base
  * versionada (tolerância de 1%), como as telas novas.
  * Gerar/atualizar a base: pnpm test:visual --update-snapshots

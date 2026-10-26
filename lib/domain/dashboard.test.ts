@@ -1,7 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { makeBook, referenceBooks } from "@/tests/support/reference";
-import { loadStandalone } from "@/tests/support/standalone";
+import { makeBook } from "@/tests/support/reference";
 
 import { wallClock, yearFraction } from "./clock";
 import { dashboard, greetingFor, todayLabel } from "./dashboard";
@@ -37,47 +36,6 @@ describe("cabeçalho", () => {
   });
   it("data por extenso com o dia da semana em maiúscula", () => {
     expect(todayLabel(NOW, TZ)).toBe("Segunda-feira, 15 de junho");
-  });
-});
-
-describe("dashboard × standalone", () => {
-  beforeAll(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-  });
-  afterAll(() => vi.useRealTimers());
-
-  it("produz os mesmos KPIs, meta e listas que o painel() do standalone", () => {
-    const oracle = loadStandalone();
-    const expected = oracle.painel(oracle.state.books) as Record<string, any>;
-    const d = dashboard(referenceBooks(), {
-      goal: 24,
-      now: NOW,
-      tz: TZ,
-      userName: "Ana Lima",
-    });
-
-    expect(d.kpis.map((k) => [k.label, k.value, k.sub])).toEqual(
-      expected.kpis.map((k: any) => [k.label, k.value, k.sub])
-    );
-    expect(d.todayLabel).toBe(expected.todayLabel);
-    expect(d.greeting).toBe(expected.greeting);
-    expect(d.goalDone).toBe(expected.goalDone);
-    expect(d.goalPct).toBe(expected.goalPct);
-    expect(d.expectedPct).toBe(expected.expectedPct);
-    expect(d.expectedN).toBe(expected.expectedN);
-    expect(d.goalLine).toBe(expected.goalLine);
-    expect(d.paceLabel).toBe(expected.paceLabel);
-    expect(d.readingCount).toBe(expected.readingCount);
-    expect(d.yearReads.map((b) => b.title)).toEqual(
-      expected.yearReads.map((r: any) => r.title)
-    );
-    expect(d.reading.map((b) => b.title)).toEqual(
-      expected.reading.map((r: any) => r.title)
-    );
-    expect(d.recent.map((b) => b.title)).toEqual(
-      expected.recent.map((r: any) => r.title)
-    );
   });
 });
 

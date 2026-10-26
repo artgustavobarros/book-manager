@@ -4,6 +4,8 @@ Catálogo pessoal de livros físicos: Painel (indicadores, meta, leituras), Esta
 
 ## Conteúdo
 
+Os HTML (`Bodega Literária*.html` e `source/`) não ficam no repositório: são só referência local.
+
 - `Bodega Literária.html` — app completo, arquivo único, abre offline no navegador.
 - `Bodega Literária – Design System.html` — referência visual: cores, tipografia, espaço, movimento, componentes e microinterações (interativo, tema claro/escuro).
 - `styles.css` — ponto de entrada dos tokens (só `@import`).

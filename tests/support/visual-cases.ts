@@ -1,13 +1,13 @@
 /**
- * Casos das capturas visuais (compartilhados por oracle.spec.ts e diverged.spec.ts):
- * telas, viewports, temas e como abrir cada caso no app.
+ * Casos das capturas visuais de diverged.spec.ts: telas, viewports, temas e como abrir
+ * cada caso no app.
  */
 import { type Browser, type Page, test } from "@playwright/test";
 
 import { FIXED_NOW } from "../../playwright.config";
 import { AUTH_STATE } from "./e2e";
 
-export const EXTERNAL = /^https?:\/\/(?!localhost)/;
+const EXTERNAL = /^https?:\/\/(?!localhost)/;
 
 export type Theme = "light" | "dark";
 export type Viewport = { name: string; width: number; height: number };
@@ -22,9 +22,7 @@ export interface Case {
   act?: (page: Page) => Promise<void>;
   authed?: boolean;
   name: string;
-  /** Rota do app e aba do standalone ("Painel" é o padrão nos dois). */
   route: string;
-  tab?: "Estante" | "Dados";
 }
 
 const openFicha = async (page: Page) => {
@@ -34,25 +32,22 @@ const openFicha = async (page: Page) => {
 export const CASES: Case[] = [
   { name: "entrar", route: "/entrar", authed: false },
   { name: "painel", route: "/" },
-  { name: "estante", route: "/estante", tab: "Estante" },
+  { name: "estante", route: "/estante" },
   {
     name: "estante-lista",
     route: "/estante",
-    tab: "Estante",
     act: (p) => p.getByRole("button", { name: "Lista", exact: true }).click(),
   },
   {
     name: "estante-filtro",
     route: "/estante",
-    tab: "Estante",
     act: (p) => p.getByRole("button", { name: /^Emprestados/ }).click(),
   },
-  { name: "dados", route: "/dados", tab: "Dados" },
-  { name: "ficha", route: "/estante", tab: "Estante", act: openFicha },
+  { name: "dados", route: "/dados" },
+  { name: "ficha", route: "/estante", act: openFicha },
   {
     name: "edicao",
     route: "/estante",
-    tab: "Estante",
     act: async (p) => {
       await openFicha(p);
       await p.getByRole("button", { name: "Editar ficha" }).click();
@@ -111,8 +106,8 @@ export async function openApp(
 }
 
 /**
- * Casos que divergem de propósito do standalone em design/handoff: saem do oráculo e
- * passam a ter baselines próprias em diverged.spec.ts. O standalone da identidade bordô
+ * Casos que divergem de propósito do standalone do design e por isso têm baselines
+ * próprias em diverged.spec.ts. O standalone da identidade bordô
  * (change nova-identidade-visual) já tem header compacto e botões flutuantes; no mobile
  * continuam diferentes os ajustes do app: Estante em duas colunas, pontos do carrossel maiores
  * (alvo de toque), contadores dos chips com mais contraste, selo da meta na linha do

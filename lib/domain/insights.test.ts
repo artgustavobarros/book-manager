@@ -1,89 +1,12 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { makeBook, referenceBooks } from "@/tests/support/reference";
-import { loadStandalone } from "@/tests/support/standalone";
 
 import { groupBy, insights, scopeShelfReading } from "./insights";
 import { filterBooks } from "./shelf";
 import type { Book } from "./types";
 
-const NOW = new Date("2026-06-15T18:00:00Z");
 const books = referenceBooks();
-type Any = any;
-
-describe("insights × standalone", () => {
-  beforeAll(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-  });
-  afterAll(() => vi.useRealTimers());
-
-  const variants = [
-    { scope: "todos", expanded: {}, assignAll: false, assignMore: false },
-    {
-      scope: "lidos",
-      expanded: { genre: true, nationality: true, publisher: true },
-      assignAll: true,
-      assignMore: false,
-    },
-    { scope: "todos", expanded: {}, assignAll: true, assignMore: true },
-  ] as const;
-
-  for (const v of variants) {
-    it(`bate com dados() em ${JSON.stringify(v)}`, () => {
-      const oracle = loadStandalone({
-        state: { ...v, expanded: { ...v.expanded } },
-      });
-      // O standalone indexa `expanded` pelo nome do campo, como aqui.
-      const e = oracle.dados(oracle.state.books) as Any;
-      const d = insights(books, { ...v, year: 2026 });
-
-      // dataKpis divergem do standalone de propósito (ver describe "dataKpis").
-      expect([d.thermoPct, d.thermoPctLabel, d.thermoLabel]).toEqual([
-        e.thermoPct,
-        e.thermoPctLabel,
-        e.thermoLabel,
-      ]);
-      expect(d.bigBooks.map((r) => [r.rank, r.book.title, r.pages])).toEqual(
-        e.bigBooks.map((r: Any) => [r.rank, r.title, r.pages])
-      );
-      // O anel e as barras de status divergem de propósito: o standalone tinha um
-      // status único; aqui são Leitura e Situação (ver describe "Leitura e Situação").
-      expect([d.baseLabel, d.donutTotal]).toEqual([e.baseLabel, e.donutTotal]);
-      for (const [ours, theirs] of [
-        [d.genre, e.genre],
-        [d.nat, e.nat],
-        [d.pub, e.pub],
-      ] as const) {
-        expect(ours.list.map((r) => [r.label, r.count, r.pct])).toEqual(
-          theirs.list.map((r: Any) => [r.label, r.count, r.pct])
-        );
-        expect([ours.badge, ours.more, ours.moreLabel]).toEqual([
-          theirs.badge,
-          theirs.more,
-          theirs.moreLabel,
-        ]);
-      }
-      expect(
-        d.yearCols.map((c) => [String(c.year), c.count, c.sub, c.pct])
-      ).toEqual(e.yearCols.map((c: Any) => [c.label, c.count, c.sub, c.pct]));
-      expect(d.yearBadge).toBe(e.yearBadge);
-      expect(
-        d.assignRows.map((r) => [r.book.title, r.years.map((y) => y.on)])
-      ).toEqual(
-        e.assignRows.map((r: Any) => [
-          r.title,
-          r.years.map((y: Any) => y.bg === "var(--ink)"),
-        ])
-      );
-      expect([d.assignEmpty, d.assignMoreShow, d.assignMoreLabel]).toEqual([
-        e.assignEmpty,
-        e.assignMoreShow,
-        e.assignMoreLabel,
-      ]);
-    });
-  }
-});
 
 describe("insights", () => {
   it("agrupa valores vazios como 'Não informado'", () => {
