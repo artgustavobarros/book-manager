@@ -4,7 +4,6 @@ import { cn } from "cn";
 import { LayoutGridIcon, ListIcon, Share2Icon } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useEffect, useMemo, useState } from "react";
-import { preload } from "react-dom";
 
 import { useApp } from "@/components/app/app-provider";
 import { PageMain } from "@/components/app/app-shell";
@@ -18,7 +17,7 @@ import { useBackup } from "@/hooks/use-backup";
 import { useBookActions, useBooks } from "@/hooks/use-books";
 import { useDragScroll } from "@/hooks/use-drag-scroll";
 import { useShelfState } from "@/hooks/use-shelf-state";
-import { coverSrc } from "@/lib/domain/cover";
+import { preloadCovers } from "@/lib/client/preload-covers";
 import { scopeFromShelf, toPublicBooks } from "@/lib/domain/share";
 import {
   type Chip,
@@ -223,14 +222,8 @@ export function ShelfPage() {
   }, [currentPage]);
   const first = (currentPage - 1) * PAGE;
   const visible = list.slice(first, first + PAGE);
-  // As capas da primeira fileira são o LCP da Estante: o <link rel="preload"> no
-  // <head> adianta o download, que pelo background-image só começaria depois do CSS.
   if (state.view === "grid") {
-    for (const b of visible.slice(0, 2)) {
-      if (b.coverUrl) {
-        preload(coverSrc(b.coverUrl), { as: "image", fetchPriority: "high" });
-      }
-    }
+    preloadCovers(visible);
   }
   const shelfEmpty = books.length === 0;
   const noMatch = !shelfEmpty && list.length === 0;

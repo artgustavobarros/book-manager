@@ -3,7 +3,6 @@
 import { ShuffleIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { preload } from "react-dom";
 import { Avatar } from "@/components/app/avatar";
 import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
@@ -17,8 +16,8 @@ import {
 } from "@/components/ui/combobox";
 import { Segmented } from "@/components/ui/segmented";
 import { copyText } from "@/lib/client/clipboard";
+import { preloadCovers } from "@/lib/client/preload-covers";
 import { readingInfo } from "@/lib/domain/book-state";
-import { coverSrc } from "@/lib/domain/cover";
 import {
   booksLabel,
   drawPoolLabel,
@@ -143,13 +142,7 @@ export function PublicShelf({
   );
   const filtered = !!(genre || reading || q);
   const shown = list.slice(0, limit);
-  // As capas da primeira fileira são o LCP: o preload no <head> adianta o download,
-  // que pelo background-image só começaria depois do CSS (como na Estante).
-  for (const b of shown.slice(0, 2)) {
-    if (b.coverUrl) {
-      preload(coverSrc(b.coverUrl), { as: "image", fetchPriority: "high" });
-    }
-  }
+  preloadCovers(shown);
   const book = bookId ? (books.find((b) => b.id === bookId) ?? null) : null;
   const drawn = drawId ? (books.find((b) => b.id === drawId) ?? null) : null;
 

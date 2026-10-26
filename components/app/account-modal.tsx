@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { Modal, ModalClose, useModalDraft } from "@/components/ui/dialog";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
-import { authErrorMessage } from "@/lib/auth-errors";
+import { authErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/auth-errors";
 import {
   changePasswordSchema,
   MIN_PASSWORD,
@@ -270,8 +270,7 @@ function GoogleSection() {
                   setLinked(false);
                   toast("Conta Google desvinculada");
                 } catch {
-                  // Falha de rede: o cliente lança em vez de devolver `error`.
-                  setMsg(authErrorMessage({}));
+                  setMsg(NETWORK_ERROR_MESSAGE);
                 } finally {
                   setBusy(false);
                 }
@@ -298,7 +297,7 @@ function GoogleSection() {
               setBusy(true);
               setMsg("");
               // Em caso de sucesso o navegador sai para o Google: o botão só volta em
-              // erro da API ou de rede (o cliente lança quando o fetch falha).
+              // erro da API ou de rede.
               try {
                 const { error } = await authClient.linkSocial({
                   provider: "google",
@@ -310,7 +309,7 @@ function GoogleSection() {
                 }
               } catch {
                 setBusy(false);
-                setMsg(authErrorMessage({}));
+                setMsg(NETWORK_ERROR_MESSAGE);
               }
             }}
             type="button"
@@ -366,17 +365,18 @@ function DeleteSection() {
               return setConfirm(true);
             }
             setBusy(true);
-            let error: Parameters<typeof authErrorMessage>[0];
+            let result: Awaited<ReturnType<typeof authClient.deleteUser>>;
             try {
-              ({ error } = await authClient.deleteUser(
+              result = await authClient.deleteUser(
                 app.hasPassword ? { password } : {}
-              ));
+              );
             } catch {
-              // Falha de rede: o cliente lança em vez de devolver `error`.
-              error = {};
+              setConfirm(false);
+              return setMsg(NETWORK_ERROR_MESSAGE);
             } finally {
               setBusy(false);
             }
+            const { error } = result;
             if (error) {
               setConfirm(false);
               return setMsg(
