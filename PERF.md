@@ -21,3 +21,7 @@ maior elemento é texto.
 | Modais com `next/dynamic` montados só na 1ª abertura | TBT Painel 176 → 99, Dados 172 → 94, Estante 222 → 147 ms; perf 98/98/96 | revertida | A 1ª abertura passou de 133 para 501 ms (4G, CPU 4×) e 3 testes e2e quebraram: o modal aparece depois do clique e o axe pega a animação de entrada. |
 | Idem, baixando os modais no `requestIdleCallback` | TBT volta a 166–200 ms | revertida | O custo só muda de lugar, continua dentro da janela do TBT. |
 | Idem, baixando os modais no 1º `pointerdown`/`keydown` | 1ª abertura 795 ms | revertida | Os 5 chunks disputam a rede e a ficha chega mais tarde. |
+| Tirar o preload das fontes Instrument Sans e Fraunces | FCP −80 a −130 ms; LCP de Dados 1,83 → 2,39 s; perf 94/97/96 → 93/96/93 | revertida | Sem o preload a fonte chega depois e a troca de fonte vira um LCP mais tarde. |
+| Subset do Fraunces itálico só com as letras de "Literária" (80 → 5 KB) | perf 94/97/96 → 94/96/96 | revertida | Dentro do ruído: o itálico não está no caminho do FCP nem do LCP. |
+| `experimental.inlineCss` | FCP ~1,65 → ~0,9 s nas 3 páginas; LCP Painel 1,65 → 0,87 s; LCP Estante 2,1 → 2,36 s; HTML comprimido ~16 → ~56 KB | revertida | O Next duplica o CSS no payload do RSC e o CSS deixa de ir para o cache. A doc do Next desaconselha quando a maioria é visitante recorrente, que é o caso aqui. Reavaliar se o público de primeira visita (estante pública) virar prioridade. |
+| `browserslist` mais moderno para cortar ~14 KB de JS legado | — | não tentada | A estimativa (14 KB) fica abaixo do ruído das medições. |
