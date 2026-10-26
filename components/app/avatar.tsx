@@ -19,7 +19,9 @@ export function Avatar({
   const imageUrl = httpsAvatarUrl(image);
 
   return (
+    // Decorativo: o nome da pessoa sempre aparece ao lado ou no rótulo do botão.
     <span
+      aria-hidden="true"
       className={cn(
         "inline-flex flex-none items-center justify-center overflow-hidden rounded-full bg-acc text-white dark:text-onacc",
         className

@@ -1,5 +1,12 @@
 import { MIN_PASSWORD } from "@/lib/validation/auth";
 
+/**
+ * Falha de rede numa chamada do `authClient`: o cliente lança (o fetch falhou) em vez
+ * de devolver `{ error }`, então quem chama trata no `catch`.
+ */
+export const NETWORK_ERROR_MESSAGE =
+  "Sem conexão com o servidor. Verifique a internet e tente de novo.";
+
 /** Mensagens em pt-BR para os erros do Better Auth exibidos nas telas de entrada. */
 export function authErrorMessage(
   error: { code?: string; status?: number; message?: string } | null | undefined

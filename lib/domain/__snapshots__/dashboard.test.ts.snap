@@ -1,0 +1,62 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Painel: acervo de referência > KPIs, meta e listas 1`] = `
+{
+  "goal": [
+    3,
+    "12.5%",
+    "45.37671232876712%",
+    11,
+    "Faltam 21 livros · cerca de 3 por mês até dezembro",
+  ],
+  "header": [
+    "Segunda-feira, 15 de junho",
+    "Boa tarde, Ana",
+  ],
+  "kpis": [
+    [
+      "Livros no acervo",
+      "30",
+      "+3 adquiridos em 2026",
+    ],
+    [
+      "Lidos",
+      "16",
+      "53% do acervo",
+    ],
+    [
+      "Páginas lidas",
+      "3.936",
+      "média de 306 p. por livro",
+    ],
+    [
+      "Emprestados",
+      "3",
+      "fora de casa agora",
+    ],
+    [
+      "Autores",
+      "28",
+      "12 nacionalidades",
+    ],
+  ],
+  "pace": "8 abaixo do ritmo",
+  "reading": [
+    "Cem anos de solidão",
+    "O estrangeiro",
+  ],
+  "readingCount": "2 livros",
+  "recent": [
+    "Kindred",
+    "Americanah",
+    "Frankenstein",
+    "Drácula",
+    "A morte de Ivan Ilitch",
+  ],
+  "yearReads": [
+    "Frankenstein",
+    "Macunaíma",
+    "Kindred",
+  ],
+}
+`;

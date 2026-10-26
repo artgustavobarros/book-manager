@@ -75,7 +75,6 @@ function AccountButton({ className }: { className?: string }) {
   const app = useApp();
   return (
     <button
-      aria-label="Minha conta"
       className={cn(
         "flex size-10 flex-none items-center justify-center rounded-full border-0 p-0 font-bold text-sm tracking-[.025em] transition-transform duration-100 active:scale-95",
         className
@@ -84,6 +83,8 @@ function AccountButton({ className }: { className?: string }) {
       title="Minha conta"
       type="button"
     >
+      {/* Nome em texto oculto, não aria-label: as iniciais visíveis não fazem parte do nome. */}
+      <span className="sr-only">Minha conta</span>
       <Avatar
         className="size-full"
         image={app.user.image}
@@ -132,6 +133,7 @@ function WideHeader({ search }: { search: HeaderSearch }) {
               searchClass,
               "h-10 max-w-[360px] border-line2 px-4 text-sm transition-[border-color,box-shadow] duration-150 focus:border-ink focus:shadow-ring"
             )}
+            name="q"
             onChange={(e) => search.setQuery(e.target.value)}
             placeholder="Buscar título, autor, editora, empréstimo, anotações…"
             value={search.query}
@@ -227,6 +229,7 @@ function NarrowHeader({ search }: { search: HeaderSearch }) {
                 "h-11 animate-acv-fade border-ink px-4 text-base shadow-[0_0_0_3px_rgba(127,120,110,.18)]",
                 search.query && "pr-11"
               )}
+              name="q"
               onChange={(e) => search.setQuery(e.target.value)}
               placeholder="Buscar título, autor, editora…"
               ref={inputRef}

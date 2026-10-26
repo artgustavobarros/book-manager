@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { Modal, ModalClose, useModalDraft } from "@/components/ui/dialog";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
-import { authErrorMessage } from "@/lib/auth-errors";
+import { authErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/auth-errors";
 import {
   changePasswordSchema,
   MIN_PASSWORD,
@@ -253,21 +253,27 @@ function GoogleSection() {
               onClick={async () => {
                 setBusy(true);
                 setMsg("");
-                const { data: accounts } = await authClient.listAccounts();
-                const google = accounts?.find((a) => a.providerId === "google");
-                if (!google) {
+                try {
+                  const { data: accounts } = await authClient.listAccounts();
+                  const google = accounts?.find(
+                    (a) => a.providerId === "google"
+                  );
+                  if (!google) {
+                    return setLinked(false);
+                  }
+                  const { error } = await authClient.unlinkAccount({
+                    accountId: google.accountId,
+                  });
+                  if (error) {
+                    return setMsg(authErrorMessage(error));
+                  }
+                  setLinked(false);
+                  toast("Conta Google desvinculada");
+                } catch {
+                  setMsg(NETWORK_ERROR_MESSAGE);
+                } finally {
                   setBusy(false);
-                  return setLinked(false);
                 }
-                const { error } = await authClient.unlinkAccount({
-                  accountId: google.accountId,
-                });
-                setBusy(false);
-                if (error) {
-                  return setMsg(authErrorMessage(error));
-                }
-                setLinked(false);
-                toast("Conta Google desvinculada");
               }}
               type="button"
             >
@@ -290,14 +296,20 @@ function GoogleSection() {
               }
               setBusy(true);
               setMsg("");
-              // Em caso de sucesso o navegador sai para o Google.
-              const { error } = await authClient.linkSocial({
-                provider: "google",
-                callbackURL: "/",
-              });
-              if (error) {
+              // Em caso de sucesso o navegador sai para o Google: o botão só volta em
+              // erro da API ou de rede.
+              try {
+                const { error } = await authClient.linkSocial({
+                  provider: "google",
+                  callbackURL: "/",
+                });
+                if (error) {
+                  setBusy(false);
+                  setMsg(authErrorMessage(error));
+                }
+              } catch {
                 setBusy(false);
-                setMsg(authErrorMessage(error));
+                setMsg(NETWORK_ERROR_MESSAGE);
               }
             }}
             type="button"
@@ -353,10 +365,18 @@ function DeleteSection() {
               return setConfirm(true);
             }
             setBusy(true);
-            const { error } = await authClient.deleteUser(
-              app.hasPassword ? { password } : {}
-            );
-            setBusy(false);
+            let result: Awaited<ReturnType<typeof authClient.deleteUser>>;
+            try {
+              result = await authClient.deleteUser(
+                app.hasPassword ? { password } : {}
+              );
+            } catch {
+              setConfirm(false);
+              return setMsg(NETWORK_ERROR_MESSAGE);
+            } finally {
+              setBusy(false);
+            }
+            const { error } = result;
             if (error) {
               setConfirm(false);
               return setMsg(

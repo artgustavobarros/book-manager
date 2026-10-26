@@ -33,6 +33,16 @@ export function coverColors(
 }
 
 /**
+ * URL da capa para exibir. As capas da Apple (iTunes) saem em WebP: o CDN serve o
+ * mesmo tamanho com cerca de 1/3 dos bytes do JPG gravado no acervo.
+ */
+export function coverSrc(url: string): string {
+  return /^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(url)
+    ? url.replace(/(\/\d+x\d+bb)\.jpg$/, "$1.webp")
+    : url;
+}
+
+/**
  * Valor de `background-image` para a capa (ou "none"). A URL vem do usuário: aspas,
  * barra invertida e quebras de linha viram escapes CSS para não sair do `url("…")`.
  */
@@ -40,7 +50,7 @@ export function coverImage(url: string | null | undefined): string {
   if (!url) {
     return "none";
   }
-  const safe = url.replace(
+  const safe = coverSrc(url).replace(
     /["\\\n\r\f]/g,
     (c) => "\\" + c.charCodeAt(0).toString(16) + " "
   );

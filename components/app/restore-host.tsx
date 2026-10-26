@@ -55,6 +55,7 @@ export function RestoreHost() {
         accept=".json,application/json"
         aria-hidden="true"
         className="hidden"
+        name="backup"
         onChange={async (e) => {
           const file = e.target.files?.[0];
           e.target.value = "";

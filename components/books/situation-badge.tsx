@@ -74,7 +74,10 @@ function LentBadge({
               ? `Registrar devolução de livro emprestado a ${borrower}`
               : "Registrar devolução"
           }
-          className="ml-0.5 inline-flex size-4 items-center justify-center rounded-full bg-lentfg/15 text-[10px] text-lentfg transition-colors hover:bg-lentfg hover:text-white"
+          // Alvo de toque de 24px em volta do círculo de 16px; a margem negativa devolve
+          // o espaço do padding. Cresce mais para cima porque, na lista do celular, o
+          // autor fica logo abaixo.
+          className="group/return -mt-[5px] -mr-1 -mb-[3px] -ml-0.5 inline-flex size-6 rounded-full px-1 pt-[5px] pb-[3px] text-[10px] text-lentfg"
           onClick={(e) => {
             e.stopPropagation();
             onReturn();
@@ -82,7 +85,9 @@ function LentBadge({
           title="Registrar devolução"
           type="button"
         >
-          ✕
+          <span className="flex size-4 items-center justify-center rounded-full bg-lentfg/15 transition-colors group-hover/return:bg-lentfg group-hover/return:text-white">
+            ✕
+          </span>
         </button>
       ) : null}
     </span>

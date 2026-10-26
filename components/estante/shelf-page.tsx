@@ -17,6 +17,7 @@ import { useBackup } from "@/hooks/use-backup";
 import { useBookActions, useBooks } from "@/hooks/use-books";
 import { useDragScroll } from "@/hooks/use-drag-scroll";
 import { useShelfState } from "@/hooks/use-shelf-state";
+import { preloadCovers } from "@/lib/client/preload-covers";
 import { scopeFromShelf, toPublicBooks } from "@/lib/domain/share";
 import {
   type Chip,
@@ -221,6 +222,9 @@ export function ShelfPage() {
   }, [currentPage]);
   const first = (currentPage - 1) * PAGE;
   const visible = list.slice(first, first + PAGE);
+  if (state.view === "grid") {
+    preloadCovers(visible);
+  }
   const shelfEmpty = books.length === 0;
   const noMatch = !shelfEmpty && list.length === 0;
 

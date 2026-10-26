@@ -12,7 +12,11 @@ import { Input } from "@/components/ui/input";
 import { FieldLabel } from "@/components/ui/text-field";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
-import { authErrorMessage, oauthErrorMessage } from "@/lib/auth-errors";
+import {
+  authErrorMessage,
+  NETWORK_ERROR_MESSAGE,
+  oauthErrorMessage,
+} from "@/lib/auth-errors";
 import { signInSchema, signUpSchema } from "@/lib/validation/auth";
 
 import { AuthHeading, AuthNotice, authCardClass } from "./auth-ui";
@@ -117,15 +121,21 @@ function GoogleButton({
             return;
           }
           setBusy(true);
-          // Em caso de sucesso o navegador sai para o Google; o botão fica travado até lá.
-          const { error } = await authClient.signIn.social({
-            provider: "google",
-            callbackURL,
-            errorCallbackURL: "/entrar",
-          });
-          if (error) {
+          // Em caso de sucesso o navegador sai para o Google; o botão fica travado até lá
+          // e só volta em erro da API ou de rede.
+          try {
+            const { error } = await authClient.signIn.social({
+              provider: "google",
+              callbackURL,
+              errorCallbackURL: "/entrar",
+            });
+            if (error) {
+              setBusy(false);
+              setMsg(authErrorMessage(error));
+            }
+          } catch {
             setBusy(false);
-            setMsg(authErrorMessage(error));
+            setMsg(NETWORK_ERROR_MESSAGE);
           }
         }}
         type="button"

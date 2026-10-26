@@ -1,5 +1,5 @@
 import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import * as z from "zod";
 
 /**
  * Variáveis de ambiente validadas (T3 Env). Nenhum outro módulo lê `process.env`.

@@ -50,7 +50,7 @@ export function BookRow({
       <span className="flex min-w-0 flex-col gap-1 max-[640px]:col-span-2 max-[640px]:col-start-2 max-[640px]:row-start-1">
         {/* A linha inteira abre a ficha com o mouse; o título é o alvo do teclado. */}
         <button
-          className="truncate border-0 bg-transparent p-0 text-left font-semibold text-ink text-sm max-[640px]:whitespace-normal"
+          className="-mt-1.5 truncate border-0 bg-transparent px-0 pt-1.5 pb-0 text-left font-semibold text-ink text-sm max-[640px]:whitespace-normal"
           onClick={(e) => {
             e.stopPropagation();
             app.openView(b.id);
@@ -65,8 +65,11 @@ export function BookRow({
           onReturn={() => app.returnBook(b)}
         />
       </span>
+      {/* Título e autor têm alvo de toque de 24px (padding com margem negativa, sem
+          mexer no layout): o título cresce para cima e o autor, mais para baixo (no celular, o selo de
+          emprestado fica logo acima). */}
       <button
-        className="truncate border-0 bg-transparent p-0 text-left text-ink text-sm hover:text-acc hover:underline max-[640px]:col-span-2 max-[640px]:col-start-2 max-[640px]:row-start-2"
+        className="-mt-0.5 -mb-1 truncate border-0 bg-transparent px-0 pt-0.5 pb-1 text-left text-ink text-sm hover:text-acc hover:underline max-[640px]:col-span-2 max-[640px]:col-start-2 max-[640px]:row-start-2"
         onClick={(e) => {
           e.stopPropagation();
           onAuthor(author);

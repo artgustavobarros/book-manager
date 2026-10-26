@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { makeBook } from "@/tests/support/reference";
+import { makeBook, referenceBooks } from "@/tests/support/reference";
 
 import { wallClock, yearFraction } from "./clock";
 import { dashboard, greetingFor, todayLabel } from "./dashboard";
@@ -75,5 +75,29 @@ describe("dashboard", () => {
     expect(d.goalDone).toBe(2);
     expect(d.yearReads).toContain(lent);
     expect(d.kpis[1].value).toBe("2");
+  });
+});
+
+describe("Painel: acervo de referência", () => {
+  // Os campos que eram conferidos contra o standalone (que saiu do repositório).
+  // Regravar só de propósito: pnpm test -u
+  it("KPIs, meta e listas", () => {
+    const d = dashboard(referenceBooks(), {
+      goal: 24,
+      now: NOW,
+      tz: TZ,
+      userName: "Ana Lima",
+    });
+    const t = (bs: { title: string }[]) => bs.map((b) => b.title);
+    expect({
+      kpis: d.kpis.map((k) => [k.label, k.value, k.sub]),
+      header: [d.todayLabel, d.greeting],
+      goal: [d.goalDone, d.goalPct, d.expectedPct, d.expectedN, d.goalLine],
+      pace: d.paceLabel,
+      readingCount: d.readingCount,
+      yearReads: t(d.yearReads),
+      reading: t(d.reading),
+      recent: t(d.recent),
+    }).toMatchSnapshot();
   });
 });

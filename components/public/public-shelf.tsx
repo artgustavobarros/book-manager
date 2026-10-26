@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/combobox";
 import { Segmented } from "@/components/ui/segmented";
 import { copyText } from "@/lib/client/clipboard";
+import { preloadCovers } from "@/lib/client/preload-covers";
 import { readingInfo } from "@/lib/domain/book-state";
 import {
   booksLabel,
@@ -141,6 +142,7 @@ export function PublicShelf({
   );
   const filtered = !!(genre || reading || q);
   const shown = list.slice(0, limit);
+  preloadCovers(shown);
   const book = bookId ? (books.find((b) => b.id === bookId) ?? null) : null;
   const drawn = drawId ? (books.find((b) => b.id === drawId) ?? null) : null;
 

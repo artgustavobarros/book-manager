@@ -1,0 +1,910 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Dados: acervo de referência > gráficos e listas em {"scope":"lidos","expanded":{"genre":true,"nationality":true,"publisher":true},"assignAll":true,"assignMore":false} 1`] = `
+{
+  "assign": [
+    false,
+    true,
+    "Mostrar todos (16)",
+  ],
+  "assignRows": [
+    [
+      "1984",
+      [
+        false,
+        true,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "A desobediência civil",
+      [
+        false,
+        false,
+        true,
+        false,
+        false,
+      ],
+    ],
+    [
+      "A hora da estrela",
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "A metamorfose",
+      [
+        true,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "A morte de Ivan Ilitch",
+      [
+        false,
+        false,
+        false,
+        true,
+        false,
+      ],
+    ],
+    [
+      "Crime e castigo",
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+  ],
+  "bigBooks": [
+    [
+      1,
+      "Crime e castigo",
+      "568 p.",
+    ],
+    [
+      2,
+      "1984",
+      "416 p.",
+    ],
+    [
+      3,
+      "O morro dos ventos uivantes",
+      "384 p.",
+    ],
+    [
+      4,
+      "Kindred",
+      "320 p.",
+    ],
+    [
+      5,
+      "Ensaio sobre a cegueira",
+      "312 p.",
+    ],
+  ],
+  "donut": [
+    "16 livros",
+    "16",
+  ],
+  "genre": {
+    "badge": "7 gêneros",
+    "list": [
+      [
+        "Romance",
+        7,
+        "100%",
+      ],
+      [
+        "Novela",
+        3,
+        "42.857142857142854%",
+      ],
+      [
+        "Ficção científica e distopia",
+        2,
+        "28.57142857142857%",
+      ],
+      [
+        "Contos",
+        1,
+        "14.285714285714285%",
+      ],
+      [
+        "Ensaio",
+        1,
+        "14.285714285714285%",
+      ],
+      [
+        "Não-ficção",
+        1,
+        "14.285714285714285%",
+      ],
+      [
+        "Terror e gótico",
+        1,
+        "14.285714285714285%",
+      ],
+    ],
+    "more": false,
+    "moreLabel": "Mostrar menos",
+  },
+  "nat": {
+    "badge": "8 países",
+    "list": [
+      [
+        "brasileira",
+        5,
+        "100%",
+      ],
+      [
+        "inglesa",
+        3,
+        "60%",
+      ],
+      [
+        "estadunidense",
+        2,
+        "40%",
+      ],
+      [
+        "russa",
+        2,
+        "40%",
+      ],
+      [
+        "argentina",
+        1,
+        "20%",
+      ],
+      [
+        "mexicana",
+        1,
+        "20%",
+      ],
+      [
+        "portuguesa",
+        1,
+        "20%",
+      ],
+      [
+        "tcheca",
+        1,
+        "20%",
+      ],
+    ],
+    "more": true,
+    "moreLabel": "Mostrar menos",
+  },
+  "pub": {
+    "badge": "9 editoras",
+    "list": [
+      [
+        "Antofágica",
+        4,
+        "100%",
+      ],
+      [
+        "Companhia das Letras",
+        3,
+        "75%",
+      ],
+      [
+        "Record",
+        2,
+        "50%",
+      ],
+      [
+        "Todavia",
+        2,
+        "50%",
+      ],
+      [
+        "Ática",
+        1,
+        "25%",
+      ],
+      [
+        "Editora 34",
+        1,
+        "25%",
+      ],
+      [
+        "Morro Branco",
+        1,
+        "25%",
+      ],
+      [
+        "Penguin",
+        1,
+        "25%",
+      ],
+      [
+        "Rocco",
+        1,
+        "25%",
+      ],
+    ],
+    "more": true,
+    "moreLabel": "Mostrar menos",
+  },
+  "thermo": [
+    "42.857142857142854%",
+    "43% lido",
+    "3.936 de ~9.184 páginas do acervo",
+  ],
+  "yearBadge": "3.936 páginas",
+  "yearCols": [
+    [
+      2018,
+      1,
+      "272 páginas",
+      "27.333333333333332%",
+    ],
+    [
+      2020,
+      2,
+      "744 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2021,
+      2,
+      "400 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2022,
+      3,
+      "688 páginas",
+      "82%",
+    ],
+    [
+      2023,
+      2,
+      "616 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2024,
+      1,
+      "96 páginas",
+      "27.333333333333332%",
+    ],
+    [
+      2025,
+      2,
+      "256 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2026,
+      3,
+      "864 páginas",
+      "82%",
+    ],
+  ],
+}
+`;
+
+exports[`Dados: acervo de referência > gráficos e listas em {"scope":"todos","expanded":{},"assignAll":false,"assignMore":false} 1`] = `
+{
+  "assign": [
+    true,
+    false,
+    "Mostrar todos (0)",
+  ],
+  "assignRows": [],
+  "bigBooks": [
+    [
+      1,
+      "Crime e castigo",
+      "568 p.",
+    ],
+    [
+      2,
+      "1984",
+      "416 p.",
+    ],
+    [
+      3,
+      "O morro dos ventos uivantes",
+      "384 p.",
+    ],
+    [
+      4,
+      "Kindred",
+      "320 p.",
+    ],
+    [
+      5,
+      "Ensaio sobre a cegueira",
+      "312 p.",
+    ],
+  ],
+  "donut": [
+    "30 livros",
+    "30",
+  ],
+  "genre": {
+    "badge": "7 gêneros",
+    "list": [
+      [
+        "Romance",
+        20,
+        "100%",
+      ],
+      [
+        "Novela",
+        3,
+        "15%",
+      ],
+      [
+        "Ficção científica e distopia",
+        2,
+        "10%",
+      ],
+      [
+        "Terror e gótico",
+        2,
+        "10%",
+      ],
+      [
+        "Contos",
+        1,
+        "5%",
+      ],
+      [
+        "Ensaio",
+        1,
+        "5%",
+      ],
+      [
+        "Não-ficção",
+        1,
+        "5%",
+      ],
+    ],
+    "more": false,
+    "moreLabel": "Mostrar todos (7)",
+  },
+  "nat": {
+    "badge": "12 países",
+    "list": [
+      [
+        "brasileira",
+        8,
+        "100%",
+      ],
+      [
+        "inglesa",
+        5,
+        "62.5%",
+      ],
+      [
+        "estadunidense",
+        4,
+        "50%",
+      ],
+      [
+        "russa",
+        3,
+        "37.5%",
+      ],
+      [
+        "francesa",
+        2,
+        "25%",
+      ],
+      [
+        "tcheca",
+        2,
+        "25%",
+      ],
+      [
+        "argentina",
+        1,
+        "12.5%",
+      ],
+    ],
+    "more": true,
+    "moreLabel": "Mostrar todos (12)",
+  },
+  "pub": {
+    "badge": "10 editoras",
+    "list": [
+      [
+        "Companhia das Letras",
+        6,
+        "100%",
+      ],
+      [
+        "Antofágica",
+        5,
+        "83.33333333333334%",
+      ],
+      [
+        "Penguin",
+        5,
+        "83.33333333333334%",
+      ],
+      [
+        "Record",
+        4,
+        "66.66666666666666%",
+      ],
+      [
+        "Todavia",
+        4,
+        "66.66666666666666%",
+      ],
+      [
+        "Editora 34",
+        2,
+        "33.33333333333333%",
+      ],
+      [
+        "Ática",
+        1,
+        "16.666666666666664%",
+      ],
+    ],
+    "more": true,
+    "moreLabel": "Mostrar todos (10)",
+  },
+  "thermo": [
+    "42.857142857142854%",
+    "43% lido",
+    "3.936 de ~9.184 páginas do acervo",
+  ],
+  "yearBadge": "3.936 páginas",
+  "yearCols": [
+    [
+      2018,
+      1,
+      "272 páginas",
+      "27.333333333333332%",
+    ],
+    [
+      2020,
+      2,
+      "744 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2021,
+      2,
+      "400 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2022,
+      3,
+      "688 páginas",
+      "82%",
+    ],
+    [
+      2023,
+      2,
+      "616 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2024,
+      1,
+      "96 páginas",
+      "27.333333333333332%",
+    ],
+    [
+      2025,
+      2,
+      "256 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2026,
+      3,
+      "864 páginas",
+      "82%",
+    ],
+  ],
+}
+`;
+
+exports[`Dados: acervo de referência > gráficos e listas em {"scope":"todos","expanded":{},"assignAll":true,"assignMore":true} 1`] = `
+{
+  "assign": [
+    false,
+    true,
+    "Mostrar menos",
+  ],
+  "assignRows": [
+    [
+      "1984",
+      [
+        false,
+        true,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "A desobediência civil",
+      [
+        false,
+        false,
+        true,
+        false,
+        false,
+      ],
+    ],
+    [
+      "A hora da estrela",
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "A metamorfose",
+      [
+        true,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "A morte de Ivan Ilitch",
+      [
+        false,
+        false,
+        false,
+        true,
+        false,
+      ],
+    ],
+    [
+      "Crime e castigo",
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "Ensaio sobre a cegueira",
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "Ficções",
+      [
+        true,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "Frankenstein",
+      [
+        false,
+        false,
+        false,
+        false,
+        true,
+      ],
+    ],
+    [
+      "Kindred",
+      [
+        false,
+        false,
+        false,
+        false,
+        true,
+      ],
+    ],
+    [
+      "Macunaíma",
+      [
+        false,
+        false,
+        false,
+        false,
+        true,
+      ],
+    ],
+    [
+      "O cortiço",
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "O morro dos ventos uivantes",
+      [
+        true,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "Pedro Páramo",
+      [
+        false,
+        false,
+        false,
+        true,
+        false,
+      ],
+    ],
+    [
+      "Quarto de despejo",
+      [
+        false,
+        true,
+        false,
+        false,
+        false,
+      ],
+    ],
+    [
+      "Vidas secas",
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+    ],
+  ],
+  "bigBooks": [
+    [
+      1,
+      "Crime e castigo",
+      "568 p.",
+    ],
+    [
+      2,
+      "1984",
+      "416 p.",
+    ],
+    [
+      3,
+      "O morro dos ventos uivantes",
+      "384 p.",
+    ],
+    [
+      4,
+      "Kindred",
+      "320 p.",
+    ],
+    [
+      5,
+      "Ensaio sobre a cegueira",
+      "312 p.",
+    ],
+  ],
+  "donut": [
+    "30 livros",
+    "30",
+  ],
+  "genre": {
+    "badge": "7 gêneros",
+    "list": [
+      [
+        "Romance",
+        20,
+        "100%",
+      ],
+      [
+        "Novela",
+        3,
+        "15%",
+      ],
+      [
+        "Ficção científica e distopia",
+        2,
+        "10%",
+      ],
+      [
+        "Terror e gótico",
+        2,
+        "10%",
+      ],
+      [
+        "Contos",
+        1,
+        "5%",
+      ],
+      [
+        "Ensaio",
+        1,
+        "5%",
+      ],
+      [
+        "Não-ficção",
+        1,
+        "5%",
+      ],
+    ],
+    "more": false,
+    "moreLabel": "Mostrar todos (7)",
+  },
+  "nat": {
+    "badge": "12 países",
+    "list": [
+      [
+        "brasileira",
+        8,
+        "100%",
+      ],
+      [
+        "inglesa",
+        5,
+        "62.5%",
+      ],
+      [
+        "estadunidense",
+        4,
+        "50%",
+      ],
+      [
+        "russa",
+        3,
+        "37.5%",
+      ],
+      [
+        "francesa",
+        2,
+        "25%",
+      ],
+      [
+        "tcheca",
+        2,
+        "25%",
+      ],
+      [
+        "argentina",
+        1,
+        "12.5%",
+      ],
+    ],
+    "more": true,
+    "moreLabel": "Mostrar todos (12)",
+  },
+  "pub": {
+    "badge": "10 editoras",
+    "list": [
+      [
+        "Companhia das Letras",
+        6,
+        "100%",
+      ],
+      [
+        "Antofágica",
+        5,
+        "83.33333333333334%",
+      ],
+      [
+        "Penguin",
+        5,
+        "83.33333333333334%",
+      ],
+      [
+        "Record",
+        4,
+        "66.66666666666666%",
+      ],
+      [
+        "Todavia",
+        4,
+        "66.66666666666666%",
+      ],
+      [
+        "Editora 34",
+        2,
+        "33.33333333333333%",
+      ],
+      [
+        "Ática",
+        1,
+        "16.666666666666664%",
+      ],
+    ],
+    "more": true,
+    "moreLabel": "Mostrar todos (10)",
+  },
+  "thermo": [
+    "42.857142857142854%",
+    "43% lido",
+    "3.936 de ~9.184 páginas do acervo",
+  ],
+  "yearBadge": "3.936 páginas",
+  "yearCols": [
+    [
+      2018,
+      1,
+      "272 páginas",
+      "27.333333333333332%",
+    ],
+    [
+      2020,
+      2,
+      "744 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2021,
+      2,
+      "400 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2022,
+      3,
+      "688 páginas",
+      "82%",
+    ],
+    [
+      2023,
+      2,
+      "616 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2024,
+      1,
+      "96 páginas",
+      "27.333333333333332%",
+    ],
+    [
+      2025,
+      2,
+      "256 páginas",
+      "54.666666666666664%",
+    ],
+    [
+      2026,
+      3,
+      "864 páginas",
+      "82%",
+    ],
+  ],
+}
+`;

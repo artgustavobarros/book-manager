@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 
 import { json, parseBody, withSession } from "@/lib/api";
 import { googleEnabled } from "@/lib/auth";

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { makeBook, referenceBooks } from "@/tests/support/reference";
 
@@ -297,4 +297,52 @@ describe("Leitura e Situação", () => {
       ["doado", 1],
     ]);
   });
+});
+
+describe("Dados: acervo de referência", () => {
+  beforeAll(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-06-15T18:00:00Z"));
+  });
+  afterAll(() => vi.useRealTimers());
+
+  // Os campos que eram conferidos contra o standalone (que saiu do repositório).
+  // Regravar só de propósito: pnpm test -u
+  const variants = [
+    { scope: "todos", expanded: {}, assignAll: false, assignMore: false },
+    {
+      scope: "lidos",
+      expanded: { genre: true, nationality: true, publisher: true },
+      assignAll: true,
+      assignMore: false,
+    },
+    { scope: "todos", expanded: {}, assignAll: true, assignMore: true },
+  ] as const;
+
+  for (const v of variants) {
+    it(`gráficos e listas em ${JSON.stringify(v)}`, () => {
+      const d = insights(books, { ...v, year: 2026 });
+      const bars = (g: typeof d.genre) => ({
+        list: g.list.map((r) => [r.label, r.count, r.pct]),
+        badge: g.badge,
+        more: g.more,
+        moreLabel: g.moreLabel,
+      });
+      expect({
+        thermo: [d.thermoPct, d.thermoPctLabel, d.thermoLabel],
+        bigBooks: d.bigBooks.map((r) => [r.rank, r.book.title, r.pages]),
+        donut: [d.baseLabel, d.donutTotal],
+        genre: bars(d.genre),
+        nat: bars(d.nat),
+        pub: bars(d.pub),
+        yearCols: d.yearCols.map((c) => [c.year, c.count, c.sub, c.pct]),
+        yearBadge: d.yearBadge,
+        assignRows: d.assignRows.map((r) => [
+          r.book.title,
+          r.years.map((y) => y.on),
+        ]),
+        assign: [d.assignEmpty, d.assignMoreShow, d.assignMoreLabel],
+      }).toMatchSnapshot();
+    });
+  }
 });
