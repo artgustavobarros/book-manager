@@ -103,9 +103,11 @@ export function BookCard({
         <span className="font-semibold text-mute text-xs tabular-nums">
           {b.orderNo ? "#" + b.orderNo : "—"}
         </span>
-        {/* O card inteiro abre a ficha com o mouse; o título é o alvo do teclado. */}
+        {/* O card inteiro abre a ficha com o mouse; o título é o alvo do teclado.
+            Título e autor têm alvo de toque de 24px (padding com margem negativa, sem
+            mexer no layout): o título cresce para cima, o autor mais para baixo. */}
         <button
-          className="text-pretty break-words border-0 bg-transparent p-0 text-left font-semibold text-ink text-sm leading-[1.25]"
+          className="-mt-[6.5px] text-pretty break-words border-0 bg-transparent px-0 pt-[6.5px] pb-0 text-left font-semibold text-ink text-sm leading-[1.25]"
           onClick={(e) => {
             e.stopPropagation();
             app.openView(b.id);
@@ -115,7 +117,7 @@ export function BookCard({
           {b.title}
         </button>
         <button
-          className="max-w-full cursor-pointer self-start break-words border-0 bg-transparent p-0 text-left text-mute text-xs hover:text-acc hover:underline"
+          className="-mt-1 -mb-[5px] max-w-full cursor-pointer self-start break-words border-0 bg-transparent px-0 pt-1 pb-[5px] text-left text-mute text-xs hover:text-acc hover:underline"
           onClick={(e) => {
             e.stopPropagation();
             onAuthor(author);
