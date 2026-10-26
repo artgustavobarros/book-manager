@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { makeBook } from "@/tests/support/reference";
+import { makeBook, referenceBooks } from "@/tests/support/reference";
 
 import { exportCsv, parseCSV } from "./csv";
 
@@ -26,6 +26,14 @@ describe("parseCSV", () => {
 });
 
 describe("exportCsv", () => {
+  // Saída completa do acervo de referência: cabeçalho, ordem das colunas, BOM e CRLF.
+  // Regravar só de propósito: pnpm test -u
+  it("exporta o acervo de referência inteiro", async () => {
+    await expect(exportCsv(referenceBooks())).toMatchFileSnapshot(
+      "__snapshots__/acervo-referencia.csv"
+    );
+  });
+
   it("escapa ; e aspas", () => {
     const csv = exportCsv([makeBook({ title: 'Um "dois"; três', orderNo: 1 })]);
     expect(csv.split("\r\n")[1].split(";")[1]).toBe('"Um ""dois""');

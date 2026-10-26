@@ -126,9 +126,14 @@ describe("mergeSheet", () => {
   });
   afterAll(() => vi.useRealTimers());
 
-  it("conta atualizados e novos no acervo de referência", () => {
+  // Campos atualizados e livros novos completos. Regravar só de propósito: pnpm test -u
+  it("aplica a planilha ao acervo de referência", () => {
     const merge = mergeSheet(referenceBooks(), parseSheet(CSV), NOW);
     expect([merge.updated, merge.added]).toEqual([3, 3]);
+    expect({
+      updates: merge.updates,
+      inserts: merge.inserts,
+    }).toMatchSnapshot();
   });
 
   it("preserva anotações, capa, páginas e ano lido do app", () => {

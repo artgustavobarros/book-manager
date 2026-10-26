@@ -1,5 +1,5 @@
 /**
- * Casos das capturas visuais de diverged.spec.ts: telas, viewports, temas e como abrir
+ * Casos das capturas visuais de screens.spec.ts: telas, viewports, temas e como abrir
  * cada caso no app.
  */
 import { type Browser, type Page, test } from "@playwright/test";
@@ -17,8 +17,8 @@ export const VIEWPORTS: Viewport[] = [
 ];
 export const THEMES: Theme[] = ["light", "dark"];
 
-export interface Case {
-  /** Ação executada igualmente nos dois (mesmos rótulos acessíveis). */
+interface Case {
+  /** Ação executada depois de abrir a rota (abrir modal, trocar a vista…). */
   act?: (page: Page) => Promise<void>;
   authed?: boolean;
   name: string;
@@ -68,7 +68,7 @@ export const CASES: Case[] = [
   },
 ];
 
-export async function settle(page: Page) {
+async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(400);
 }
@@ -104,39 +104,3 @@ export async function openApp(
   await page.evaluate(() => window.scrollTo(0, 0));
   return { page, close: () => ctx.close() };
 }
-
-/**
- * Casos que divergem de propósito do standalone do design e por isso têm baselines
- * próprias em diverged.spec.ts. O standalone da identidade bordô
- * (change nova-identidade-visual) já tem header compacto e botões flutuantes; no mobile
- * continuam diferentes os ajustes do app: Estante em duas colunas, pontos do carrossel maiores
- * (alvo de toque), contadores dos chips com mais contraste, selo da meta na linha do
- * título, lista responsiva, "Cor/etnia do autor(a)" na ficha e o rodapé. No desktop,
- * a lista da Estante usa ícones do lucide nas ações e Dados não tem a legenda de escopo
- * e usa o bordô em todas as barras, e os KPIs do Painel seguem a tipografia do card da
- * meta, inclusive atrás dos modais de sorteio e planilha; nos cards de capa da Estante,
- * o seletor de Leitura ocupa a largura toda, sem o botão de ação rápida (change
- * polish-shelf-dashboard-insights-ui). Com Leitura e Situação (ADR 0001), a Estante tem
- * duas linhas de chips, Dados um bloco de Situação e a ficha (vista e edição) dois
- * seletores no lugar do status único.
- */
-export const DIVERGED = new Set([
-  "painel/desktop",
-  "painel/mobile",
-  "estante/desktop",
-  "estante-lista/desktop",
-  "estante-filtro/desktop",
-  "dados/desktop",
-  "estante/mobile",
-  "estante-lista/mobile",
-  "estante-filtro/mobile",
-  "dados/mobile",
-  "ficha/desktop",
-  "ficha/mobile",
-  "edicao/desktop",
-  "edicao/mobile",
-  "surpresa/desktop",
-  "surpresa/mobile",
-  "planilha/desktop",
-  "planilha/mobile",
-]);
