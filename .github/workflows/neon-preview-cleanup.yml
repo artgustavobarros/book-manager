@@ -1,0 +1,21 @@
+name: Limpar banco de preview
+
+# A integração da Vercel cria um branch `preview/<branch do git>` no projeto Neon de
+# preview para cada PR, e só o apaga quando a Vercel apaga o último deploy dele (meses
+# depois, ou nunca, pelas exceções de retenção). O limite do plano é de 10 branches.
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  delete-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PREVIEW_PROJECT_ID }}
+          branch: preview/${{ github.head_ref }}
+          api_key: ${{ secrets.NEON_API_KEY }}
