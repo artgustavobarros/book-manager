@@ -3,7 +3,10 @@ import type { Book } from "@/lib/domain/types";
 
 import raw from "../fixtures/reference-books.json";
 
-/** Acervo de referência (SEED do standalone) convertido para o modelo, com os ids originais. */
+/**
+ * Acervo de referência (SEED do standalone) convertido para o modelo, com os ids originais.
+ * O JSON foi extraído uma vez do standalone e agora é mantido à mão.
+ */
 export function referenceBooks(): Book[] {
   const fields = fromBackup(raw, new Date("2026-06-15T12:00:00Z"));
   return fields.map((f, i) => ({

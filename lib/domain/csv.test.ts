@@ -1,9 +1,6 @@
-import { readFileSync } from "node:fs";
-
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { makeBook, referenceBooks } from "@/tests/support/reference";
-import { loadStandalone } from "@/tests/support/standalone";
 
 import { exportCsv, parseCSV } from "./csv";
 
@@ -26,64 +23,15 @@ describe("parseCSV", () => {
       ["x", "linha 1\nlinha 2"],
     ]);
   });
-
-  it("é idêntico ao parser do standalone", () => {
-    const oracleParse = loadStandaloneParse();
-    const samples = [
-      'a;b\n"1;2";3',
-      'x,y\r\n1,"2,3"\r\n',
-      '﻿T;A\n"um ""dois""";3\r\n\r\n;;\n4;5',
-    ];
-    for (const s of samples) {
-      expect(parseCSV(s)).toEqual(oracleParse(s));
-    }
-  });
 });
 
-describe("exportCsv × standalone", () => {
-  let captured: Blob | null = null;
-  beforeAll(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-06-15T18:00:00Z"));
-    vi.spyOn(URL, "createObjectURL").mockImplementation((b) => {
-      captured = b as Blob;
-      return "blob:x";
-    });
-    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
-  });
-  afterAll(() => {
-    vi.useRealTimers();
-    vi.restoreAllMocks();
-  });
-
-  it("gera o mesmo CSV, com Leitura e Situação e mais a coluna Cor/etnia", async () => {
-    const oracle = loadStandalone();
-    (oracle as any).toast = () => {};
-    (oracle as any).exportCsv();
-    const theirs = await captured!.text();
-    const ours = exportCsv(referenceBooks());
-    // O standalone tem um "Status" único: a Situação fora de casa, senão a Leitura.
-    const toStandalone = (csv: string) =>
-      csv
-        .split("\r\n")
-        .map((line) => {
-          const cells = parseCSV(line)[0] ?? [];
-          if (cells.length !== 17) {
-            return line;
-          }
-          const parts = line.split(";");
-          const [reading, situation] = [parts[4], parts[5]];
-          const status =
-            reading === "Leitura"
-              ? "Status"
-              : situation === "Em casa"
-                ? reading
-                : situation;
-          return parts.toSpliced(12, 1).toSpliced(4, 2, status).join(";");
-        })
-        .join("\r\n");
-    expect(ours.startsWith("﻿")).toBe(true);
-    expect(toStandalone(ours.slice(1))).toBe(theirs.replace(/^﻿/, ""));
+describe("exportCsv", () => {
+  // Saída completa do acervo de referência: cabeçalho, ordem das colunas, BOM e CRLF.
+  // Regravar só de propósito: pnpm test -u
+  it("exporta o acervo de referência inteiro", async () => {
+    await expect(exportCsv(referenceBooks())).toMatchFileSnapshot(
+      "__snapshots__/acervo-referencia.csv"
+    );
   });
 
   it("escapa ; e aspas", () => {
@@ -91,10 +39,3 @@ describe("exportCsv × standalone", () => {
     expect(csv.split("\r\n")[1].split(";")[1]).toBe('"Um ""dois""');
   });
 });
-
-function loadStandaloneParse(): (s: string) => string[][] {
-  const src = readFileSync("design/handoff/source/Acervo.dc.html", "utf8");
-  const start = src.indexOf("function parseCSV");
-  const end = src.indexOf("function mapHeader");
-  return new Function(src.slice(start, end) + "\nreturn parseCSV;")();
-}

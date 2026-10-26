@@ -20,7 +20,7 @@ export const FIXED_NOW = "2026-06-15T15:00:00-03:00";
 
 /**
  * - e2e: fluxos funcionais contra a build de produção, com banco PGlite descartável.
- * - visual: compara o app com o standalone do design (oráculo), ver tests/visual.
+ * - visual: compara telas do app com linhas de base versionadas, ver tests/visual.
  */
 export default defineConfig({
   testDir: "tests",
