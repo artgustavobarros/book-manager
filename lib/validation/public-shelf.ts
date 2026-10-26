@@ -3,7 +3,7 @@
  * Valor fora do formato vira "sem filtro" (`catch`), nunca erro: o link continua abrindo.
  * Se o gênero ou o livro existem na estante é checado depois, em `resolvePublicSelection`.
  */
-import { z } from "zod";
+import * as z from "zod";
 
 import { PUBLIC_READINGS, type PublicSelection } from "@/lib/domain/share";
 

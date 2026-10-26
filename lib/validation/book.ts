@@ -3,7 +3,7 @@
  * - `bookFieldsSchema`: JSON tipado aceito pela API.
  * - `bookFormSchema`: valores do formulário (strings dos inputs) → mesmos tipos da API.
  */
-import { z } from "zod";
+import * as z from "zod";
 
 import { toIsoDate } from "@/lib/domain/backup";
 import {

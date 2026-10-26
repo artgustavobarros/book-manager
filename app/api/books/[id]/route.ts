@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { json, notFound, parseBody, withSession } from "@/lib/api";
 import { db } from "@/lib/db";
 import { deleteBook, updateBook } from "@/lib/services/books";
