@@ -12,6 +12,7 @@
     "dev": "next dev",
     "lint": "ultracite check",
     "lint:fix": "ultracite fix",
+    "skills:install": "bash scripts/skills-install.sh",
     "start": "next start",
     "test": "vitest run",
     "test:e2e": "playwright test --project=setup --project=e2e",

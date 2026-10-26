@@ -57,6 +57,7 @@ Para usar um Postgres de verdade (por exemplo uma branch de desenvolvimento do N
 | `pnpm db:seed` | Cria o usuário de referência com o acervo do design (30 livros) |
 | `pnpm db:seed:personas` | Popula o banco com 4 personas de teste (Arthur Whale 600 livros, Mariana Empréstimos, Lucas Metas e Zero Novato) |
 | `pnpm db:studio` | Drizzle Studio (somente Postgres) |
+| `pnpm skills:install` | Restaura as skills de agente (fora do git) a partir do `skills-lock.json`, mais o impeccable |
 
 O schema das tabelas de autenticação (`lib/db/auth-schema.ts`) é gerado pelo Better Auth: `npx auth@latest generate --config lib/auth.ts --output lib/db/auth-schema.ts`.
 
