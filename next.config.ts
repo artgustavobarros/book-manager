@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 // Valida as variáveis de ambiente no build e no start.
@@ -10,4 +11,13 @@ const nextConfig: NextConfig = {
   devIndicators: false,
 };
 
-export default nextConfig;
+// Envia os source maps ao Sentry no build. Sem SENTRY_AUTH_TOKEN (dev, CI) o envio é pulado.
+export default withSentryConfig(nextConfig, {
+  org: "arthur-barros-99",
+  project: "book-manager",
+  telemetry: false,
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeTracing: true,
+  },
+});
