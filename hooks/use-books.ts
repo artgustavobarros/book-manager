@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 
 import { toast } from "@/components/app/toast";
-import { api } from "@/lib/client/api";
+import { ApiError, api } from "@/lib/client/api";
 import {
   applyBookPatch,
   optimisticFields,
@@ -60,7 +60,12 @@ function updateOnServer({ id, patch }: UpdateVariables) {
 }
 
 function deleteOnServer({ id }: DeleteVariables) {
-  return api.del(`/api/books/${id}`);
+  return api.del(`/api/books/${id}`).catch((error: unknown) => {
+    if (error instanceof ApiError && error.status === 404) {
+      return;
+    }
+    throw error;
+  });
 }
 
 /** Defaults let persisted mutations resume after their component has unmounted. */

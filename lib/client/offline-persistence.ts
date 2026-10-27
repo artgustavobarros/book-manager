@@ -6,18 +6,21 @@ const store = createStore("bodega-literaria", "offline-mutations");
 export const OFFLINE_MUTATION_META = { persistOfflineMutation: true } as const;
 
 export const offlineMutationRetry = (
-  _failureCount: number,
+  failureCount: number,
   error: Error
 ): boolean => {
   if (error instanceof TypeError) {
     return true;
   }
   const status = (error as Error & { status?: number }).status;
+  if (status === 401) {
+    return true;
+  }
   return (
-    status === 401 ||
-    status === 408 ||
-    status === 429 ||
-    (status !== undefined && status >= 500)
+    failureCount < 2 &&
+    (status === 408 ||
+      status === 429 ||
+      (status !== undefined && status >= 500))
   );
 };
 

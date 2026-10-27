@@ -48,6 +48,7 @@ test("a estante começa privada e o dono a publica pelo cabeçalho", async ({
   page,
   browser,
 }) => {
+  await page.request.put("/api/public-shelf", { data: { enabled: false } });
   const { ctx, page: anon } = await visitor(browser);
   expect((await anon.goto(SHELF))?.status()).toBe(404);
   await ctx.close();
@@ -205,7 +206,7 @@ test("metadados Open Graph no HTML do servidor e imagem OG", async ({
     new RegExp(SHELF + "\\?leitura=lido$")
   );
   expect(meta("name", "twitter:card")).toBe("summary_large_image");
-  expect(meta("name", "robots")).toBe("noindex, nofollow");
+  expect(meta("name", "robots")).toBe("index, follow");
   expect(html).toContain(
     "<title>Livros lidos na estante de Ana Lima · Bodega Literária</title>"
   );

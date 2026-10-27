@@ -386,6 +386,8 @@ export function AppProvider({
       },
     });
     configureBookMutationDefaults(qc);
+    qc.setQueryData(BOOKS_KEY, initial.books, { updatedAt: 0 });
+    qc.setQueryData(["goal", initial.year], initial.goal, { updatedAt: 0 });
     qc.setMutationDefaults<unknown, Error, GoalVariables>(GOAL_MUTATION_KEY, {
       mutationFn: ({ year, target }) =>
         api.put(`/api/goals/${year}`, { target }),
@@ -421,7 +423,8 @@ export function AppProvider({
         persister,
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
-            query.queryKey[0] === "books" || query.queryKey[0] === "goal",
+            query.state.dataUpdatedAt > 0 &&
+            (query.queryKey[0] === "books" || query.queryKey[0] === "goal"),
           shouldDehydrateMutation: (mutation) =>
             mutation.options.meta?.persistOfflineMutation === true &&
             mutation.state.status === "pending",
