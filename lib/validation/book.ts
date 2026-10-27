@@ -86,7 +86,8 @@ export type BookFieldsOutput = z.output<typeof bookFieldsSchema>;
 /** Criação: só o título é obrigatório; o resto assume os padrões do modelo. */
 export const bookCreateSchema = bookFieldsSchema
   .partial()
-  .required({ title: true });
+  .required({ title: true })
+  .extend({ id: z.uuid().optional() });
 
 /** Atualização parcial de um livro. */
 export const bookPatchSchema = bookFieldsSchema

@@ -25,9 +25,7 @@ export const PATCH = withSession<{ id: string }>(
 
 export const DELETE = withSession<{ id: string }>(
   async ({ userId, params }) => {
-    if (!(await deleteBook(db, userId, idOf(params.id)))) {
-      throw notFound();
-    }
+    await deleteBook(db, userId, idOf(params.id));
     return new Response(null, { status: 204 });
   }
 );

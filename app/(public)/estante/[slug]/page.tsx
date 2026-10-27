@@ -48,8 +48,8 @@ export async function generateMetadata({
   return {
     title: og.title,
     description: og.description,
-    alternates: { canonical: path },
-    robots: { index: false, follow: false },
+    alternates: { canonical: `/estante/${slug}` },
+    robots: { index: true, follow: true },
     // Substitui o openGraph do layout raiz por inteiro: repete os campos fixos.
     openGraph: {
       type: "website",

@@ -10,9 +10,14 @@ CPU realmente limitadas), mediana de 3 execuções por página. O modo padrão (
 incluindo todo o JS baixado antes dele, e num servidor local isso infla o LCP de páginas cujo
 maior elemento é texto.
 
+A configuração local antiga do Chrome DevTools MCP forçava o Chromium do Playwright, que não estava
+instalado. Ela foi alinhada à configuração global; o MCP abriu uma página vazia nesta sessão. A tabela
+abaixo é anterior à liberação de indexação das estantes públicas; Lighthouse ainda não foi refeito.
+
 ## Estado em 2026-10-26
 
-Lighthouse mobile, `devtools`, mediana de 3 (perf) e uma execução (demais categorias):
+Lighthouse mobile, `devtools`, mediana de 3 (perf) e uma execução (demais categorias), antes da
+liberação de indexação das estantes públicas:
 
 | Página | Perf | A11y | Boas práticas | SEO |
 |---|---|---|---|---|
@@ -22,8 +27,9 @@ Lighthouse mobile, `devtools`, mediana de 3 (perf) e uma execução (demais cate
 | Estante pública | 98 | 100 | 100 | 66 |
 | Entrar | 99 | 100 | 100 | 100 |
 
-SEO abaixo de 100 é o `noindex` proposital das páginas logadas e da estante pública
-(`app/robots.ts`). O que falta para 100 em performance é o FCP (~1,7 s); só o `inlineCss`
+SEO abaixo de 100 nas páginas logadas vem do `noindex` proposital. Estantes públicas agora
+podem ser indexadas e entram no sitemap; estantes privadas ficam fora dele (`app/robots.ts`).
+O que falta para 100 em performance é o FCP (~1,7 s); só o `inlineCss`
 mexeu nele (ver abaixo). react-doctor 0.9.18 (`--scope full`): 75, triagem em
 `.react-doctor/false-positives.md`.
 
