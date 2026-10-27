@@ -2,7 +2,9 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import * as z from "zod";
 
 /**
- * Variáveis de ambiente validadas (T3 Env). Nenhum outro módulo lê `process.env`.
+ * Variáveis de ambiente validadas (T3 Env). Nenhum outro módulo lê `process.env`,
+ * exceto `lib/sentry.ts` (`NEXT_PUBLIC_VERCEL_ENV`), que fica fora para não levar o
+ * zod ao JS inicial do navegador.
  *
  * DATABASE_URL aceita `postgres://…` (Neon em produção) ou `pglite://<dir>` /
  * `pglite://memory` (Postgres embutido para desenvolvimento e testes).

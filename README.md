@@ -86,7 +86,7 @@ A estante começa privada. Pelo ícone de compartilhar (cabeçalho, Estante ou f
 
 ## Variáveis de ambiente
 
-Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.example`](.env.example).
+Todas, exceto as do Sentry, são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.example`](.env.example).
 
 | Variável | Obrigatória | Descrição |
 |---|---|---|
@@ -99,6 +99,7 @@ Todas são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.e
 | `CRON_SECRET` | para cópia semanal | Segredo de 16+ caracteres para autenticar o cron da Vercel |
 | `EMAIL_TRANSPORT` | não | `gmail` (padrão), `console` ou `outbox` (testes) |
 | `SMTP_USER` / `SMTP_PASS` | com `gmail` | Conta Gmail e **senha de app** |
+| `SENTRY_AUTH_TOKEN` | não | Só no build da Vercel, para enviar source maps ao Sentry; sem ela o envio é pulado |
 
 ## Testes
 
@@ -129,6 +130,7 @@ Os testes Playwright criam banco PGlite, caixa de e-mail e sessão em um diretó
    | `SMTP_USER` / `SMTP_PASS` | ✓ | só com `gmail` |
    | `CRON_SECRET` | ✓ | — |
    | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✓ | opcional |
+   | `SENTRY_AUTH_TOKEN` | ✓ | ✓ (source maps; o envio de erros liga sozinho pela `NEXT_PUBLIC_VERCEL_ENV`) |
    | `BETTER_AUTH_URL` | só para forçar outro domínio | — |
    | `PRODUCTION_NEON_PROJECT_ID` | ID do projeto Neon de produção | — |
    | `PREVIEW_NEON_PROJECT_ID` | — | ID do projeto Neon de Preview |

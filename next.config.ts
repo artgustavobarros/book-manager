@@ -16,6 +16,8 @@ export default withSentryConfig(nextConfig, {
   org: "arthur-barros-99",
   project: "book-manager",
   telemetry: false,
+  // Sem tracing, o onRouterTransitionStart não faz nada; o aviso do build não se aplica.
+  suppressOnRouterTransitionStartWarning: true,
   bundleSizeOptimizations: {
     excludeDebugStatements: true,
     excludeTracing: true,
