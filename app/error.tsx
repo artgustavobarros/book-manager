@@ -15,7 +15,10 @@ export default function AppError({
 }) {
   useEffect(() => {
     console.error(error);
-    Sentry.captureException(error);
+    // Com digest, o erro veio do servidor e o onRequestError já o enviou com a stack.
+    if (!error.digest) {
+      Sentry.captureException(error);
+    }
   }, [error]);
 
   return (
