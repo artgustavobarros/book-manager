@@ -1,3 +1,5 @@
+import type * as Sentry from "@sentry/nextjs";
+
 /**
  * Opções do Sentry comuns a navegador, Node e Edge.
  *
@@ -14,4 +16,4 @@ export const sentryOptions = {
   dsn: "https://b1ec0fa00a3016649ee9786861efcf75@o4508295775977472.ingest.us.sentry.io/4508295806189568",
   enabled: vercelEnv !== undefined,
   environment: vercelEnv,
-};
+} satisfies Parameters<typeof Sentry.init>[0];
