@@ -2,7 +2,18 @@
  * Estante pública: publicação pelo dono e leitura por visitantes. A projeção dos
  * livros é feita aqui, na consulta, para que campos privados nunca saiam do banco.
  */
-import { and, asc, count, eq, like, max, ne, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  eq,
+  isNotNull,
+  like,
+  max,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 
 import type { DB } from "@/lib/db";
 import { books, user, userSettings } from "@/lib/db/schema";
@@ -146,6 +157,22 @@ export async function findPublicShelf(
     slug,
     owner: { name: row.name, image: row.image },
   };
+}
+
+/** Slugs que estão publicados agora, para o sitemap excluir estantes privadas. */
+export async function listPublicShelfSlugs(db: DB): Promise<string[]> {
+  const rows = await db
+    .select({ slug: userSettings.publicSlug })
+    .from(userSettings)
+    .innerJoin(user, eq(user.id, userSettings.userId))
+    .where(
+      and(
+        eq(userSettings.publicEnabled, true),
+        isNotNull(userSettings.publicSlug)
+      )
+    )
+    .orderBy(asc(userSettings.publicSlug));
+  return rows.flatMap((row) => (row.slug ? [row.slug] : []));
 }
 
 const notDonated = (ownerId: string) =>

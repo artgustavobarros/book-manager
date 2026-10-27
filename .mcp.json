@@ -5,8 +5,13 @@
       "args": ["-y", "next-devtools-mcp@latest"]
     },
     "chrome-devtools": {
-      "command": "bash",
-      "args": ["scripts/chrome-devtools-mcp.sh"]
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--isolated",
+        "--no-usage-statistics"
+      ]
     },
     "Neon": {
       "type": "http",

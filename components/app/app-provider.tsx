@@ -2,10 +2,11 @@
 
 import {
   QueryClient,
-  QueryClientProvider,
+  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import {
   createContext,
   useCallback,
@@ -14,9 +15,18 @@ import {
   useState,
 } from "react";
 
-import { BOOKS_KEY, useBookActions } from "@/hooks/use-books";
+import {
+  BOOKS_KEY,
+  configureBookMutationDefaults,
+  useBookActions,
+} from "@/hooks/use-books";
 import { api } from "@/lib/client/api";
-import { createLatestSaver } from "@/lib/client/latest-saver";
+import {
+  createOfflinePersister,
+  OFFLINE_MUTATION_META,
+  offlineMutationRetry,
+  offlineMutationRetryDelay,
+} from "@/lib/client/offline-persistence";
 import {
   nextReading,
   readingInfo,
@@ -108,6 +118,11 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
 
 export { initialsOf } from "@/lib/domain/text";
 
+const GOAL_MUTATION_KEY = ["goal", "save"] as const;
+const OFFLINE_CACHE_BUSTER = "offline-v1";
+
+type GoalVariables = { target: number; year: number };
+
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function useApp(): AppContextValue {
@@ -146,30 +161,25 @@ function AppState({
     queryKey: goalKey,
     queryFn: async () =>
       (await api.get<{ target: number }>(`/api/goals/${initial.year}`)).target,
-    initialData: initial.goal,
     staleTime: Number.POSITIVE_INFINITY,
   });
+  const saveGoal = useMutation({
+    mutationKey: GOAL_MUTATION_KEY,
+    scope: { id: `goal:${initial.year}` },
+    mutationFn: ({ year, target }: GoalVariables) =>
+      api.put(`/api/goals/${year}`, { target }),
+  });
 
-  // PUTs da meta em fila: o último valor clicado é o último a chegar ao servidor.
-  const [saveGoal] = useState(() =>
-    createLatestSaver(
-      (target: number) => api.put(`/api/goals/${initial.year}`, { target }),
-      {
-        initial: initial.goal,
-        onFail: (lastSaved, e) => {
-          qc.setQueryData(["goal", initial.year], lastSaved);
-          toast(e.message, { type: "error" });
-        },
-      }
-    )
-  );
   const changeGoal = useCallback(
     (delta: number) => {
-      const next = Math.max(1, goal + delta);
-      qc.setQueryData(["goal", initial.year], next);
-      void saveGoal(next);
+      const next = Math.max(
+        1,
+        (qc.getQueryData<number>(goalKey) ?? goal) + delta
+      );
+      qc.setQueryData(goalKey, next);
+      saveGoal.mutate({ year: initial.year, target: next });
     },
-    [goal, initial.year, qc, saveGoal]
+    [goal, goalKey, initial.year, qc, saveGoal]
   );
 
   const setReading = useCallback(
@@ -366,14 +376,62 @@ export function AppProvider({
 }) {
   const [client] = useState(() => {
     const qc = new QueryClient({
-      defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } },
+      defaultOptions: {
+        mutations: { gcTime: Number.POSITIVE_INFINITY },
+        queries: {
+          gcTime: Number.POSITIVE_INFINITY,
+          refetchOnWindowFocus: false,
+          retry: 1,
+        },
+      },
     });
-    qc.setQueryData(BOOKS_KEY, initial.books);
+    configureBookMutationDefaults(qc);
+    qc.setQueryData(BOOKS_KEY, initial.books, { updatedAt: 0 });
+    qc.setQueryData(["goal", initial.year], initial.goal, { updatedAt: 0 });
+    qc.setMutationDefaults<unknown, Error, GoalVariables>(GOAL_MUTATION_KEY, {
+      mutationFn: ({ year, target }) =>
+        api.put(`/api/goals/${year}`, { target }),
+      meta: OFFLINE_MUTATION_META,
+      networkMode: "online",
+      retry: offlineMutationRetry,
+      retryDelay: offlineMutationRetryDelay,
+      onError: (error, { year }) => {
+        void qc.invalidateQueries({ queryKey: ["goal", year] });
+        toast(error.message || "Não foi possível salvar. Tente de novo.", {
+          type: "error",
+        });
+      },
+    });
     return qc;
   });
+  const [persister] = useState(() => createOfflinePersister(initial.user.id));
   return (
-    <QueryClientProvider client={client}>
+    <PersistQueryClientProvider
+      client={client}
+      onSuccess={() => {
+        if (!client.getQueryData(BOOKS_KEY)) {
+          client.setQueryData(BOOKS_KEY, initial.books);
+        }
+        if (!client.getQueryData(["goal", initial.year])) {
+          client.setQueryData(["goal", initial.year], initial.goal);
+        }
+        void client.resumePausedMutations();
+      }}
+      persistOptions={{
+        buster: OFFLINE_CACHE_BUSTER,
+        maxAge: Number.POSITIVE_INFINITY,
+        persister,
+        dehydrateOptions: {
+          shouldDehydrateQuery: (query) =>
+            query.state.dataUpdatedAt > 0 &&
+            (query.queryKey[0] === "books" || query.queryKey[0] === "goal"),
+          shouldDehydrateMutation: (mutation) =>
+            mutation.options.meta?.persistOfflineMutation === true &&
+            mutation.state.status === "pending",
+        },
+      }}
+    >
       <AppState initial={initial}>{children}</AppState>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }

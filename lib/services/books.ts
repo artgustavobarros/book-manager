@@ -112,20 +112,33 @@ async function nextOrderNo(db: DB, userId: string): Promise<number> {
 export async function createBook(
   db: DB,
   userId: string,
-  fields: Partial<BookFields> & { title: string }
-): Promise<Book> {
+  fields: Partial<BookFields> & { title: string },
+  id?: string
+): Promise<Book | null> {
   const orderNo = fields.orderNo ?? (await nextOrderNo(db, userId));
   const [row] = await db
     .insert(books)
     .values({
+      ...(id ? { id } : {}),
       ...toValues({ ...EMPTY_BOOK_FIELDS, ...fields }),
       lentAt: lentAtOnInsert(fields.situation ?? EMPTY_BOOK_FIELDS.situation),
       title: fields.title,
       orderNo,
       userId,
     })
+    .onConflictDoNothing({ target: books.id })
     .returning();
-  return rowToBook(row);
+  if (row) {
+    return rowToBook(row);
+  }
+  if (id) {
+    const [existing] = await db
+      .select()
+      .from(books)
+      .where(and(eq(books.id, id), eq(books.userId, userId)));
+    return existing ? rowToBook(existing) : null;
+  }
+  return null;
 }
 
 export async function updateBook(

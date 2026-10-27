@@ -3,11 +3,12 @@ import type { MetadataRoute } from "next";
 import { appUrl } from "@/lib/app-url";
 
 /**
- * Só a tela de entrada é indexável: o resto exige conta ou carrega um token de e-mail.
+ * A tela de entrada e as estantes publicadas são indexáveis. As outras páginas exigem
+ * conta ou carregam um token de e-mail.
  * Assets e imagens de metadados ficam liberados para o robô renderizar a página.
  * Estantes públicas (`/estante/…`, nunca `/estante`) e suas imagens OG (`/og/`) ficam
- * liberadas para robôs de preview que respeitam o robots.txt (como o do X); elas
- * declaram `noindex`, então não entram em buscadores.
+ * liberadas para buscadores e robôs de preview quando a estante está publicada.
+ * Estantes privadas não resolvem a rota e não entram no sitemap.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
