@@ -8,7 +8,7 @@ export const COVERS: readonly (readonly [bg: string, ink: string])[] = [
   ["#5b3a5e", "#efe3e8"],
   ["#d9cbb3", "#2a2622"],
   ["#3d3a36", "#e8e1d4"],
-  ["#a65a3a", "#f6ece0"],
+  ["#9e5233", "#f6ece0"],
   ["#7d8b6a", "#1d1b18"],
 ];
 

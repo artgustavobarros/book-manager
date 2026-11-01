@@ -68,7 +68,7 @@ export function BookCard({
         ref={coverRef}
         style={{ background: coverBg, color: coverInk }}
       >
-        <span className="break-words font-semibold text-xs uppercase tracking-[.1em] opacity-80">
+        <span className="break-words font-semibold text-xs uppercase tracking-[.1em]">
           {author}
         </span>
         <span className="text-balance break-words font-bold font-title text-xl leading-[1.08]">

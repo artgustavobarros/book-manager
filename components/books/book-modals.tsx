@@ -97,7 +97,7 @@ function CoverPanel({
       >
         <span
           className={cn(
-            "font-semibold text-[10px] uppercase tracking-[.1em] opacity-80",
+            "font-semibold text-[10px] uppercase tracking-[.1em]",
             "max-[640px]:text-[6px]"
           )}
         >

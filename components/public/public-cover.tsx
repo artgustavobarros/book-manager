@@ -26,7 +26,7 @@ export function PublicCover({
     >
       <span
         className={cn(
-          "break-words font-semibold uppercase tracking-[.1em] opacity-80",
+          "break-words font-semibold uppercase tracking-[.1em]",
           panel ? "text-[10px]" : "text-xs"
         )}
       >
