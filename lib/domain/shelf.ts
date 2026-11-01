@@ -222,20 +222,8 @@ const COMPARATORS: Record<SortKey, (a: Book, b: Book) => number> = {
     cmpEmptyLastDesc(a.nationality, b.nationality),
   "lanc-novos": (a, b) => (b.yearPublished || -1e4) - (a.yearPublished || -1e4),
   "lanc-antigos": (a, b) => (a.yearPublished || 1e4) - (b.yearPublished || 1e4),
-  recentes: (a, b) => {
-    const ea = !a.acquiredOn?.trim();
-    const eb = !b.acquiredOn?.trim();
-    return ea || eb
-      ? Number(ea) - Number(eb)
-      : (b.acquiredOn || "").localeCompare(a.acquiredOn || "");
-  },
-  antigos: (a, b) => {
-    const ea = !a.acquiredOn?.trim();
-    const eb = !b.acquiredOn?.trim();
-    return ea || eb
-      ? Number(ea) - Number(eb)
-      : (a.acquiredOn || "").localeCompare(b.acquiredOn || "");
-  },
+  recentes: (a, b) => cmpEmptyLastDesc(a.acquiredOn, b.acquiredOn),
+  antigos: (a, b) => cmpEmptyLast(a.acquiredOn, b.acquiredOn),
   leitura: (a, b) =>
     cmp(readingInfo(a.reading).label, readingInfo(b.reading).label),
   "leitura-desc": (a, b) =>

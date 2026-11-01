@@ -8,11 +8,10 @@ import {
   PencilIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 
 import { useApp } from "@/components/app/app-provider";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isCoverLoaded, markCoverLoaded } from "@/lib/client/preload-covers";
+import { useCoverImage } from "@/hooks/use-cover-image";
 import { coverColors, coverSrc } from "@/lib/domain/cover";
 import type { Book } from "@/lib/domain/types";
 
@@ -35,29 +34,13 @@ export function BookCard({
   const { coverBg, coverInk } = coverColors(b.title, b.author);
   const author = b.author || "Autor desconhecido";
   const src = b.coverUrl ? coverSrc(b.coverUrl) : null;
-  const [coverLoaded, setCoverLoaded] = useState(() =>
-    Boolean(src && isCoverLoaded(src))
-  );
-  const [coverError, setCoverError] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    if (!src) {
-      setCoverLoaded(false);
-      setCoverError(false);
-      return;
-    }
-    if (isCoverLoaded(src)) {
-      setCoverLoaded(true);
-      return;
-    }
-    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
-      markCoverLoaded(src);
-      setCoverLoaded(true);
-    }
-  }, [src]);
-
-  const showCover = Boolean(src && !coverError);
+  const {
+    imgRef,
+    loaded: coverLoaded,
+    showImage: showCover,
+    onLoad,
+    onError,
+  } = useCoverImage(src);
   const actions: [LucideIcon, string, () => void, boolean][] = [
     [
       HeartIcon,
@@ -101,14 +84,10 @@ export function BookCard({
                 coverLoaded ? "opacity-100" : "opacity-0"
               )}
               fill
-              onError={() => setCoverError(true)}
-              onLoad={() => {
-                if (src) {
-                  markCoverLoaded(src);
-                }
-                setCoverLoaded(true);
-              }}
+              onError={onError}
+              onLoad={onLoad}
               ref={imgRef}
+              sizes="(max-width: 641px) 50vw, (max-width: 1024px) 33vw, 220px"
               src={src!}
               unoptimized
             />
