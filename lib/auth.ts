@@ -83,6 +83,7 @@ export const auth = betterAuth({
     : {},
 
   account: {
+    encryptOAuthTokens: true,
     accountLinking: {
       enabled: true,
       trustedProviders: ["google"],

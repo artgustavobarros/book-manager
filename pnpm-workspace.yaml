@@ -4,3 +4,16 @@ allowBuilds:
   unrs-resolver: false
 # Ultracite offers other lint providers as optional peers; install only the selected Biome provider.
 autoInstallPeers: false
+overrides:
+  source-map-js@>=1.0.0 <1.2.2: '>=1.2.2'
+  vite@>=8.3.0 <=8.3.2: '>=8.3.3'
+  zod@>=4.0.0 <4.6.6: '>=4.6.6'
+minimumReleaseAgeExclude:
+  - '@better-auth/core@1.7.15'
+  - '@better-auth/drizzle-adapter@1.7.15'
+  - '@better-auth/kysely-adapter@1.7.15'
+  - '@better-auth/memory-adapter@1.7.15'
+  - '@better-auth/mongo-adapter@1.7.15'
+  - '@better-auth/prisma-adapter@1.7.15'
+  - '@better-auth/telemetry@1.7.15'
+  - better-auth@1.7.15
