@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import type { OgData } from "@/lib/domain/share";
 
 import { OG_SIZE, ShelfOgCard } from "./shelf-og-card";
@@ -29,6 +30,7 @@ export function ScaledOgCard({ og }: { og: OgData }) {
       ref={ref}
       role="img"
     >
+      {scale ? null : <Skeleton className="absolute inset-0 rounded-none" />}
       <div
         aria-hidden="true"
         className="absolute top-0 left-0 origin-top-left"

@@ -34,9 +34,10 @@ import {
   situationInfo,
 } from "@/lib/domain/book-state";
 import type { ShareScope } from "@/lib/domain/share";
+import type { ShelfView } from "@/lib/domain/shelf";
 import { initialsOf } from "@/lib/domain/text";
 import type { Book, Reading, Situation } from "@/lib/domain/types";
-import type { Theme } from "@/lib/theme";
+import { SHELF_VIEW_COOKIE, type Theme } from "@/lib/theme";
 
 import { toast } from "./toast";
 
@@ -60,6 +61,8 @@ export interface AppInitial {
   origin: string;
   publicShelf: PublicShelfState;
   sheetUrl: string | null;
+  /** Vista preferida da Estante ("grid" | "list"), lida do cookie no SSR. */
+  shelfView?: ShelfView;
   theme: Theme;
   tz: string;
   user: AppUser;
@@ -79,6 +82,7 @@ type ModalState =
 interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   accountOpen: boolean;
   changeGoal: (delta: number) => void;
+  clearRouteTransition: () => void;
   closeLend: () => void;
   closeModal: () => void;
   closeShare: () => void;
@@ -95,12 +99,15 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   /** Abre o modal "Compartilhar" (escopo padrão: estante toda). */
   openShare: (scope?: ShareScope) => void;
   openView: (id: string) => void;
+  /** Transição de rota em andamento (exibe o skeleton de destino imediatamente em 3G). */
+  pendingNav: { from: string; to: string } | null;
   returnBook: (book: Book) => void;
   setAccountOpen: (v: boolean) => void;
   setPublicShelf: (state: PublicShelfState) => void;
 
   setReading: (book: Book, reading: Reading) => void;
   setSheetUrl: (url: string | null) => void;
+  setShelfView: (view: ShelfView) => void;
   /** Muda a Situação (abre o pedido de "com quem?" para Emprestado). */
   setSituation: (book: Book, situation: Situation) => void;
   setSurpriseOpen: (v: boolean) => void;
@@ -108,7 +115,9 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   setUser: (patch: Partial<AppUser>) => void;
   /** Escopo inicial do modal "Compartilhar" aberto; null = fechado. */
   shareScope: ShareScope | null;
+  shelfView: ShelfView;
   startReading: (book: Book) => void;
+  startRouteTransition: (targetHref: string, currentPathname: string) => void;
   surpriseOpen: boolean;
   syncOpen: boolean;
   toggleFavorite: (book: Book) => void;
@@ -148,6 +157,14 @@ function AppState({
     []
   );
   const [sheetUrl, setSheetUrl] = useState(initial.sheetUrl);
+  const [shelfView, setShelfViewState] = useState<ShelfView>(
+    initial.shelfView ?? "grid"
+  );
+  const setShelfView = useCallback((view: ShelfView) => {
+    setShelfViewState(view);
+    // biome-ignore lint/suspicious/noDocumentCookie: Persists the user's preferred shelf view ("grid" | "list") for SSR and future visits.
+    document.cookie = `${SHELF_VIEW_COOKIE}=${view}; path=/; max-age=31536000; samesite=lax`;
+  }, []);
   const [modal, setModal] = useState<ModalState>(null);
   const [surpriseOpen, setSurpriseOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -155,6 +172,22 @@ function AppState({
   const [lendFor, setLendFor] = useState<Book | null>(null);
   const [publicShelf, setPublicShelf] = useState(initial.publicShelf);
   const [shareScope, setShareScope] = useState<ShareScope | null>(null);
+  const [pendingNav, setPendingNav] = useState<{
+    from: string;
+    to: string;
+  } | null>(null);
+  const startRouteTransition = useCallback(
+    (targetHref: string, currentPathname: string) => {
+      const to = targetHref.split("?")[0] || "/";
+      if (to === currentPathname) {
+        setPendingNav(null);
+        return;
+      }
+      setPendingNav({ from: currentPathname, to });
+    },
+    []
+  );
+  const clearRouteTransition = useCallback(() => setPendingNav(null), []);
 
   const goalKey = ["goal", initial.year] as const;
   const { data: goal = initial.goal } = useQuery({
@@ -273,6 +306,11 @@ function AppState({
       changeGoal,
       sheetUrl,
       setSheetUrl,
+      shelfView,
+      setShelfView,
+      pendingNav,
+      startRouteTransition,
+      clearRouteTransition,
       publicShelf,
       setPublicShelf,
       shareScope,
@@ -347,6 +385,11 @@ function AppState({
       goal,
       changeGoal,
       sheetUrl,
+      shelfView,
+      setShelfView,
+      pendingNav,
+      startRouteTransition,
+      clearRouteTransition,
       publicShelf,
       shareScope,
       modal,

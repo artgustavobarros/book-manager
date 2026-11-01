@@ -15,7 +15,13 @@ import { getGoal } from "@/lib/services/goals";
 import { getPublicShelfState } from "@/lib/services/public-shelf";
 import { getSettings } from "@/lib/services/settings";
 import { requirePageSession } from "@/lib/session";
-import { parseTheme, THEME_COOKIE, TZ_COOKIE } from "@/lib/theme";
+import {
+  parseShelfView,
+  parseTheme,
+  SHELF_VIEW_COOKIE,
+  THEME_COOKIE,
+  TZ_COOKIE,
+} from "@/lib/theme";
 
 /** Páginas da conta: nada aqui é para buscador. */
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -71,6 +77,7 @@ export default async function AppLayout({
         tz,
         now: now.toISOString(),
         theme: parseTheme(jar.get(THEME_COOKIE)?.value),
+        shelfView: parseShelfView(jar.get(SHELF_VIEW_COOKIE)?.value),
         googleEnabled,
         hasPassword: accounts.some((a) => a.providerId === "credential"),
         googleLinked: accounts.some((a) => a.providerId === "google"),

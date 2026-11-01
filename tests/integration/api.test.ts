@@ -8,7 +8,7 @@ import * as goalsRoute from "@/app/api/goals/[year]/route";
 import * as settingsRoute from "@/app/api/settings/route";
 import * as syncRoute from "@/app/api/sheet-sync/route";
 import { db } from "@/lib/db";
-import { books, user } from "@/lib/db/schema";
+import { books, rateLimit, user } from "@/lib/db/schema";
 import { type Book, EMPTY_BOOK_FIELDS } from "@/lib/domain/types";
 import { applyMerge } from "@/lib/services/books";
 import backup from "@/tests/fixtures/reference-books.json";
@@ -24,7 +24,11 @@ beforeAll(async () => {
   ana = await createUserSession("Ana Lima");
   bia = await createUserSession("Bia Souza");
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(async () => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+  await db.delete(rateLimit);
+});
 
 async function body<T = any>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
@@ -778,5 +782,40 @@ describe("planilha", () => {
     );
     expect(res.status).toBe(422);
     expect((await body(res)).error).toContain("Qualquer pessoa com o link");
+  });
+});
+
+describe("limite de requisições nas rotas pesadas", () => {
+  it("bloqueia com 429 e Retry-After ao exceder a janela e libera após expirar", async () => {
+    const start = new Date("2026-06-15T12:00:00.000Z");
+    vi.useFakeTimers({ toFake: ["Date"], now: start });
+
+    const callImport = (cookie = ana.cookie) =>
+      importRoute.POST(
+        req("/api/books/import", {
+          method: "POST",
+          cookie,
+          json: [{ title: "Livro de teste" }],
+        }),
+        ctx()
+      );
+
+    for (let i = 0; i < 5; i++) {
+      expect((await callImport()).status).toBe(200);
+    }
+
+    const blocked = await callImport();
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get("retry-after")).toBe("60");
+    expect(await body(blocked)).toEqual({
+      error: "Muitas tentativas. Aguarde um momento e tente novamente.",
+    });
+
+    // Outro usuário tem contador independente.
+    expect((await callImport(bia.cookie)).status).toBe(200);
+
+    // Após a janela de 60s, o contador reinicia.
+    vi.setSystemTime(new Date(start.getTime() + 60_000));
+    expect((await callImport()).status).toBe(200);
   });
 });

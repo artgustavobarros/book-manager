@@ -66,7 +66,7 @@ function SurpriseBody() {
           className="relative flex aspect-[2/3] w-full flex-col justify-between overflow-hidden rounded-md px-3 py-4 shadow-lift"
           style={{ background: coverBg, color: coverInk }}
         >
-          <span className="font-semibold text-xs uppercase tracking-[.1em] opacity-80">
+          <span className="font-semibold text-xs uppercase tracking-[.1em]">
             {sb?.author ?? ""}
           </span>
           <span className="font-bold font-title text-xl leading-[1.08]">
@@ -136,7 +136,7 @@ function SurpriseBody() {
                 className="relative flex aspect-[2/3] w-[84px] flex-none flex-col justify-between overflow-hidden rounded px-[7px] py-2 shadow-[0_6px_14px_-8px_rgba(27,26,23,.45)]"
                 style={{ background: coverBg, color: coverInk }}
               >
-                <span className="font-semibold text-[6px] uppercase tracking-[.1em] opacity-80">
+                <span className="font-semibold text-[6px] uppercase tracking-[.1em]">
                   {sb.author ?? ""}
                 </span>
                 <span className="font-bold text-xs leading-[1.08]">

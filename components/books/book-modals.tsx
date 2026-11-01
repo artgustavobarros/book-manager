@@ -33,6 +33,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useBookActions, useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import { useSingleFlight } from "@/hooks/use-single-flight";
@@ -96,7 +97,7 @@ function CoverPanel({
       >
         <span
           className={cn(
-            "font-semibold text-[10px] uppercase tracking-[.1em] opacity-80",
+            "font-semibold text-[10px] uppercase tracking-[.1em]",
             "max-[640px]:text-[6px]"
           )}
         >
@@ -530,6 +531,25 @@ function OnlineSearch({
         </button>
       </div>
       {msg ? <span className="text-mute text-xs">{msg}</span> : null}
+      {loading ? (
+        <div
+          aria-busy="true"
+          aria-label="Buscando nos catálogos"
+          className="-mx-2 flex flex-col gap-0.5"
+          role="status"
+        >
+          {[0, 1, 2].map((i) => (
+            <div className="flex items-center gap-3 rounded-lg p-2" key={i}>
+              <Skeleton className="h-12 w-8 flex-none rounded" />
+              <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-3/5" />
+                <Skeleton className="h-3 w-2/5" />
+                <Skeleton className="h-3 w-4/5" />
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
       {results?.length ? (
         <div className="-mx-2 flex max-h-[280px] flex-col gap-0.5 overflow-y-auto">
           {results.map((r, i) => (

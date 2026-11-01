@@ -1,7 +1,11 @@
+import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 
+import { env } from "@/env";
 import { auth, type Session } from "@/lib/auth";
+import { type DB, db } from "@/lib/db";
+import { rateLimit } from "@/lib/db/schema";
 
 export class HttpError extends Error {
   constructor(
@@ -39,16 +43,91 @@ type Handler<C> = (ctx: {
   params: C;
 }) => Promise<Response>;
 
+export interface RateLimitRule {
+  key: string;
+  max: number;
+  windowSeconds?: number;
+}
+
+export interface SessionRouteOptions {
+  rateLimit?: RateLimitRule;
+}
+
+const e2eMode =
+  env.E2E_MODE === "1" && env.DATABASE_URL.startsWith("pglite://");
+
+export async function enforceRateLimit(
+  database: DB,
+  userId: string,
+  rule: RateLimitRule,
+  now = Date.now()
+): Promise<{ allowed: true } | { allowed: false; retryAfterSeconds: number }> {
+  const windowMs = (rule.windowSeconds ?? 60) * 1000;
+  const max = e2eMode ? rule.max * 20 : rule.max;
+  const bucketKey = `${rule.key}:${userId}`;
+
+  const [row] = await database
+    .insert(rateLimit)
+    .values({
+      id: bucketKey,
+      key: bucketKey,
+      count: 1,
+      lastRequest: now,
+    })
+    .onConflictDoUpdate({
+      target: rateLimit.key,
+      set: {
+        count: sql`case when ${now}::bigint - ${rateLimit.lastRequest} >= ${windowMs}::bigint then 1 else ${rateLimit.count} + 1 end`,
+        lastRequest: sql`case when ${now}::bigint - ${rateLimit.lastRequest} >= ${windowMs}::bigint then ${now}::bigint else ${rateLimit.lastRequest} end`,
+      },
+    })
+    .returning({
+      count: rateLimit.count,
+      lastRequest: rateLimit.lastRequest,
+    });
+
+  if (row.count > max) {
+    const remainingMs = Math.max(1000, windowMs - (now - row.lastRequest));
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.ceil(remainingMs / 1000),
+    };
+  }
+
+  return { allowed: true };
+}
+
 /**
  * Route Handler autenticado: resolve a sessão (401 sem ela) e converte erros
  * de validação (400) e HttpError no status correspondente. O `userId` vem só da sessão.
  */
-export function withSession<P = Record<string, never>>(handler: Handler<P>) {
+export function withSession<P = Record<string, never>>(
+  handler: Handler<P>,
+  options?: SessionRouteOptions
+) {
   return async (request: Request, context: { params: Promise<P> }) => {
     try {
       const session = await auth.api.getSession({ headers: request.headers });
       if (!session) {
         return json({ error: "Não autenticado." }, { status: 401 });
+      }
+      if (options?.rateLimit) {
+        const limit = await enforceRateLimit(
+          db,
+          session.user.id,
+          options.rateLimit
+        );
+        if (!limit.allowed) {
+          return json(
+            {
+              error: "Muitas tentativas. Aguarde um momento e tente novamente.",
+            },
+            {
+              status: 429,
+              headers: { "Retry-After": String(limit.retryAfterSeconds) },
+            }
+          );
+        }
       }
       const params = (await context?.params) ?? ({} as P);
       return await handler({

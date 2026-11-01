@@ -8,6 +8,7 @@ import {
   useModalClose,
   useModalDraft,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useBookActions } from "@/hooks/use-books";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { ApiError, api } from "@/lib/client/api";
@@ -66,11 +67,25 @@ function SyncBody() {
       </span>
       <input
         aria-label="Link da planilha"
-        className="h-10 rounded-lg border border-line2 bg-card px-3 text-ink text-sm outline-none placeholder:text-[light-dark(#757575,#a9a9a9)] focus:border-ink"
+        className="h-10 rounded-lg border border-line2 bg-card px-3 text-ink text-sm outline-none placeholder:text-[light-dark(#757575,#a9a9a9)] focus:border-ink disabled:cursor-wait disabled:opacity-60"
+        disabled={syncing}
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://docs.google.com/spreadsheets/d/…"
         value={url}
       />
+      {syncing ? (
+        <div
+          aria-live="polite"
+          className="flex flex-col gap-2 rounded-xl border border-line bg-hov p-3.5"
+          role="status"
+        >
+          <span className="text-mute text-xs">
+            Lendo a planilha e atualizando o acervo…
+          </span>
+          <Skeleton className="h-3.5 w-3/5" />
+          <Skeleton className="h-3 w-2/5" />
+        </div>
+      ) : null}
       {msg ? (
         <span className="text-ink text-sm leading-[1.5]">{msg}</span>
       ) : null}

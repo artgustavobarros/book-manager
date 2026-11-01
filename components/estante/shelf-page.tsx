@@ -1,7 +1,14 @@
 "use client";
 
 import { cn } from "cn";
-import { LayoutGridIcon, ListIcon, Share2Icon } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  LayoutGridIcon,
+  ListIcon,
+  Share2Icon,
+} from "lucide-react";
 import { Popover } from "radix-ui";
 import { useEffect, useMemo, useState } from "react";
 
@@ -113,6 +120,75 @@ function SortMenu({
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
+  );
+}
+
+function SortHeader({
+  label,
+  ascKey,
+  descKey,
+  defaultKey = ascKey,
+  currentSort,
+  onSort,
+  className,
+}: {
+  label: string;
+  ascKey: SortKey;
+  descKey: SortKey;
+  defaultKey?: SortKey;
+  currentSort: SortKey;
+  onSort: (k: SortKey) => void;
+  className?: string;
+}) {
+  const isAsc = currentSort === ascKey;
+  const isDesc = currentSort === descKey;
+  const isActive = isAsc || isDesc;
+
+  const handleClick = () => {
+    if (isAsc) {
+      onSort(descKey);
+    } else if (isDesc) {
+      onSort(ascKey);
+    } else {
+      onSort(defaultKey);
+    }
+  };
+
+  return (
+    <button
+      aria-label={`Ordenar por ${label}${
+        isActive ? (isAsc ? " (crescente)" : " (decrescente)") : ""
+      }`}
+      aria-pressed={isActive}
+      className={cn(
+        "group -mx-1 flex items-center gap-1 rounded border-0 bg-transparent px-1 py-0.5 text-left font-semibold text-xs transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-line2",
+        isActive ? "font-bold text-ink" : "text-mute",
+        className
+      )}
+      onClick={handleClick}
+      title={`Ordenar por ${label} (${
+        isActive
+          ? isAsc
+            ? "crescente · clique para inverter"
+            : "decrescente · clique para inverter"
+          : "clique para ordenar"
+      })`}
+      type="button"
+    >
+      <span className="truncate">{label}</span>
+      <span className="inline-flex size-3.5 flex-none items-center justify-center">
+        {isAsc ? (
+          <ArrowUpIcon aria-hidden="true" className="size-3 text-acc" />
+        ) : isDesc ? (
+          <ArrowDownIcon aria-hidden="true" className="size-3 text-acc" />
+        ) : (
+          <ArrowUpDownIcon
+            aria-hidden="true"
+            className="size-2.5 opacity-0 transition-opacity group-hover:opacity-60"
+          />
+        )}
+      </span>
+    </button>
   );
 }
 
@@ -422,7 +498,7 @@ export function ShelfPage() {
 
       {state.view === "list" && list.length > 0 ? (
         <div>
-          <p className="mb-2 hidden text-mute text-xs min-[641px]:max-[1120px]:block">
+          <p className="mb-2 hidden text-mute text-xs min-[641px]:max-[768px]:block">
             Deslize para ver todas as colunas e ações da lista.
           </p>
           <div
@@ -431,22 +507,74 @@ export function ShelfPage() {
             role="region"
             tabIndex={0}
           >
-            <div className="flex min-w-[1120px] flex-col max-[640px]:min-w-0">
+            <div className="flex min-w-[760px] flex-col max-[640px]:min-w-0 lg:min-w-[1120px]">
               <div
                 className={
                   LIST_COLUMNS +
-                  "border-line border-b bg-hov font-semibold text-mute text-xs max-[640px]:hidden"
+                  "items-center border-line border-b bg-hov font-semibold text-mute text-xs max-[640px]:hidden"
                 }
               >
-                <span>#</span>
+                <SortHeader
+                  ascKey="ordem"
+                  currentSort={state.sort}
+                  descKey="ordem-desc"
+                  label="#"
+                  onSort={(sort) => setShelf({ sort })}
+                />
                 <span />
-                <span>Título</span>
-                <span>Autor(a)</span>
-                <span>Editora</span>
-                <span>Gênero / país</span>
-                <span>Ano</span>
-                <span>Aquisição</span>
-                <span>Leitura</span>
+                <SortHeader
+                  ascKey="titulo"
+                  currentSort={state.sort}
+                  descKey="titulo-desc"
+                  label="Título"
+                  onSort={(sort) => setShelf({ sort })}
+                />
+                <SortHeader
+                  ascKey="autor"
+                  currentSort={state.sort}
+                  descKey="autor-desc"
+                  label="Autor(a)"
+                  onSort={(sort) => setShelf({ sort })}
+                />
+                <SortHeader
+                  ascKey="editora"
+                  className="max-lg:hidden"
+                  currentSort={state.sort}
+                  descKey="editora-desc"
+                  label="Editora"
+                  onSort={(sort) => setShelf({ sort })}
+                />
+                <SortHeader
+                  ascKey="genero"
+                  currentSort={state.sort}
+                  descKey="genero-desc"
+                  label="Gênero / País"
+                  onSort={(sort) => setShelf({ sort })}
+                />
+                <SortHeader
+                  ascKey="lanc-antigos"
+                  className="max-lg:hidden"
+                  currentSort={state.sort}
+                  defaultKey="lanc-novos"
+                  descKey="lanc-novos"
+                  label="Ano"
+                  onSort={(sort) => setShelf({ sort })}
+                />
+                <SortHeader
+                  ascKey="antigos"
+                  currentSort={state.sort}
+                  defaultKey="recentes"
+                  descKey="recentes"
+                  label="Aquisição"
+                  onSort={(sort) => setShelf({ sort })}
+                />
+                <SortHeader
+                  ascKey="leitura"
+                  currentSort={state.sort}
+                  descKey="leitura-desc"
+                  label="Leitura"
+                  onSort={(sort) => setShelf({ sort })}
+                />
                 <span />
               </div>
               {visible.map((b) => (

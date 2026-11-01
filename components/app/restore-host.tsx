@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/alert-dialog";
 import { RESTORE_EVENT } from "@/hooks/use-backup";
 import { useBookActions, useBooks } from "@/hooks/use-books";
+import { useSingleFlight } from "@/hooks/use-single-flight";
 import { api } from "@/lib/client/api";
 import { fromBackup } from "@/lib/domain/backup";
 import type { Book } from "@/lib/domain/types";
@@ -22,31 +23,43 @@ export function RestoreHost() {
   const input = useRef<HTMLInputElement>(null);
   const books = useBooks();
   const { replaceAll } = useBookActions();
+  const [restoring, setRestoring] = useState(false);
+  const submitOnce = useSingleFlight();
   const [pending, setPending] = useState<{
     data: unknown[];
     valid: number;
   } | null>(null);
 
   useEffect(() => {
-    const open = () => input.current?.click();
+    const open = () => {
+      if (!restoring) {
+        input.current?.click();
+      }
+    };
     window.addEventListener(RESTORE_EVENT, open);
     return () => window.removeEventListener(RESTORE_EVENT, open);
-  }, []);
+  }, [restoring]);
 
-  async function restore(data: unknown[]) {
-    try {
-      const res = await api.post<{ count: number; books: Book[] }>(
-        "/api/books/import",
-        data
-      );
-      replaceAll(res.books);
-      toast("Backup restaurado · " + res.count + " livros");
-    } catch (e) {
-      toast("Não foi possível restaurar o backup", {
-        type: "error",
-        note: (e as Error).message || INVALID_BACKUP,
-      });
-    }
+  function restore(data: unknown[]) {
+    return submitOnce(async () => {
+      setRestoring(true);
+      toast("Restaurando backup…", { type: "info" });
+      try {
+        const res = await api.post<{ count: number; books: Book[] }>(
+          "/api/books/import",
+          data
+        );
+        replaceAll(res.books);
+        toast("Backup restaurado · " + res.count + " livros");
+      } catch (e) {
+        toast("Não foi possível restaurar o backup", {
+          type: "error",
+          note: (e as Error).message || INVALID_BACKUP,
+        });
+      } finally {
+        setRestoring(false);
+      }
+    });
   }
 
   return (
@@ -86,10 +99,13 @@ export function RestoreHost() {
         type="file"
       />
       <ConfirmDialog
-        confirmLabel="Restaurar backup"
+        confirmLabel={restoring ? "Restaurando…" : "Restaurar backup"}
         description={`O backup tem ${pending?.valid ?? 0} livros${ignoredNote(pending)} e vai substituir os ${books.length} livros atuais. Esta ação não pode ser desfeita.`}
         onConfirm={() => {
-          const { data } = pending!;
+          if (!pending) {
+            return;
+          }
+          const { data } = pending;
           setPending(null);
           void restore(data);
         }}
