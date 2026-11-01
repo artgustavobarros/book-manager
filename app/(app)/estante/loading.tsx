@@ -56,7 +56,7 @@ export default function EstanteLoading() {
 
         {shelfView === "list" ? (
           <div className="overflow-x-auto rounded-xl border border-line bg-card max-[640px]:overflow-visible">
-            <div className="flex min-w-[1120px] flex-col max-[640px]:min-w-0">
+            <div className="flex min-w-[760px] flex-col max-[640px]:min-w-0 lg:min-w-[1120px]">
               <div
                 className={
                   LIST_COLUMNS +
@@ -67,9 +67,9 @@ export default function EstanteLoading() {
                 <span />
                 <span>Título</span>
                 <span>Autor(a)</span>
-                <span>Editora</span>
-                <span>Gênero / país</span>
-                <span>Ano</span>
+                <span className="max-lg:hidden">Editora</span>
+                <span>Gênero / País</span>
+                <span className="max-lg:hidden">Ano</span>
                 <span>Aquisição</span>
                 <span>Leitura</span>
                 <span />
@@ -86,12 +86,12 @@ export default function EstanteLoading() {
                     <Skeleton className="h-3.5 w-16 rounded-full" />
                   </div>
                   <Skeleton className="h-3.5 w-3/4 max-[640px]:col-span-2 max-[640px]:col-start-2 max-[640px]:row-start-2" />
-                  <Skeleton className="h-3.5 w-2/3 max-[640px]:hidden" />
+                  <Skeleton className="h-3.5 w-2/3 max-lg:hidden" />
                   <div className="flex flex-col gap-1 max-[640px]:hidden">
                     <Skeleton className="h-3.5 w-3/4" />
                     <Skeleton className="h-3 w-1/2" />
                   </div>
-                  <Skeleton className="h-3.5 w-10 max-[640px]:hidden" />
+                  <Skeleton className="h-3.5 w-10 max-lg:hidden" />
                   <Skeleton className="h-3.5 w-16 max-[640px]:hidden" />
                   <Skeleton className="h-8 w-full rounded-lg max-[640px]:col-start-2 max-[640px]:row-start-3" />
                   <div className="flex justify-end gap-1 max-[640px]:col-start-3 max-[640px]:row-start-3">

@@ -1,12 +1,18 @@
-import { cn } from "cn";
+"use client";
 
-import { coverColors, coverImage } from "@/lib/domain/cover";
+import { cn } from "cn";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import { isCoverLoaded, markCoverLoaded } from "@/lib/client/preload-covers";
+import { coverColors, coverSrc } from "@/lib/domain/cover";
 import { initial } from "@/lib/domain/text";
 import type { Book } from "@/lib/domain/types";
 
 /**
- * Mini-capa (inicial sobre a cor gerada + imagem por cima), usada no Painel, na lista
- * e nos resultados. `as="button"` para as que abrem a ficha.
+ * Mini-capa (inicial sobre a cor gerada + imagem com skeleton durante o fetch),
+ * usada no Painel, na lista e nos resultados. `as="button"` para as que abrem a ficha.
  */
 export function MiniCover({
   book,
@@ -22,7 +28,32 @@ export function MiniCover({
   title?: string;
 }) {
   const { coverBg, coverInk } = coverColors(book.title, book.author);
+  const src = book.coverUrl ? coverSrc(book.coverUrl) : null;
+  const [loaded, setLoaded] = useState(() =>
+    Boolean(src && isCoverLoaded(src))
+  );
+  const [hasError, setHasError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (!src) {
+      setLoaded(false);
+      setHasError(false);
+      return;
+    }
+    if (isCoverLoaded(src)) {
+      setLoaded(true);
+      return;
+    }
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      markCoverLoaded(src);
+      setLoaded(true);
+    }
+  }, [src]);
+
   const Comp = as;
+  const showImage = Boolean(src && !hasError);
+
   return (
     <Comp
       {...(as === "button"
@@ -41,10 +72,32 @@ export function MiniCover({
       title={title}
     >
       {initial(book.title)}
-      <span
-        className="absolute inset-0 bg-center bg-cover"
-        style={{ backgroundImage: coverImage(book.coverUrl) }}
-      />
+      {showImage ? (
+        <>
+          <Image
+            alt=""
+            aria-hidden="true"
+            className={cn(
+              "object-cover transition-opacity duration-300",
+              loaded ? "opacity-100" : "opacity-0"
+            )}
+            fill
+            onError={() => setHasError(true)}
+            onLoad={() => {
+              if (src) {
+                markCoverLoaded(src);
+              }
+              setLoaded(true);
+            }}
+            ref={imgRef}
+            src={src!}
+            unoptimized
+          />
+          {loaded ? null : (
+            <Skeleton className="absolute inset-0 size-full rounded-none" />
+          )}
+        </>
+      ) : null}
     </Comp>
   );
 }

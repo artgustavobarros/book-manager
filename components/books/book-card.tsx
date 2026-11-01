@@ -7,9 +7,13 @@ import {
   type LucideIcon,
   PencilIcon,
 } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 import { useApp } from "@/components/app/app-provider";
-import { coverColors, coverImage } from "@/lib/domain/cover";
+import { Skeleton } from "@/components/ui/skeleton";
+import { isCoverLoaded, markCoverLoaded } from "@/lib/client/preload-covers";
+import { coverColors, coverSrc } from "@/lib/domain/cover";
 import type { Book } from "@/lib/domain/types";
 
 import { ReadingSelect } from "./reading-select";
@@ -30,6 +34,30 @@ export function BookCard({
   const app = useApp();
   const { coverBg, coverInk } = coverColors(b.title, b.author);
   const author = b.author || "Autor desconhecido";
+  const src = b.coverUrl ? coverSrc(b.coverUrl) : null;
+  const [coverLoaded, setCoverLoaded] = useState(() =>
+    Boolean(src && isCoverLoaded(src))
+  );
+  const [coverError, setCoverError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (!src) {
+      setCoverLoaded(false);
+      setCoverError(false);
+      return;
+    }
+    if (isCoverLoaded(src)) {
+      setCoverLoaded(true);
+      return;
+    }
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      markCoverLoaded(src);
+      setCoverLoaded(true);
+    }
+  }, [src]);
+
+  const showCover = Boolean(src && !coverError);
   const actions: [LucideIcon, string, () => void, boolean][] = [
     [
       HeartIcon,
@@ -63,10 +91,32 @@ export function BookCard({
         <span className="text-balance break-words font-bold font-title text-xl leading-[1.08]">
           {b.title}
         </span>
-        <span
-          className="absolute inset-0 bg-center bg-cover"
-          style={{ backgroundImage: coverImage(b.coverUrl) }}
-        />
+        {showCover ? (
+          <>
+            <Image
+              alt=""
+              aria-hidden="true"
+              className={cn(
+                "object-cover transition-opacity duration-300",
+                coverLoaded ? "opacity-100" : "opacity-0"
+              )}
+              fill
+              onError={() => setCoverError(true)}
+              onLoad={() => {
+                if (src) {
+                  markCoverLoaded(src);
+                }
+                setCoverLoaded(true);
+              }}
+              ref={imgRef}
+              src={src!}
+              unoptimized
+            />
+            {coverLoaded ? null : (
+              <Skeleton className="absolute inset-0 size-full rounded-none" />
+            )}
+          </>
+        ) : null}
         {/* Sem selo sobre a capa (cobria o autor): a Leitura fica no seletor abaixo. */}
         {b.favorite ? (
           <span className="absolute top-2 right-2 text-sm text-white [text-shadow:0_1px_3px_rgba(0,0,0,.4)] group-hover:hidden max-[641px]:hidden">

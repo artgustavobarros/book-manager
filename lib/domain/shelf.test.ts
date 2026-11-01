@@ -169,6 +169,41 @@ describe("sortBooks", () => {
     );
     expect(titles(sorted)).toEqual(["eca", "erico", "nulo"]);
   });
+
+  it("ordena em ordem decrescente (Z–A) mantendo vazios no fim", () => {
+    const sorted = sortBooks(
+      [
+        makeBook({ author: "Clarice Lispector", title: "clarice" }),
+        makeBook({ author: null, title: "nulo" }),
+        makeBook({ author: "Machado de Assis", title: "machado" }),
+      ],
+      "autor-desc"
+    );
+    expect(titles(sorted)).toEqual(["machado", "clarice", "nulo"]);
+  });
+
+  it("ordena por gênero e leitura", () => {
+    const sortedGenre = sortBooks(
+      [
+        makeBook({ genre: "Romance", title: "b" }),
+        makeBook({ genre: "Ficção", title: "a" }),
+        makeBook({ genre: null, title: "c" }),
+      ],
+      "genero"
+    );
+    expect(titles(sortedGenre)).toEqual(["a", "b", "c"]);
+
+    const sortedReading = sortBooks(
+      [
+        makeBook({ reading: "lido", title: "lido" }),
+        makeBook({ reading: "abandonado", title: "abandonado" }),
+        makeBook({ reading: "lendo", title: "lendo" }),
+      ],
+      "leitura"
+    );
+    // Abandonado (A) -> Lendo (L) -> Lido (L)
+    expect(titles(sortedReading)).toEqual(["abandonado", "lendo", "lido"]);
+  });
 });
 
 describe("chips", () => {

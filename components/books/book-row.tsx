@@ -12,7 +12,7 @@ import { ReadingSelect } from "./reading-select";
 import { SituationBadge } from "./situation-badge";
 
 export const LIST_COLUMNS =
-  "grid grid-cols-[40px_36px_minmax(0,2fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_52px_100px_128px_96px] gap-3 px-5 py-3 max-[640px]:grid-cols-[40px_minmax(0,1fr)_auto] max-[640px]:gap-x-3 max-[640px]:gap-y-1 max-[640px]:px-3";
+  "grid grid-cols-[40px_36px_minmax(0,2fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_100px_128px_96px] lg:grid-cols-[40px_36px_minmax(0,2fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_52px_100px_128px_96px] gap-3 px-5 py-3 max-[640px]:grid-cols-[40px_minmax(0,1fr)_auto] max-[640px]:gap-x-3 max-[640px]:gap-y-1 max-[640px]:px-3";
 
 /** Linha da vista "Lista". */
 export function BookRow({
@@ -79,14 +79,14 @@ export function BookRow({
       >
         {author}
       </button>
-      <span className="truncate text-mute max-[640px]:hidden">
+      <span className="truncate text-mute max-lg:hidden">
         {b.publisher || "—"}
       </span>
       <span className="flex min-w-0 flex-col text-mute max-[640px]:hidden">
         <span className="truncate">{b.genre || "—"}</span>
         <span className="text-xs capitalize">{b.nationality || "—"}</span>
       </span>
-      <span className="text-mute tabular-nums max-[640px]:hidden">
+      <span className="text-mute tabular-nums max-lg:hidden">
         {b.yearPublished || "—"}
       </span>
       <span className="text-mute tabular-nums max-[640px]:hidden">

@@ -1,5 +1,11 @@
 /** Filtros, facetas e ordenação da Estante (porta de `estante()` do standalone). */
-import { isReading, isSituation, READINGS, SITUATIONS } from "./book-state";
+import {
+  isReading,
+  isSituation,
+  READINGS,
+  readingInfo,
+  SITUATIONS,
+} from "./book-state";
 import { cmp, norm } from "./text";
 import type { Book, Reading, Situation } from "./types";
 
@@ -84,10 +90,17 @@ export const SORT_KEYS = [
   "titulo",
   "titulo-desc",
   "autor",
+  "autor-desc",
   "editora",
+  "editora-desc",
+  "genero",
+  "genero-desc",
   "lanc-novos",
   "lanc-antigos",
   "recentes",
+  "antigos",
+  "leitura",
+  "leitura-desc",
   "paginas",
 ] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
@@ -98,10 +111,17 @@ export const SORT_LABELS: Record<SortKey, string> = {
   titulo: "Título · A–Z",
   "titulo-desc": "Título · Z–A",
   autor: "Autor(a) · A–Z",
+  "autor-desc": "Autor(a) · Z–A",
   editora: "Editora · A–Z",
+  "editora-desc": "Editora · Z–A",
+  genero: "Gênero · A–Z",
+  "genero-desc": "Gênero · Z–A",
   "lanc-novos": "Lançamento · novos",
   "lanc-antigos": "Lançamento · antigos",
   recentes: "Aquisição · recentes",
+  antigos: "Aquisição · antigas",
+  leitura: "Leitura · A–Z",
+  "leitura-desc": "Leitura · Z–A",
   paginas: "Páginas · maiores",
 };
 
@@ -123,8 +143,27 @@ export const SORT_GROUPS: readonly {
       ["titulo-desc", "Z–A"],
     ],
   },
-  { label: "Autor(a)", opts: [["autor", "A–Z"]] },
-  { label: "Editora", opts: [["editora", "A–Z"]] },
+  {
+    label: "Autor(a)",
+    opts: [
+      ["autor", "A–Z"],
+      ["autor-desc", "Z–A"],
+    ],
+  },
+  {
+    label: "Editora",
+    opts: [
+      ["editora", "A–Z"],
+      ["editora-desc", "Z–A"],
+    ],
+  },
+  {
+    label: "Gênero",
+    opts: [
+      ["genero", "A–Z"],
+      ["genero-desc", "Z–A"],
+    ],
+  },
   {
     label: "Lançamento",
     opts: [
@@ -132,7 +171,20 @@ export const SORT_GROUPS: readonly {
       ["lanc-antigos", "Antigos"],
     ],
   },
-  { label: "Aquisição", opts: [["recentes", "Recentes"]] },
+  {
+    label: "Aquisição",
+    opts: [
+      ["recentes", "Recentes"],
+      ["antigos", "Antigas"],
+    ],
+  },
+  {
+    label: "Leitura",
+    opts: [
+      ["leitura", "A–Z"],
+      ["leitura-desc", "Z–A"],
+    ],
+  },
   { label: "Páginas", opts: [["paginas", "Maiores"]] },
 ];
 
@@ -146,16 +198,48 @@ function cmpEmptyLast(a: string | null, b: string | null): number {
   return ea || eb ? Number(ea) - Number(eb) : cmp(a, b);
 }
 
+/** Como `cmp` decrescente, mas valores vazios vão sempre para o fim. */
+function cmpEmptyLastDesc(a: string | null, b: string | null): number {
+  const ea = !a?.trim();
+  const eb = !b?.trim();
+  return ea || eb ? Number(ea) - Number(eb) : cmp(b, a);
+}
+
 const COMPARATORS: Record<SortKey, (a: Book, b: Book) => number> = {
   ordem: (a, b) => ordN(a) - ordN(b),
   "ordem-desc": (a, b) => (b.orderNo || 0) - (a.orderNo || 0),
   titulo: (a, b) => cmp(a.title, b.title),
   "titulo-desc": (a, b) => cmp(b.title, a.title),
   autor: (a, b) => cmpEmptyLast(a.author, b.author),
+  "autor-desc": (a, b) => cmpEmptyLastDesc(a.author, b.author),
   editora: (a, b) => cmpEmptyLast(a.publisher, b.publisher),
+  "editora-desc": (a, b) => cmpEmptyLastDesc(a.publisher, b.publisher),
+  genero: (a, b) =>
+    cmpEmptyLast(a.genre, b.genre) ||
+    cmpEmptyLast(a.nationality, b.nationality),
+  "genero-desc": (a, b) =>
+    cmpEmptyLastDesc(a.genre, b.genre) ||
+    cmpEmptyLastDesc(a.nationality, b.nationality),
   "lanc-novos": (a, b) => (b.yearPublished || -1e4) - (a.yearPublished || -1e4),
   "lanc-antigos": (a, b) => (a.yearPublished || 1e4) - (b.yearPublished || 1e4),
-  recentes: (a, b) => (b.acquiredOn || "").localeCompare(a.acquiredOn || ""),
+  recentes: (a, b) => {
+    const ea = !a.acquiredOn?.trim();
+    const eb = !b.acquiredOn?.trim();
+    return ea || eb
+      ? Number(ea) - Number(eb)
+      : (b.acquiredOn || "").localeCompare(a.acquiredOn || "");
+  },
+  antigos: (a, b) => {
+    const ea = !a.acquiredOn?.trim();
+    const eb = !b.acquiredOn?.trim();
+    return ea || eb
+      ? Number(ea) - Number(eb)
+      : (a.acquiredOn || "").localeCompare(b.acquiredOn || "");
+  },
+  leitura: (a, b) =>
+    cmp(readingInfo(a.reading).label, readingInfo(b.reading).label),
+  "leitura-desc": (a, b) =>
+    cmp(readingInfo(b.reading).label, readingInfo(a.reading).label),
   paginas: (a, b) => pg(b) - pg(a),
 };
 
