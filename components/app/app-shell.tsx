@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
+import { RouteSkeleton } from "@/app/(app)/loading";
 import { AppFooter } from "./app-footer";
 import { AppHeader } from "./app-header";
 import { AppModals } from "./app-modals";
@@ -37,7 +38,23 @@ function SheetExportReturn() {
 /** Estrutura das páginas autenticadas (Acervo.dc.html, bloco `authed`). */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useApp();
+  const { clearRouteTransition, pendingNav, user } = useApp();
+  const pendingTarget =
+    pendingNav && pendingNav.from === pathname && pendingNav.to !== pathname
+      ? pendingNav.to
+      : null;
+  const mainContent = pendingTarget ? (
+    <RouteSkeleton pathname={pendingTarget} />
+  ) : (
+    children
+  );
+
+  useEffect(() => {
+    if (pendingNav && pendingNav.from !== pathname) {
+      clearRouteTransition();
+    }
+  }, [clearRouteTransition, pathname, pendingNav]);
+
   return (
     <div className="flex min-h-screen flex-col bg-bg text-ink transition-[background-color,color] duration-300">
       <a
@@ -48,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </a>
       <AppHeader />
       <EmailVerificationBanner key={pathname} />
-      {children}
+      {mainContent}
       <AppFooter />
       {/* Espaço para os botões flutuantes não cobrirem o fim da página. */}
       <div

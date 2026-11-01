@@ -30,10 +30,15 @@ function Tabs({
   itemClassName?: string;
 }) {
   const pathname = usePathname();
+  const app = useApp();
+  const activePath =
+    app.pendingNav && app.pendingNav.from === pathname
+      ? app.pendingNav.to
+      : pathname;
   return (
     <nav className={cn("flex gap-0.5 rounded-lg bg-seg p-1", className)}>
       {TABS.map(([href, label]) => {
-        const active = pathname === href;
+        const active = activePath === href;
         return (
           <Link
             aria-current={active ? "page" : undefined}
@@ -46,7 +51,15 @@ function Tabs({
             )}
             href={href}
             key={href}
-            onClick={() => window.scrollTo({ top: 0 })}
+            onClick={(e) => {
+              if (
+                !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) &&
+                e.button === 0
+              ) {
+                app.startRouteTransition(href, pathname);
+              }
+              window.scrollTo({ top: 0 });
+            }}
           >
             {label}
           </Link>
@@ -57,6 +70,8 @@ function Tabs({
 }
 
 function Brand({ className }: { className?: string }) {
+  const pathname = usePathname();
+  const app = useApp();
   return (
     <Link
       className={cn(
@@ -64,6 +79,14 @@ function Brand({ className }: { className?: string }) {
         className
       )}
       href="/"
+      onClick={(e) => {
+        if (
+          !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) &&
+          e.button === 0
+        ) {
+          app.startRouteTransition("/", pathname);
+        }
+      }}
     >
       <BrandMark />
       <BrandWordmark />

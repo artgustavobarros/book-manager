@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { api } from "@/lib/client/api";
 import {
@@ -30,7 +31,11 @@ export function SheetExportSection() {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const { data: state, error } = useQuery({
+  const {
+    data: state,
+    error,
+    isPending,
+  } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: () => api.get<SheetExportState>("/api/sheets-export"),
   });
@@ -122,52 +127,62 @@ export function SheetExportSection() {
           {message}
         </span>
       ) : null}
-      <div className="flex flex-wrap gap-2">
-        {canConnect ? (
-          <button
-            className={buttonClass}
-            disabled={busy}
-            onClick={connect}
-            type="button"
-          >
-            {busy
-              ? "Conectando…"
-              : needsReconnect
-                ? "Reconectar"
-                : "Conectar Google"}
-          </button>
-        ) : null}
-        {state?.spreadsheetUrl ? (
-          <a
-            className={`${buttonClass} inline-flex items-center`}
-            href={state.spreadsheetUrl}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Abrir planilha
-          </a>
-        ) : null}
-        {active && state.lastError && !state.currentWeekSucceeded ? (
-          <button
-            className={buttonClass}
-            disabled={busy}
-            onClick={() => action("retry")}
-            type="button"
-          >
-            Tentar novamente
-          </button>
-        ) : null}
-        {active || needsReconnect || state?.status === "pending" ? (
-          <button
-            className={buttonClass}
-            disabled={busy}
-            onClick={() => action("disable")}
-            type="button"
-          >
-            Desativar
-          </button>
-        ) : null}
-      </div>
+      {isPending ? (
+        <div aria-busy="true" className="flex flex-col gap-3" role="status">
+          <span className="sr-only">Carregando cópia semanal…</span>
+          <Skeleton className="h-4 w-44" />
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-9 w-36 rounded-lg border border-line2" />
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {canConnect ? (
+            <button
+              className={buttonClass}
+              disabled={busy}
+              onClick={connect}
+              type="button"
+            >
+              {busy
+                ? "Conectando…"
+                : needsReconnect
+                  ? "Reconectar"
+                  : "Conectar Google"}
+            </button>
+          ) : null}
+          {state?.spreadsheetUrl ? (
+            <a
+              className={`${buttonClass} inline-flex items-center`}
+              href={state.spreadsheetUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Abrir planilha
+            </a>
+          ) : null}
+          {active && state.lastError && !state.currentWeekSucceeded ? (
+            <button
+              className={buttonClass}
+              disabled={busy}
+              onClick={() => action("retry")}
+              type="button"
+            >
+              Tentar novamente
+            </button>
+          ) : null}
+          {active || needsReconnect || state?.status === "pending" ? (
+            <button
+              className={buttonClass}
+              disabled={busy}
+              onClick={() => action("disable")}
+              type="button"
+            >
+              Desativar
+            </button>
+          ) : null}
+        </div>
+      )}
       {app.googleEnabled ? null : (
         <span className="text-mute text-xs">
           A conexão com Google não está disponível neste ambiente.

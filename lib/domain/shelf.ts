@@ -281,7 +281,10 @@ export const DEFAULT_SHELF: ShelfState = {
 
 type ParamSource = { get(name: string): string | null };
 
-export function parseShelfParams(params: ParamSource): ShelfState {
+export function parseShelfParams(
+  params: ParamSource,
+  defaultView: ShelfView = DEFAULT_SHELF.view
+): ShelfState {
   const reading = params.get("leitura");
   const situation = params.get("situacao");
   const sort = params.get("ordem");
@@ -296,13 +299,16 @@ export function parseShelfParams(params: ParamSource): ShelfState {
     sort: SORT_KEYS.includes(sort as SortKey)
       ? (sort as SortKey)
       : DEFAULT_SHELF.sort,
-    view: view === "lista" ? "list" : "grid",
+    view: view === "lista" ? "list" : view === "capas" ? "grid" : defaultView,
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,
   };
 }
 
 /** Serializa omitindo os valores padrão. */
-export function toShelfParams(state: Partial<ShelfState>): URLSearchParams {
+export function toShelfParams(
+  state: Partial<ShelfState>,
+  defaultView: ShelfView = DEFAULT_SHELF.view
+): URLSearchParams {
   const p = new URLSearchParams();
   if (state.q) {
     p.set("q", state.q);
@@ -319,8 +325,8 @@ export function toShelfParams(state: Partial<ShelfState>): URLSearchParams {
   if (state.sort && state.sort !== DEFAULT_SHELF.sort) {
     p.set("ordem", state.sort);
   }
-  if (state.view === "list") {
-    p.set("vista", "lista");
+  if (state.view && state.view !== defaultView) {
+    p.set("vista", state.view === "list" ? "lista" : "capas");
   }
   if (state.page && state.page > 1) {
     p.set("pagina", String(state.page));
@@ -329,7 +335,10 @@ export function toShelfParams(state: Partial<ShelfState>): URLSearchParams {
 }
 
 /** Href da Estante com o estado indicado (usado pelos atalhos de Painel e Dados). */
-export function shelfHref(state: Partial<ShelfState> = {}): string {
-  const qs = toShelfParams(state).toString();
+export function shelfHref(
+  state: Partial<ShelfState> = {},
+  defaultView: ShelfView = DEFAULT_SHELF.view
+): string {
+  const qs = toShelfParams(state, defaultView).toString();
   return qs ? `/estante?${qs}` : "/estante";
 }

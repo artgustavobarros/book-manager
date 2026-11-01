@@ -249,6 +249,11 @@ describe("facetas e URL", () => {
     expect(parseShelfParams(new URLSearchParams("status=lido"))).toEqual(
       DEFAULT_SHELF
     );
+    // Respeita a vista padrão escolhida pelo usuário (ex.: "list")
+    expect(parseShelfParams(new URLSearchParams(""), "list").view).toBe("list");
+    expect(
+      toShelfParams({ ...DEFAULT_SHELF, view: "list" }, "list").get("vista")
+    ).toBeNull();
   });
 });
 
