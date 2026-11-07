@@ -1,8 +1,13 @@
 import { waitUntil } from "@vercel/functions";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import {
+  APIError,
+  createAuthMiddleware,
+  getSessionFromCtx,
+} from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { env } from "@/env";
 import { appUrl, vercelUrl } from "@/lib/app-url";
@@ -35,6 +40,26 @@ const trustedOrigins = [appUrl, env.NEXT_PUBLIC_APP_URL, vercelUrl].filter(
   (o): o is string => !!o
 );
 
+/**
+ * Remove vínculos sociais criados antes de alguém provar a posse do endereço.
+ *
+ * Quem cadastra um e-mail que não é seu recebe sessão na hora
+ * (`requireEmailVerification: false`) e podia usá-la para vincular o próprio
+ * Google. O vínculo sobrevivia à verificação e à redefinição de senha, então o
+ * login Google continuava entrando na conta do dono real. A conta `credential`
+ * é preservada: a senha acabou de ser provada ou redefinida.
+ */
+async function dropUnprovenLinks(userId: string) {
+  await db
+    .delete(schema.account)
+    .where(
+      and(
+        eq(schema.account.userId, userId),
+        ne(schema.account.providerId, "credential")
+      )
+    );
+}
+
 export const auth = betterAuth({
   appName: "Bodega Literária",
   baseURL: appUrl,
@@ -55,6 +80,8 @@ export const auth = betterAuth({
     // Redefinir a senha pelo link do e-mail prova a posse da caixa: a conta fica verificada.
     onPasswordReset: async ({ user }) => {
       if (!user.emailVerified) {
+        // A posse acabou de ser provada; nada vinculado antes disso sobrevive.
+        await dropUnprovenLinks(user.id);
         await db
           .update(schema.user)
           .set({ emailVerified: true })
@@ -68,6 +95,11 @@ export const auth = betterAuth({
     sendOnSignIn: false,
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60 * 24,
+    // Só dispara na primeira verificação (a troca de e-mail tem outro ramo),
+    // com o usuário ainda não verificado: mesma limpeza do reset de senha.
+    beforeEmailVerification: async (u) => {
+      await dropUnprovenLinks(u.id);
+    },
     // Também usado na troca de e-mail: o link vai para o endereço novo, com o texto da troca.
     sendVerificationEmail: async (data) => deliver(verificationMessage(data)),
   },
@@ -107,6 +139,28 @@ export const auth = betterAuth({
   user: {
     changeEmail: { enabled: true },
     deleteUser: { enabled: true },
+  },
+
+  hooks: {
+    /**
+     * `/link-social` é autorizado só pela presença de sessão, nos dois ramos
+     * (`idToken` e redirect). Sem este portão, uma conta cadastrada num
+     * endereço alheio e ainda não verificada podia anexar um Google próprio.
+     */
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/link-social") {
+        return;
+      }
+      const current = await getSessionFromCtx(ctx);
+      // Sem sessão o próprio endpoint responde 401; aqui só barramos a sessão
+      // cujo endereço nunca foi provado.
+      if (current && !current.user.emailVerified) {
+        throw new APIError("FORBIDDEN", {
+          code: "EMAIL_NOT_VERIFIED_FOR_LINK",
+          message: "Confirme seu e-mail antes de vincular uma conta Google.",
+        });
+      }
+    }),
   },
 
   rateLimit: {

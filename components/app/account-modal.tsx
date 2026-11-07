@@ -261,8 +261,10 @@ function GoogleSection() {
                   if (!google) {
                     return setLinked(false);
                   }
+                  // `id` é a linha do Better Auth; `accountId` é o `sub` do
+                  // Google. O endpoint casa pelo `id`.
                   const { error } = await authClient.unlinkAccount({
-                    accountId: google.accountId,
+                    accountId: google.id,
                   });
                   if (error) {
                     return setMsg(authErrorMessage(error));
