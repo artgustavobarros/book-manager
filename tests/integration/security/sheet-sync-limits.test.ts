@@ -76,7 +76,7 @@ describe("achado 4 — limites do sync da planilha", () => {
     );
 
     expect(error.code).toBe("too-many-rows");
-    expect(error.detail).toContain("20.001");
+    expect(error.userMessage).toContain("20.001");
     expect(await countBooks(userId)).toBe(0);
   });
 
@@ -89,7 +89,7 @@ describe("achado 4 — limites do sync da planilha", () => {
     );
 
     expect(error.code).toBe("invalid-row");
-    expect(error.detail).toContain("Linha 1");
+    expect(error.userMessage).toContain("Linha 1");
     expect(await countBooks(userId)).toBe(0);
   });
 

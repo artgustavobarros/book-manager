@@ -32,16 +32,16 @@ export type SheetErrorCode =
 
 export class SheetError extends Error {
   /**
-   * `detail` é texto pronto para a pessoa ler. Os códigos de limite dizem
+   * `userMessage` é texto pronto para a pessoa ler. Os códigos de limite dizem
    * exatamente qual número foi estourado, senão a mensagem genérica de
    * "não consegui ler a planilha" mandaria alguém caçar um problema que não
    * existe no compartilhamento.
    */
   constructor(
     public code: SheetErrorCode,
-    public detail?: string
+    public userMessage?: string
   ) {
-    super(detail ?? code);
+    super(userMessage ?? code);
     this.name = "SheetError";
   }
 }

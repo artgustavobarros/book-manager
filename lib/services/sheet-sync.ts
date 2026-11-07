@@ -7,6 +7,7 @@ import {
   SheetError,
   sheetCsvUrl,
 } from "@/lib/domain/sheet";
+import { readBoundedBody } from "@/lib/outbound-fetch";
 import { MAX_BULK_BOOKS } from "@/lib/validation/api";
 import { bookFieldsSchema } from "@/lib/validation/book";
 
@@ -22,44 +23,6 @@ export const SHEET_MESSAGES = {
     "Não foi possível ler a planilha. Confirme que ela está compartilhada como “Qualquer pessoa com o link” e que a primeira linha tem os nomes das colunas (Título, Autor, Status…).",
 } as const;
 
-/**
- * Lê o corpo limitando por bytes **durante** o download.
- *
- * Antes o corpo inteiro era carregado e só então medido por `text.length`, o
- * que tornava o limite inútil contra uma resposta enorme: a memória já tinha
- * sido gasta. Aqui a leitura é abortada ao passar do teto.
- */
-async function readBounded(res: Response): Promise<string> {
-  const declared = Number(res.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > MAX_BYTES) {
-    throw new SheetError("fetch");
-  }
-  if (!res.body) {
-    const text = await res.text();
-    if (text.length > MAX_BYTES) {
-      throw new SheetError("fetch");
-    }
-    return text;
-  }
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let seen = 0;
-  let text = "";
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    seen += value.byteLength;
-    if (seen > MAX_BYTES) {
-      await reader.cancel();
-      throw new SheetError("fetch");
-    }
-    text += decoder.decode(value, { stream: true });
-  }
-  return text + decoder.decode();
-}
-
 async function fetchCsv(url: string, fetcher: typeof fetch): Promise<string> {
   const res = await fetcher(url, {
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
@@ -69,7 +32,13 @@ async function fetchCsv(url: string, fetcher: typeof fetch): Promise<string> {
   if (!res.ok) {
     throw new SheetError("fetch");
   }
-  return readBounded(res);
+  // Corta no teto durante o download: medir depois de carregar tudo não é
+  // limite, porque nesse ponto a memória já foi gasta.
+  const body = await readBoundedBody(res, MAX_BYTES);
+  if (!body) {
+    throw new SheetError("fetch");
+  }
+  return new TextDecoder().decode(body);
 }
 
 /**
