@@ -22,10 +22,13 @@ export const POST = withSession(
       });
     } catch (error) {
       if (error instanceof SheetError) {
+        // Os erros de limite trazem o número exato; dizer "não consegui ler a
+        // planilha" neles mandaria a pessoa mexer no compartilhamento à toa.
         const message =
-          error.code === "invalid-url"
+          error.detail ??
+          (error.code === "invalid-url"
             ? SHEET_MESSAGES.invalidUrl
-            : SHEET_MESSAGES.unreadable;
+            : SHEET_MESSAGES.unreadable);
         return json(
           { error: message },
           { status: error.code === "invalid-url" ? 400 : 422 }
