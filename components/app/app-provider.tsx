@@ -23,6 +23,7 @@ import {
 import { api } from "@/lib/client/api";
 import {
   createOfflinePersister,
+  isPendingOfflineMutation,
   OFFLINE_MUTATION_META,
   offlineMutationRetry,
   offlineMutationRetryDelay,
@@ -479,9 +480,7 @@ export function AppProvider({
           shouldDehydrateQuery: (query) =>
             query.state.dataUpdatedAt > 0 &&
             (query.queryKey[0] === "books" || query.queryKey[0] === "goal"),
-          shouldDehydrateMutation: (mutation) =>
-            mutation.options.meta?.persistOfflineMutation === true &&
-            mutation.state.status === "pending",
+          shouldDehydrateMutation: isPendingOfflineMutation,
         },
       }}
     >
