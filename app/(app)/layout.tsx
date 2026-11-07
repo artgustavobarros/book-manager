@@ -59,6 +59,13 @@ export default async function AppLayout({
     ]);
 
   return (
+    // `key` é carregado de segurança, não enfeite. O AppProvider guarda o
+    // QueryClient, o persister da fila offline e o usuário em inicializadores
+    // de `useState`, que rodam uma vez só. Sem a chave, uma troca de conta no
+    // mesmo navegador seguida de `router.refresh()` — que re-renderiza sem
+    // desmontar — deixaria a aba com o acervo de quem saiu e gravaria a fila
+    // de quem entrou sob a chave de quem saiu. Trocar a identidade tem de
+    // descartar a subárvore inteira.
     <AppProvider
       initial={{
         user: {
@@ -82,6 +89,7 @@ export default async function AppLayout({
         hasPassword: accounts.some((a) => a.providerId === "credential"),
         googleLinked: accounts.some((a) => a.providerId === "google"),
       }}
+      key={user.id}
     >
       <AppShell>{children}</AppShell>
     </AppProvider>
