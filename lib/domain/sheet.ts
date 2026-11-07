@@ -25,11 +25,23 @@ export type SheetErrorCode =
   | "html"
   | "empty"
   | "no-title"
-  | "fetch";
+  | "fetch"
+  | "too-many-rows"
+  | "too-many-books"
+  | "invalid-row";
 
 export class SheetError extends Error {
-  constructor(public code: SheetErrorCode) {
-    super(code);
+  /**
+   * `detail` é texto pronto para a pessoa ler. Os códigos de limite dizem
+   * exatamente qual número foi estourado, senão a mensagem genérica de
+   * "não consegui ler a planilha" mandaria alguém caçar um problema que não
+   * existe no compartilhamento.
+   */
+  constructor(
+    public code: SheetErrorCode,
+    public detail?: string
+  ) {
+    super(detail ?? code);
     this.name = "SheetError";
   }
 }
