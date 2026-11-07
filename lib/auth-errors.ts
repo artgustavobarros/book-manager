@@ -24,6 +24,8 @@ export function authErrorMessage(
       return "E-mail ou senha incorretos.";
     case "EMAIL_NOT_VERIFIED":
       return "Confirme seu e-mail antes de entrar. Procure o link na caixa de entrada (e no spam).";
+    case "EMAIL_NOT_VERIFIED_FOR_LINK":
+      return "Confirme seu e-mail antes de vincular uma conta Google. Procure o link na caixa de entrada (e no spam).";
     case "USER_ALREADY_EXISTS":
     case "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL":
       return "Não foi possível criar a conta com este e-mail.";
