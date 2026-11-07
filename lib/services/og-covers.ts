@@ -4,91 +4,38 @@
  * lombada colorida), para que uma capa lenta não derrube o preview.
  *
  * A URL da capa vem de quem cadastrou o livro, e o OG de uma estante publicada é
- * público — então quem quiser escolhe para onde este servidor vai buscar. Daí o
- * cuidado com endereço interno, aqui e em cada salto de redirecionamento.
+ * público — então quem quiser escolhe para onde este servidor vai buscar. As
+ * defesas de endereço e de tamanho ficam em `lib/outbound-fetch`, junto com as
+ * do sync da planilha, que tem o mesmo par de problemas.
  */
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
+import {
+  type HostResolver,
+  hostIsPublic,
+  readBoundedBody,
+  resolveHost,
+} from "@/lib/outbound-fetch";
 
 const TIMEOUT_MS = 2000;
 const MAX_BYTES = 1_500_000;
 const TYPES = /^image\/(jpeg|png|gif)$/;
 const MAX_REDIRECTS = 4;
 
-/** Resolve um nome nos endereços dele. Injetável para o teste rodar sem rede. */
-export type HostResolver = (host: string) => Promise<string[]>;
-
-const resolveHost: HostResolver = async (host) =>
-  (await lookup(host, { all: true, verbatim: true })).map((a) => a.address);
-
 export interface CoverDeps {
   fetcher?: typeof fetch;
   resolve?: HostResolver;
 }
 
-function blockedIPv4(address: string): boolean {
-  const [a, b, c] = address.split(".").map(Number);
-  return (
-    a === 0 || // "este host"
-    a === 10 || // privada
-    a === 127 || // loopback
-    (a === 100 && b >= 64 && b <= 127) || // CGNAT
-    (a === 169 && b === 254) || // link-local: metadata de nuvem mora aqui
-    (a === 172 && b >= 16 && b <= 31) || // privada
-    (a === 192 && b === 0 && (c === 0 || c === 2)) || // protocolo e TEST-NET-1
-    (a === 192 && b === 168) || // privada
-    (a === 198 && b >= 18 && b <= 19) || // benchmark
-    (a === 198 && b === 51 && c === 100) || // TEST-NET-2
-    (a === 203 && b === 0 && c === 113) || // TEST-NET-3
-    a >= 224 // multicast, reservado e broadcast
-  );
-}
-
-function blockedIPv6(address: string): boolean {
-  const h = address.toLowerCase();
-  // Alguns formatos embutem um IPv4 no fim: `::ffff:10.0.0.1`, `64:ff9b::10.0.0.1`.
-  const v4 = /(\d{1,3}(?:\.\d{1,3}){3})$/.exec(h)?.[1];
-  if (v4 && isIP(v4) === 4 && blockedIPv4(v4)) {
-    return true;
-  }
-  return (
-    h === "::" ||
-    h === "::1" ||
-    /^f[cd]/.test(h) || // ULA
-    /^fe[89ab]/.test(h) || // link-local
-    h.startsWith("::ffff:") || // IPv4 mapeado
-    h.startsWith("64:ff9b:") || // NAT64
-    h.startsWith("2002:") // 6to4
-  );
-}
-
-function blockedAddress(address: string): boolean {
-  const version = isIP(address);
-  if (version === 4) {
-    return blockedIPv4(address);
-  }
-  if (version === 6) {
-    return blockedIPv6(address);
-  }
-  // Não é endereço: não há o que julgar, então recusa.
-  return true;
-}
-
-function hostOf(raw: string): string | null {
-  try {
-    return new URL(raw).hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Forma da URL e, quando o host é um endereço literal, a faixa dele.
+ * Único portão da busca de capa: forma da URL **e** endereço de destino.
  *
- * Não decide nada sobre **nome** de host: para isso existe `coverHostIsPublic`,
- * que resolve o nome. As duas checagens andam juntas.
+ * As duas checagens eram exportadas em separado, com um comentário pedindo
+ * que andassem juntas — contrato que só o código interno cumpria. Agora existe
+ * uma porta só, e não há como usar metade dela.
  */
-export function isFetchableCover(raw: string): boolean {
+export async function canFetchCover(
+  raw: string,
+  resolve: HostResolver = resolveHost
+): Promise<boolean> {
   let url: URL;
   try {
     url = new URL(raw);
@@ -98,78 +45,7 @@ export function isFetchableCover(raw: string): boolean {
   if (url.protocol !== "https:" || url.username || url.password) {
     return false;
   }
-  const host = hostOf(raw);
-  if (!host) {
-    return false;
-  }
-  if (
-    host === "localhost" ||
-    host.endsWith(".localhost") ||
-    host.endsWith(".internal")
-  ) {
-    return false;
-  }
-  if (isIP(host)) {
-    return !blockedAddress(host);
-  }
-  return true;
-}
-
-/**
- * Resolve o nome e recusa se **qualquer** endereço cair em faixa interna.
- *
- * Sem isto, a proteção só enxergava IP literal: um nome comum com registro A
- * apontando para `169.254.169.254` ou `10.0.0.x` atravessava a peneira inteira,
- * e o servidor ia buscar lá.
- *
- * Resta uma janela: entre esta checagem e a conexão, o DNS pode responder outra
- * coisa (rebinding). Fechar isso exige fixar o endereço na hora de conectar, o
- * que a API de `fetch` não oferece — fica registrado em vez de disfarçado.
- */
-export async function coverHostIsPublic(
-  raw: string,
-  resolve: HostResolver = resolveHost
-): Promise<boolean> {
-  const host = hostOf(raw);
-  if (!host) {
-    return false;
-  }
-  if (isIP(host)) {
-    return !blockedAddress(host);
-  }
-  const addresses = await resolve(host).catch(() => []);
-  return addresses.length > 0 && addresses.every((a) => !blockedAddress(a));
-}
-
-async function reachable(raw: string, resolve: HostResolver): Promise<boolean> {
-  return isFetchableCover(raw) && (await coverHostIsPublic(raw, resolve));
-}
-
-/** Lê o corpo cortando no teto, em vez de carregar tudo e medir depois. */
-async function readBounded(res: Response): Promise<Buffer | null> {
-  if (Number(res.headers.get("content-length") ?? 0) > MAX_BYTES) {
-    return null;
-  }
-  if (!res.body) {
-    const whole = Buffer.from(await res.arrayBuffer());
-    return whole.byteLength > MAX_BYTES ? null : whole;
-  }
-  const reader = res.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let seen = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    seen += value.byteLength;
-    if (seen > MAX_BYTES) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-  return Buffer.concat(chunks);
+  return hostIsPublic(raw, resolve);
 }
 
 /**
@@ -190,7 +66,7 @@ async function fetchFollowingSafeRedirects(
       return res;
     }
     url = new URL(location, url).href;
-    if (!(await reachable(url, resolve))) {
+    if (!(await canFetchCover(url, resolve))) {
       return null;
     }
   }
@@ -203,7 +79,7 @@ export async function fetchCoverDataUrl(
 ): Promise<string | null> {
   // Capas do Google Books costumam vir em http; o mesmo endereço responde em https.
   const src = raw?.replace(/^http:\/\//i, "https://") ?? null;
-  if (!(src && (await reachable(src, resolve)))) {
+  if (!(src && (await canFetchCover(src, resolve)))) {
     return null;
   }
   try {
@@ -215,11 +91,11 @@ export async function fetchCoverDataUrl(
     if (!(res.ok && TYPES.test(type))) {
       return null;
     }
-    const buf = await readBounded(res);
-    if (!buf) {
+    const body = await readBoundedBody(res, MAX_BYTES);
+    if (!body) {
       return null;
     }
-    return `data:${type};base64,${buf.toString("base64")}`;
+    return `data:${type};base64,${Buffer.from(body).toString("base64")}`;
   } catch {
     return null;
   }

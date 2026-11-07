@@ -25,7 +25,7 @@ export const POST = withSession(
         // Os erros de limite trazem o número exato; dizer "não consegui ler a
         // planilha" neles mandaria a pessoa mexer no compartilhamento à toa.
         const message =
-          error.detail ??
+          error.userMessage ??
           (error.code === "invalid-url"
             ? SHEET_MESSAGES.invalidUrl
             : SHEET_MESSAGES.unreadable);

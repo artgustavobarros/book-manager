@@ -5,11 +5,7 @@ import * as route from "@/app/api/public-shelf/route";
 import * as ogRoute from "@/app/og/estante/[slug]/route";
 import { db } from "@/lib/db";
 import { books, user, userSettings } from "@/lib/db/schema";
-import {
-  coverHostIsPublic,
-  fetchCoverDataUrl,
-  isFetchableCover,
-} from "@/lib/services/og-covers";
+import { canFetchCover, fetchCoverDataUrl } from "@/lib/services/og-covers";
 import {
   findPublicShelf,
   listPublicBooks,
@@ -320,20 +316,25 @@ describe("capas remotas da OG", () => {
       mapa[host] ?? padrao;
   const resolve = resolvendo({});
 
-  it("recusa pela forma da URL e por endereço literal interno", () => {
-    expect(isFetchableCover("https://books.google.com/x.jpg")).toBe(true);
-    expect(isFetchableCover("http://books.google.com/x.jpg")).toBe(false);
-    expect(isFetchableCover("https://localhost/x.jpg")).toBe(false);
-    expect(isFetchableCover("https://10.0.0.2/x.jpg")).toBe(false);
-    expect(isFetchableCover("https://169.254.169.254/latest")).toBe(false);
-    expect(isFetchableCover("https://[::1]/x.jpg")).toBe(false);
-    expect(isFetchableCover("javascript:alert(1)")).toBe(false);
-    expect(isFetchableCover("https://user:pw@books.google.com/x.jpg")).toBe(
-      false
+  it("recusa pela forma da URL e por endereço literal interno", async () => {
+    expect(await canFetchCover("https://books.google.com/x.jpg", resolve)).toBe(
+      true
     );
+    for (const url of [
+      "http://books.google.com/x.jpg", // só https
+      "https://user:pw@books.google.com/x.jpg", // credencial na URL
+      "javascript:alert(1)", // nem é http
+      "https://localhost/x.jpg",
+      "https://algo.internal/x.jpg",
+      "https://10.0.0.2/x.jpg",
+      "https://169.254.169.254/latest",
+      "https://[::1]/x.jpg",
+    ]) {
+      expect(await canFetchCover(url, resolve)).toBe(false);
+    }
   });
 
-  it("cobre as faixas que faltavam", () => {
+  it("cobre as faixas que faltavam", async () => {
     for (const host of [
       "198.18.0.1", // benchmark
       "224.0.0.1", // multicast
@@ -345,7 +346,7 @@ describe("capas remotas da OG", () => {
       "[::ffff:10.0.0.1]", // IPv4 mapeado
       "[fd00::1]", // ULA
     ]) {
-      expect(isFetchableCover(`https://${host}/x.jpg`)).toBe(false);
+      expect(await canFetchCover(`https://${host}/x.jpg`, resolve)).toBe(false);
     }
   });
 
@@ -361,8 +362,11 @@ describe("capas remotas da OG", () => {
       "vazio.exemplo.test": [],
     });
 
-    // A forma da URL passa: é por isso que a checagem de nome precisa existir.
-    expect(isFetchableCover("https://metadata.exemplo.test/latest")).toBe(true);
+    // Com um resolvedor que devolve endereço público, o mesmo nome passa: o
+    // que decide é para onde ele resolve, não como ele se parece.
+    expect(
+      await canFetchCover("https://metadata.exemplo.test/latest", resolve)
+    ).toBe(true);
 
     for (const host of [
       "metadata.exemplo.test",
@@ -372,13 +376,13 @@ describe("capas remotas da OG", () => {
       // Nome que não resolve também não passa.
       "vazio.exemplo.test",
     ]) {
-      expect(await coverHostIsPublic(`https://${host}/x.jpg`, paraDentro)).toBe(
+      expect(await canFetchCover(`https://${host}/x.jpg`, paraDentro)).toBe(
         false
       );
     }
 
     expect(
-      await coverHostIsPublic("https://books.google.com/x.jpg", paraDentro)
+      await canFetchCover("https://books.google.com/x.jpg", paraDentro)
     ).toBe(true);
 
     // E o caminho completo também recusa, sem nunca chamar o fetcher.
