@@ -4,15 +4,22 @@ import { withSession } from "@/lib/api";
 import { db } from "@/lib/db";
 import {
   activateSheetExport,
-  disableSheetExport,
+  cancelPendingSheetExport,
 } from "@/lib/services/sheet-export";
 
-/** Better Auth redirects here after the Google consent flow. */
+/**
+ * Better Auth redirects here after the Google consent flow.
+ *
+ * É um GET que muda estado e só confere o cookie de sessão, então uma
+ * navegação de topo vinda de outro site chega aqui com a sessão da vítima.
+ * Por isso o cancelamento é limitado ao fluxo pendente: sem um `connect`
+ * iniciado por quem pede, não há o que desativar.
+ */
 export const GET = withSession(async ({ request, userId }) => {
   const url = new URL(request.url);
   let result: string;
   if (url.searchParams.has("error")) {
-    await disableSheetExport(db, userId);
+    await cancelPendingSheetExport(db, userId);
     result = "denied";
   } else {
     const state = await activateSheetExport(db, userId);
@@ -23,7 +30,7 @@ export const GET = withSession(async ({ request, userId }) => {
           : "ok"
         : "denied";
     if (result === "denied") {
-      await disableSheetExport(db, userId);
+      await cancelPendingSheetExport(db, userId);
     }
   }
   const redirect = new URL("/", request.url);

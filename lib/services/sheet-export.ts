@@ -172,11 +172,33 @@ export async function activateSheetExport(
   return sheetExportState(db, userId, deps.now);
 }
 
+/** Desativação deliberada, pedida pela pessoa dona na tela de ajustes. */
 export async function disableSheetExport(db: DB, userId: string) {
   await db
     .update(sheetExportConnections)
     .set({ status: "disabled", lastError: null, lastFailedAt: null })
     .where(eq(sheetExportConnections.userId, userId));
+}
+
+/**
+ * Cancela só um fluxo de conexão em aberto.
+ *
+ * O retorno do OAuth é um GET que muda estado e se autoriza apenas pelo cookie
+ * de sessão (`SameSite=Lax` viaja em navegação de topo vinda de outro site).
+ * Sem o predicado de pendência, um link de fora derrubava a conexão já ativa
+ * de quem estivesse logado. Com ele, a navegação forjada não acha nada para
+ * cancelar.
+ */
+export async function cancelPendingSheetExport(db: DB, userId: string) {
+  await db
+    .update(sheetExportConnections)
+    .set({ status: "disabled", lastError: null, lastFailedAt: null })
+    .where(
+      and(
+        eq(sheetExportConnections.userId, userId),
+        eq(sheetExportConnections.status, "pending")
+      )
+    );
 }
 
 async function getGoogleToken(accountId: string, userId: string) {
