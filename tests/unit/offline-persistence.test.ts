@@ -20,6 +20,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   clearOfflineData,
+  isPendingOfflineMutation,
   OFFLINE_UNAUTHORIZED_MAX_RETRIES,
   offlineMutationRetry,
   offlineStorageKey,
@@ -71,6 +72,51 @@ describe("repetição de mutação enfileirada", () => {
       expect(offlineMutationRetry(0, httpError(status))).toBe(true);
       expect(offlineMutationRetry(2, httpError(status))).toBe(false);
     }
+  });
+});
+
+describe("escrita pendente", () => {
+  const mutation = (status: string, meta?: Record<string, unknown>) => ({
+    options: { meta },
+    state: { status },
+  });
+
+  it("conta só o que foi enfileirado e ainda não subiu", () => {
+    expect(
+      isPendingOfflineMutation(
+        mutation("pending", { persistOfflineMutation: true })
+      )
+    ).toBe(true);
+
+    // Já terminou, de um jeito ou de outro: não há o que perder.
+    for (const status of ["success", "error", "idle"]) {
+      expect(
+        isPendingOfflineMutation(
+          mutation(status, { persistOfflineMutation: true })
+        )
+      ).toBe(false);
+    }
+
+    // Pendente, mas não faz parte da fila offline.
+    expect(isPendingOfflineMutation(mutation("pending"))).toBe(false);
+    expect(
+      isPendingOfflineMutation(
+        mutation("pending", { persistOfflineMutation: false })
+      )
+    ).toBe(false);
+  });
+
+  /**
+   * O aviso ao sair da conta e o que vai para o IndexedDB precisam enxergar a
+   * mesma coisa. Se divergirem, ou se avisa sobre nada, ou se perde em
+   * silêncio — que era o defeito que este predicado veio fechar.
+   */
+  it("é o mesmo critério que decide o que é guardado", () => {
+    const guardada = mutation("pending", { persistOfflineMutation: true });
+    const descartavel = mutation("success", { persistOfflineMutation: true });
+
+    expect(isPendingOfflineMutation(guardada)).toBe(true);
+    expect(isPendingOfflineMutation(descartavel)).toBe(false);
   });
 });
 

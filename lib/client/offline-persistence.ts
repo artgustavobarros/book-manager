@@ -11,6 +11,29 @@ export function offlineStorageKey(userId: string) {
 }
 
 /**
+ * Escrita enfileirada que ainda não subiu.
+ *
+ * Um predicado só, usado nos dois lugares: para decidir o que vai para o
+ * IndexedDB e para saber se sair da conta vai descartar alguma coisa. De
+ * propósito — assim "o que seria perdido" é, por construção, "o que seria
+ * gravado", em vez de dois critérios escritos separado que podem divergir na
+ * primeira vez que alguém mexer num deles.
+ *
+ * Com `networkMode: "online"`, uma escrita sem rede fica `pending` e
+ * `isPaused`; uma que está tentando agora fica `pending` sem pausa. As duas
+ * contam: nenhuma das duas chegou ao servidor.
+ */
+export function isPendingOfflineMutation(mutation: {
+  options: { meta?: Record<string, unknown> };
+  state: { status: string };
+}): boolean {
+  return (
+    mutation.options.meta?.persistOfflineMutation === true &&
+    mutation.state.status === "pending"
+  );
+}
+
+/**
  * Quantas vezes insistir numa mutação enfileirada que volta 401.
  *
  * Insistir faz sentido: a fila existe justamente para sobreviver a uma sessão

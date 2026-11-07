@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useIsMutating } from "@tanstack/react-query";
 import { cn } from "cn";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,7 +11,10 @@ import { Modal, ModalClose, useModalDraft } from "@/components/ui/dialog";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/auth-errors";
-import { clearOfflineData } from "@/lib/client/offline-persistence";
+import {
+  clearOfflineData,
+  isPendingOfflineMutation,
+} from "@/lib/client/offline-persistence";
 import {
   changePasswordSchema,
   MIN_PASSWORD,
@@ -412,6 +416,11 @@ function AccountBody() {
   const app = useApp();
   const router = useRouter();
   const [leaving, setLeaving] = useState(false);
+  // Sair apaga o armazenamento local, e com ele o que ainda não subiu. Quem
+  // não tem nada pendente não merece atrito; quem tem merece saber.
+  const pendentes = useIsMutating({ predicate: isPendingOfflineMutation });
+  const [avisado, setAvisado] = useState(false);
+  const vaiDescartar = pendentes > 0 && avisado;
   return (
     <div className="flex flex-col gap-6 px-7 py-6">
       <div className="flex items-center justify-between gap-3">
@@ -440,26 +449,42 @@ function AccountBody() {
       <Divider />
       <DeleteSection />
       <Divider />
-      <button
-        className="self-start border-0 bg-transparent p-0 font-semibold text-mute text-sm hover:text-acc disabled:cursor-wait disabled:opacity-60"
-        disabled={leaving}
-        onClick={async () => {
-          setLeaving(true);
-          const { error } = await authClient.signOut();
-          if (error) {
-            setLeaving(false);
-            return toast(authErrorMessage(error), { type: "error" });
-          }
-          // Sair tem de levar embora o que ficou no navegador: a fila offline
-          // e o acervo em cache seguiam no IndexedDB depois do logout.
-          await clearOfflineData(app.user.id);
-          router.replace("/entrar");
-          router.refresh();
-        }}
-        type="button"
-      >
-        {leaving ? "Saindo…" : "Sair da conta"}
-      </button>
+      <div className="flex flex-col gap-2">
+        {vaiDescartar ? (
+          <span className="text-mute text-sm leading-[1.5]">
+            Você tem alterações que ainda não foram enviadas. Se sair agora,
+            elas serão perdidas.
+          </span>
+        ) : null}
+        <button
+          className="self-start border-0 bg-transparent p-0 font-semibold text-mute text-sm hover:text-acc disabled:cursor-wait disabled:opacity-60"
+          disabled={leaving}
+          onClick={async () => {
+            // Primeiro clique com fila pendente só avisa; o segundo sai.
+            if (pendentes > 0 && !avisado) {
+              return setAvisado(true);
+            }
+            setLeaving(true);
+            const { error } = await authClient.signOut();
+            if (error) {
+              setLeaving(false);
+              return toast(authErrorMessage(error), { type: "error" });
+            }
+            // Sair tem de levar embora o que ficou no navegador: a fila
+            // offline e o acervo em cache seguiam no IndexedDB após o logout.
+            await clearOfflineData(app.user.id);
+            router.replace("/entrar");
+            router.refresh();
+          }}
+          type="button"
+        >
+          {leaving
+            ? "Saindo…"
+            : vaiDescartar
+              ? "Sair e descartar"
+              : "Sair da conta"}
+        </button>
+      </div>
     </div>
   );
 }
