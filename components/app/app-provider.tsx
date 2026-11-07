@@ -130,6 +130,17 @@ export { initialsOf } from "@/lib/domain/text";
 const GOAL_MUTATION_KEY = ["goal", "save"] as const;
 const OFFLINE_CACHE_BUSTER = "offline-v1";
 
+/**
+ * Prazo do acervo guardado no navegador.
+ *
+ * Era infinito, e sair da conta agora limpa — mas fechar a aba não é sair.
+ * Sem prazo, o acervo de quem só fechou o navegador ficava ali para sempre,
+ * e num computador compartilhado isso é o mesmo problema que a limpeza do
+ * logout resolveu. Sete dias folgam para a fila offline cumprir o papel dela
+ * e são curtos o bastante para o dado não virar morador.
+ */
+const OFFLINE_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
 type GoalVariables = { target: number; year: number };
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -462,7 +473,7 @@ export function AppProvider({
       }}
       persistOptions={{
         buster: OFFLINE_CACHE_BUSTER,
-        maxAge: Number.POSITIVE_INFINITY,
+        maxAge: OFFLINE_CACHE_MAX_AGE_MS,
         persister,
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
