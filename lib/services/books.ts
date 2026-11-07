@@ -109,6 +109,16 @@ async function nextOrderNo(db: DB, userId: string): Promise<number> {
   return (r?.m ?? 0) + 1;
 }
 
+/**
+ * Registra um livro. O `id` vindo do cliente serve de chave de idempotência:
+ * repetir o mesmo pedido devolve o mesmo livro em vez de duplicar.
+ *
+ * Quando esse id já existe em **outra** conta, o conflito não pode aparecer na
+ * resposta: um 409 ali contaria a quem pediu que a linha existe em algum
+ * lugar, e os ids dos livros são públicos (a estante pública os projeta). O
+ * caminho é gravar de novo deixando o banco gerar o id e responder igual ao
+ * caso de id livre.
+ */
 export async function createBook(
   db: DB,
   userId: string,
@@ -116,29 +126,35 @@ export async function createBook(
   id?: string
 ): Promise<Book | null> {
   const orderNo = fields.orderNo ?? (await nextOrderNo(db, userId));
+  const values = {
+    ...toValues({ ...EMPTY_BOOK_FIELDS, ...fields }),
+    lentAt: lentAtOnInsert(fields.situation ?? EMPTY_BOOK_FIELDS.situation),
+    title: fields.title,
+    orderNo,
+    userId,
+  };
   const [row] = await db
     .insert(books)
-    .values({
-      ...(id ? { id } : {}),
-      ...toValues({ ...EMPTY_BOOK_FIELDS, ...fields }),
-      lentAt: lentAtOnInsert(fields.situation ?? EMPTY_BOOK_FIELDS.situation),
-      title: fields.title,
-      orderNo,
-      userId,
-    })
+    .values({ ...(id ? { id } : {}), ...values })
     .onConflictDoNothing({ target: books.id })
     .returning();
   if (row) {
     return rowToBook(row);
   }
-  if (id) {
-    const [existing] = await db
-      .select()
-      .from(books)
-      .where(and(eq(books.id, id), eq(books.userId, userId)));
-    return existing ? rowToBook(existing) : null;
+  if (!id) {
+    return null;
   }
-  return null;
+  const [existing] = await db
+    .select()
+    .from(books)
+    .where(and(eq(books.id, id), eq(books.userId, userId)));
+  if (existing) {
+    return rowToBook(existing);
+  }
+  // O id é de outra conta. Grava com id do servidor: mesma resposta que um id
+  // livre teria dado, então nada vaza sobre a base das outras pessoas.
+  const [fresh] = await db.insert(books).values(values).returning();
+  return fresh ? rowToBook(fresh) : null;
 }
 
 export async function updateBook(
