@@ -5,7 +5,11 @@ import * as route from "@/app/api/public-shelf/route";
 import * as ogRoute from "@/app/og/estante/[slug]/route";
 import { db } from "@/lib/db";
 import { books, user, userSettings } from "@/lib/db/schema";
-import { fetchCoverDataUrl, isFetchableCover } from "@/lib/services/og-covers";
+import {
+  coverHostIsPublic,
+  fetchCoverDataUrl,
+  isFetchableCover,
+} from "@/lib/services/og-covers";
 import {
   findPublicShelf,
   listPublicBooks,
@@ -309,7 +313,14 @@ describe("imagem OG da estante", () => {
 });
 
 describe("capas remotas da OG", () => {
-  it("só busca https fora da rede interna", () => {
+  /** Resolvedor de mentira: nenhum teste toca a rede. */
+  const resolvendo =
+    (mapa: Record<string, string[]>, padrao = ["93.184.216.34"]) =>
+    async (host: string) =>
+      mapa[host] ?? padrao;
+  const resolve = resolvendo({});
+
+  it("recusa pela forma da URL e por endereço literal interno", () => {
     expect(isFetchableCover("https://books.google.com/x.jpg")).toBe(true);
     expect(isFetchableCover("http://books.google.com/x.jpg")).toBe(false);
     expect(isFetchableCover("https://localhost/x.jpg")).toBe(false);
@@ -317,6 +328,68 @@ describe("capas remotas da OG", () => {
     expect(isFetchableCover("https://169.254.169.254/latest")).toBe(false);
     expect(isFetchableCover("https://[::1]/x.jpg")).toBe(false);
     expect(isFetchableCover("javascript:alert(1)")).toBe(false);
+    expect(isFetchableCover("https://user:pw@books.google.com/x.jpg")).toBe(
+      false
+    );
+  });
+
+  it("cobre as faixas que faltavam", () => {
+    for (const host of [
+      "198.18.0.1", // benchmark
+      "224.0.0.1", // multicast
+      "255.255.255.255", // broadcast
+      "0.0.0.0",
+      "100.64.0.1", // CGNAT
+      "[2002:a00:1::1]", // 6to4
+      "[64:ff9b::a00:1]", // NAT64
+      "[::ffff:10.0.0.1]", // IPv4 mapeado
+      "[fd00::1]", // ULA
+    ]) {
+      expect(isFetchableCover(`https://${host}/x.jpg`)).toBe(false);
+    }
+  });
+
+  /**
+   * O buraco que esta correção fecha: a peneira antiga só enxergava IP
+   * literal, então bastava um nome apontando para dentro para passar.
+   */
+  it("recusa nome de host que resolve para endereço interno", async () => {
+    const paraDentro = resolvendo({
+      "metadata.exemplo.test": ["169.254.169.254"],
+      "interno.exemplo.test": ["10.0.0.5"],
+      "misto.exemplo.test": ["93.184.216.34", "127.0.0.1"],
+      "vazio.exemplo.test": [],
+    });
+
+    // A forma da URL passa: é por isso que a checagem de nome precisa existir.
+    expect(isFetchableCover("https://metadata.exemplo.test/latest")).toBe(true);
+
+    for (const host of [
+      "metadata.exemplo.test",
+      "interno.exemplo.test",
+      // Basta um endereço interno entre os resolvidos para recusar.
+      "misto.exemplo.test",
+      // Nome que não resolve também não passa.
+      "vazio.exemplo.test",
+    ]) {
+      expect(await coverHostIsPublic(`https://${host}/x.jpg`, paraDentro)).toBe(
+        false
+      );
+    }
+
+    expect(
+      await coverHostIsPublic("https://books.google.com/x.jpg", paraDentro)
+    ).toBe(true);
+
+    // E o caminho completo também recusa, sem nunca chamar o fetcher.
+    const fetcher = vi.fn();
+    expect(
+      await fetchCoverDataUrl("https://metadata.exemplo.test/latest", {
+        fetcher: fetcher as unknown as typeof fetch,
+        resolve: paraDentro,
+      })
+    ).toBeNull();
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it("vira data URL ou null em falha, tipo errado, excesso ou atraso", async () => {
@@ -326,19 +399,54 @@ describe("capas remotas da OG", () => {
           headers: { "content-type": type },
         })) as typeof fetch;
     expect(
-      await fetchCoverDataUrl("http://c.com/a.jpg", img("image/jpeg"))
+      await fetchCoverDataUrl("http://c.com/a.jpg", {
+        fetcher: img("image/jpeg"),
+        resolve,
+      })
     ).toBe("data:image/jpeg;base64,AAAAAA==");
     expect(
-      await fetchCoverDataUrl("https://c.com/a", img("text/html"))
+      await fetchCoverDataUrl("https://c.com/a", {
+        fetcher: img("text/html"),
+        resolve,
+      })
     ).toBeNull();
     expect(
-      await fetchCoverDataUrl("https://c.com/a", img("image/png", 2_000_000))
+      await fetchCoverDataUrl("https://c.com/a", {
+        fetcher: img("image/png", 2_000_000),
+        resolve,
+      })
     ).toBeNull();
     const boom = (async () => {
       throw new Error("timeout");
     }) as typeof fetch;
-    expect(await fetchCoverDataUrl("https://c.com/a", boom)).toBeNull();
-    expect(await fetchCoverDataUrl(null)).toBeNull();
+    expect(
+      await fetchCoverDataUrl("https://c.com/a", { fetcher: boom, resolve })
+    ).toBeNull();
+    expect(await fetchCoverDataUrl(null, { resolve })).toBeNull();
+  });
+
+  it("corta o corpo no teto mesmo sem content-length", async () => {
+    // Resposta em pedaços e sem content-length: antes o corpo inteiro era
+    // carregado e só então medido.
+    const semTamanho = (async () =>
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            for (let i = 0; i < 4; i++) {
+              controller.enqueue(new Uint8Array(500_000));
+            }
+            controller.close();
+          },
+        }),
+        { headers: { "content-type": "image/png" } }
+      )) as unknown as typeof fetch;
+
+    expect(
+      await fetchCoverDataUrl("https://c.com/a", {
+        fetcher: semTamanho,
+        resolve,
+      })
+    ).toBeNull();
   });
 
   it("segue redirecionamentos só para destinos permitidos", async () => {
@@ -353,25 +461,34 @@ describe("capas remotas da OG", () => {
       }) as typeof fetch;
     // Como a Open Library: capa → archive.org → servidor do arquivo.
     expect(
-      await fetchCoverDataUrl(
-        "https://covers.openlibrary.org/b/id/1-L.jpg",
-        hops({
+      await fetchCoverDataUrl("https://covers.openlibrary.org/b/id/1-L.jpg", {
+        fetcher: hops({
           "https://covers.openlibrary.org/b/id/1-L.jpg":
             "https://archive.org/download/x.jpg",
           "https://archive.org/download/x.jpg": "/view?file=x.jpg",
-        })
-      )
+        }),
+        resolve,
+      })
     ).toBe("data:image/jpeg;base64,AAAAAA==");
     expect(
-      await fetchCoverDataUrl(
-        "https://c.com/a",
-        hops({ "https://c.com/a": "https://169.254.169.254/latest" })
-      )
+      await fetchCoverDataUrl("https://c.com/a", {
+        fetcher: hops({ "https://c.com/a": "https://169.254.169.254/latest" }),
+        resolve,
+      })
+    ).toBeNull();
+    // Redirect para um *nome* que resolve para dentro: mesmo caso, outra porta.
+    expect(
+      await fetchCoverDataUrl("https://c.com/a", {
+        fetcher: hops({ "https://c.com/a": "https://interno.exemplo.test/x" }),
+        resolve: resolvendo({ "interno.exemplo.test": ["192.168.1.1"] }),
+      })
     ).toBeNull();
     const loop = hops({
       "https://c.com/1": "https://c.com/2",
       "https://c.com/2": "https://c.com/1",
     });
-    expect(await fetchCoverDataUrl("https://c.com/1", loop)).toBeNull();
+    expect(
+      await fetchCoverDataUrl("https://c.com/1", { fetcher: loop, resolve })
+    ).toBeNull();
   });
 });
