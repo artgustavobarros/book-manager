@@ -10,6 +10,7 @@ import { Modal, ModalClose, useModalDraft } from "@/components/ui/dialog";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/auth-errors";
+import { clearOfflineData } from "@/lib/client/offline-persistence";
 import {
   changePasswordSchema,
   MIN_PASSWORD,
@@ -389,6 +390,8 @@ function DeleteSection() {
                     : authErrorMessage(error)
               );
             }
+            // A conta deixou de existir: o acervo em cache não pode ficar.
+            await clearOfflineData(app.user.id);
             router.replace("/entrar?aviso=conta-excluida");
             router.refresh();
           }}
@@ -447,6 +450,9 @@ function AccountBody() {
             setLeaving(false);
             return toast(authErrorMessage(error), { type: "error" });
           }
+          // Sair tem de levar embora o que ficou no navegador: a fila offline
+          // e o acervo em cache seguiam no IndexedDB depois do logout.
+          await clearOfflineData(app.user.id);
           router.replace("/entrar");
           router.refresh();
         }}
