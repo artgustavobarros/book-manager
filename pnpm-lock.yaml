@@ -22,6 +22,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^6.0.2
         version: 6.0.2(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1)(ajv@8.20.0)(react-hook-form@7.91.0(@types/react@19.3.0)(react@19.2.8))(zod@4.6.7)
+      '@openrouter/sdk':
+        specifier: ^1.5.103
+        version: 1.5.103
       '@sentry/nextjs':
         specifier: 11.10.0
         version: 11.10.0(next@16.4.3(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(@playwright/test@1.63.0)(@types/node@26.6.6)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -1297,6 +1300,9 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@openrouter/sdk@1.5.103':
+    resolution: {integrity: sha512-TfDg7s67+DsqSt4pGH5oIjsVNEwa9FDzigB3C8GJdjO0ebjXb9tHG4pWP5WQjIS8yLYDJK+gmNfBaTgjwgmp/g==}
 
   '@opentelemetry/api@1.10.0':
     resolution: {integrity: sha512-lMkyes8iHrG+mk6WH7X70MdCLI2RS0FwNBY1PyQ8UemaijE2m5mv5A0Niy3HtbYTFrgkUEQjFMXmSAk2hQDuPQ==}
@@ -5404,6 +5410,10 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.3
+
+  '@openrouter/sdk@1.5.103':
+    dependencies:
+      zod: 4.6.7
 
   '@opentelemetry/api@1.10.0': {}
 

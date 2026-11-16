@@ -13,6 +13,7 @@ import {
 
 import { useApp } from "@/components/app/app-provider";
 import { toast } from "@/components/app/toast";
+import { BookPhotoSearch } from "@/components/books/book-photo-search";
 import {
   Autocomplete,
   AutocompleteContent,
@@ -38,6 +39,7 @@ import { useBookActions, useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { searchCatalogs } from "@/lib/client/lookup";
+import { photoSearchQuery } from "@/lib/domain/book-photo";
 import {
   READINGS,
   readingYearFor,
@@ -449,16 +451,17 @@ function OnlineSearch({
 }) {
   const [sq, setSq] = useState("");
   const [loading, setLoading] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [results, setResults] = useState<LookupResult[] | null>(null);
   // Só a busca mais recente pode preencher os resultados.
   const searchId = useRef(0);
 
-  async function run() {
+  async function run(query?: string) {
     if (loading) {
       return;
     }
-    const q = sq.trim() || form.getValues("title").trim();
+    const q = query ?? (sq.trim() || form.getValues("title").trim());
     if (!q) {
       return setMsg("Digite um título ou ISBN.");
     }
@@ -507,10 +510,11 @@ function OnlineSearch({
         Buscar online por título ou ISBN · Google Livros, Apple Books, Open
         Library e Amazon (ISBN)
       </span>
-      <div className="flex gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
         <input
           aria-label="Buscar online"
-          className={cn(fieldInput, "flex-1")}
+          className={cn(fieldInput, "min-w-0 flex-1")}
+          disabled={photoBusy}
           onChange={(e) => setSq(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -523,12 +527,40 @@ function OnlineSearch({
         />
         <button
           className="h-10 flex-none rounded-lg border-0 bg-acc px-4 font-semibold text-onacc text-sm hover:bg-acc2 disabled:cursor-wait disabled:opacity-60"
-          disabled={loading}
+          disabled={loading || photoBusy}
           onClick={() => void run()}
           type="button"
         >
           {loading ? "Buscando…" : "Buscar"}
         </button>
+        <BookPhotoSearch
+          disabled={loading}
+          onBusyChange={(busy) => {
+            setPhotoBusy(busy);
+            if (busy) {
+              setResults(null);
+              setMsg("");
+            }
+          }}
+          onFocusForm={() => form.setFocus("title")}
+          onRecognized={(reading) => {
+            if (reading.title) {
+              form.setValue("title", reading.title, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+            }
+            if (reading.author) {
+              form.setValue("author", reading.author, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+            }
+            const query = photoSearchQuery(reading);
+            setSq(query);
+            void run(query);
+          }}
+        />
       </div>
       {msg ? <span className="text-mute text-xs">{msg}</span> : null}
       {loading ? (

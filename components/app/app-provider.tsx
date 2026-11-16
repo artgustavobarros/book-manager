@@ -60,6 +60,7 @@ export interface AppInitial {
   now: string;
   /** URL pública do app (links compartilhados são absolutos). */
   origin: string;
+  photoDataCollection: "allow" | "deny";
   publicShelf: PublicShelfState;
   sheetUrl: string | null;
   /** Vista preferida da Estante ("grid" | "list"), lida do cookie no SSR. */
