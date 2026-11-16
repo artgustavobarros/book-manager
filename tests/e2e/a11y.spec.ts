@@ -70,6 +70,10 @@ for (const theme of ["light", "dark"] as const) {
         await audit(page);
         await page.getByRole("button", { name: "Editar ficha" }).click();
         await audit(page);
+        await page
+          .getByRole("button", { name: "Identificar por foto", exact: true })
+          .click();
+        await audit(page);
       });
 
       test("compartilhar e estante pública", async ({ page }) => {

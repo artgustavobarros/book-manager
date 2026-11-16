@@ -38,6 +38,7 @@ function Modal({
   className,
   veilClassName,
   initialFocus,
+  onCloseAutoFocus,
   guardChanges = false,
   children,
 }: {
@@ -50,6 +51,7 @@ function Modal({
   veilClassName?: string;
   /** Seletor do elemento que recebe o foco ao abrir (padrão: o próprio painel). */
   initialFocus?: string;
+  onCloseAutoFocus?: (event: Event) => void;
   guardChanges?: boolean;
   children: React.ReactNode;
 }) {
@@ -129,6 +131,7 @@ function Modal({
               )}
               data-slot="modal"
               onChangeCapture={guardChanges ? markInput : undefined}
+              onCloseAutoFocus={onCloseAutoFocus}
               // O Radix trata o Esc antes de todos (captura no document): com a lista de
               // um combobox aberta, o Esc deve fechar só a lista, não o modal.
               onEscapeKeyDown={(e) => {

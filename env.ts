@@ -30,6 +30,17 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
     /** Segredo enviado pela Vercel no header Authorization das invocações cron. */
     CRON_SECRET: z.string().min(16).optional(),
+    /** Opcional: sem chave, só a identificação por foto fica indisponível. */
+    OPENROUTER_API_KEY: z.string().min(1).optional(),
+    /** Opt-in explícito para provedores que podem coletar dados e treinar. */
+    OPENROUTER_PHOTO_DATA_COLLECTION: z.enum(["deny", "allow"]).default("deny"),
+    /** Cota compartilhada do app; mantém margem no plano gratuito de 50/dia. */
+    OPENROUTER_PHOTO_DAILY_LIMIT: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(950)
+      .default(45),
     EMAIL_TRANSPORT: z.enum(["gmail", "outbox", "console"]).default("gmail"),
     /** Arquivo da caixa de saída de teste (EMAIL_TRANSPORT=outbox). */
     EMAIL_OUTBOX_FILE: z.string().optional(),

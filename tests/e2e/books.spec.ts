@@ -291,6 +291,11 @@ test.describe("acervo", () => {
       dialog.getByText("Use um link http(s) para a capa.")
     ).toBeVisible();
     await page.keyboard.press("Escape");
+    const discard = page.getByRole("alertdialog");
+    await expect(
+      discard.getByRole("heading", { name: "Descartar alterações?" })
+    ).toBeVisible();
+    await discard.getByRole("button", { name: "Descartar alterações" }).click();
     await expect(dialog).toHaveCount(0);
   });
 

@@ -84,6 +84,28 @@ Com `EMAIL_TRANSPORT=console`, os e-mails de verificação e de redefinição de
 
 A estante começa privada. Pelo ícone de compartilhar (cabeçalho, Estante ou ficha do livro), quem já confirmou o e-mail publica a estante em `/estante/{slug}` (o slug vem do nome e não muda depois) e pode torná-la privada de novo. Visitantes sem conta veem só capa, título, autor, gênero, páginas, editora, ano e Leitura (não lido, lendo, lido, abandonado); a Situação (emprestado, doado), anotações, datas de aquisição e livros doados nunca saem do servidor. Cada link traz metadados Open Graph e uma imagem gerada em `/og/estante/{slug}`; as estantes públicas declaram `noindex`.
 
+## Adicionar livro por foto
+
+1. Configure `OPENROUTER_API_KEY` no `.env.local` (ou no ambiente do servidor) e reinicie `pnpm dev`. Não cole a chave na interface nem use prefixo `NEXT_PUBLIC_`.
+2. Em **Registrar livro**, clique na câmera ao lado de **Buscar**. Em dispositivos de toque, o ícone solicita diretamente a câmera traseira; **Escolher imagem** fica no cadastro como alternativa. O sistema/navegador decide a interface nativa, mesmo no PWA. No desktop, o modal **Identificar por foto** oferece as duas opções. Use JPEG, PNG ou WebP de um único livro; HEIC precisa ser convertido para JPEG.
+3. A escolha abre o progresso e inicia automaticamente a leitura com **Nemotron 3.5 Super VL**, mostrando uma barra indeterminada. Cada envio consome uma tentativa; o X fecha o modal e cancela a leitura local. Cancelar a captura nativa antes de escolher uma foto não inicia o envio.
+4. A leitura preenche título e autor e volta ao cadastro. Se necessário, escolha uma edição nos resultados dos catálogos, revise os campos e salve. A identificação nunca cria um livro automaticamente; capa/lombada não garantem a edição correta.
+
+O navegador reduz a imagem para até 1600 px no maior lado e recodifica em JPEG, removendo os metadados. O servidor aceita até 2 MB de imagem inline, valida formato e assinatura, exige sessão e usa o SDK oficial `@openrouter/sdk`. Não há upload público, armazenamento da foto ou nova tabela. A imagem é enviada ao OpenRouter/provedor, com `dataCollection: "deny"`; se nenhum provedor atender a política, a chamada falha sem relaxá-la. Isso não promete retenção zero: confira as políticas do provedor e as configurações da conta OpenRouter.
+
+Somente `nvidia/nemotron-3.5-super-vl:free` é aceito, com preço máximo zero e sem fallback para modelo pago. Disponibilidade e cotas dos gratuitos podem mudar. Há teto de cinco tentativas por pessoa/minuto, 18 por app/minuto e `OPENROUTER_PHOTO_DAILY_LIMIT` por app/janela de 24 horas (45 por padrão, compartilhadas entre todos os usuários). As janelas começam na primeira tentativa, não à meia-noite. Chamadas malsucedidas após a reserva também consomem a cota local; outros usos da mesma chave fora do app não são contabilizados. O provedor pode aplicar limites menores. Timeout de 45 segundos, sem retries automáticos.
+
+Para testes com capas públicas, `OPENROUTER_PHOTO_DATA_COLLECTION=allow` permite provedores que coletam dados e podem usá-los para treinamento (incluindo a rota gratuita NVIDIA). A conta OpenRouter também precisa permitir essa rota. O padrão continua `deny`; a interface exibe a política efetiva antes da escolha da foto. Não use fotos com pessoas, ambientes privados ou dados pessoais nesse modo. Exemplo local, sem alterar `.env.local` nem acessar um Postgres de outro projeto:
+
+```bash
+DATABASE_URL=pglite://./.data/dev DATABASE_URL_UNPOOLED=pglite://./.data/dev pnpm db:migrate
+DATABASE_URL=pglite://./.data/dev DATABASE_URL_UNPOOLED=pglite://./.data/dev OPENROUTER_PHOTO_DATA_COLLECTION=allow EMAIL_TRANSPORT=console pnpm dev --hostname 127.0.0.1
+```
+
+Abra `http://localhost:3000`, como configurado no callback Google. O login com Google exige concluir a autorização no próprio navegador; para testar sem OAuth, use uma conta local existente. As migrations preservam o acervo; não rode `db:seed` sobre uma conta de teste com alterações que deseje manter, pois esse script recria a conta de referência.
+
+Sem chave, apenas a leitura da foto retorna indisponibilidade; cadastro manual e busca por título/ISBN continuam disponíveis. Os testes automatizados simulam o provedor e não gastam a cota real.
+
 ## Variáveis de ambiente
 
 Todas, exceto as do Sentry, são validadas em [`env.ts`](env.ts); o modelo comentado está em [`.env.example`](.env.example).
@@ -97,6 +119,9 @@ Todas, exceto as do Sentry, são validadas em [`env.ts`](env.ts); o modelo comen
 | `NEXT_PUBLIC_APP_URL` | não | URL pública extra confiável (origem) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | não | Login com Google; sem elas, o botão avisa que está indisponível |
 | `CRON_SECRET` | para cópia semanal | Segredo de 16+ caracteres para autenticar o cron da Vercel |
+| `OPENROUTER_API_KEY` | não | Chave do OpenRouter para identificar capa/lombada; somente no servidor |
+| `OPENROUTER_PHOTO_DATA_COLLECTION` | não | `deny` (padrão) ou `allow`; opt-in para provedores com coleta/possível treinamento |
+| `OPENROUTER_PHOTO_DAILY_LIMIT` | não | Cota compartilhada de fotos por janela de 24h; padrão 45, máximo 950 |
 | `EMAIL_TRANSPORT` | não | `gmail` (padrão), `console` ou `outbox` (testes) |
 | `SMTP_USER` / `SMTP_PASS` | com `gmail` | Conta Gmail e **senha de app** |
 | `SENTRY_AUTH_TOKEN` | não | Só no build da Vercel, para enviar source maps ao Sentry; sem ela o envio é pulado |

@@ -1,4 +1,6 @@
 allowBuilds:
+  # O pacote já inclui JS e tipos; não precisamos do diagnóstico de postinstall.
+  '@openrouter/sdk': false
   esbuild: true
   sharp: false
   unrs-resolver: false

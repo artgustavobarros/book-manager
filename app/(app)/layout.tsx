@@ -86,6 +86,7 @@ export default async function AppLayout({
         theme: parseTheme(jar.get(THEME_COOKIE)?.value),
         shelfView: parseShelfView(jar.get(SHELF_VIEW_COOKIE)?.value),
         googleEnabled,
+        photoDataCollection: env.OPENROUTER_PHOTO_DATA_COLLECTION,
         hasPassword: accounts.some((a) => a.providerId === "credential"),
         googleLinked: accounts.some((a) => a.providerId === "google"),
       }}
