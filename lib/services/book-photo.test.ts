@@ -155,7 +155,10 @@ describe("SDK oficial do OpenRouter", () => {
       fetcher.mockResolvedValue(completion(content));
       await expect(
         recognizeBookPhoto(PHOTO_DATA_URL, PHOTO_MODELS[0].value)
-      ).rejects.toMatchObject({ status: 502 });
+      ).rejects.toMatchObject({
+        status: 502,
+        message: expect.stringContaining("busca por título"),
+      });
     }
   );
 
@@ -176,7 +179,10 @@ describe("SDK oficial do OpenRouter", () => {
     );
     await expect(
       recognizeBookPhoto(PHOTO_DATA_URL, PHOTO_MODELS[0].value)
-    ).rejects.toMatchObject({ status: 502 });
+    ).rejects.toMatchObject({
+      status: 502,
+      message: expect.stringContaining("busca por título"),
+    });
   });
 
   it.each([

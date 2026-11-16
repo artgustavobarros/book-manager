@@ -148,7 +148,7 @@ export async function recognizeBookPhoto(
     ) {
       throw new HttpError(
         502,
-        "O modelo não concluiu a leitura. Tente novamente ou troque o modelo."
+        "O modelo não concluiu a leitura. Tente novamente ou use a busca por título."
       );
     }
     const text = choice.message.content
@@ -159,7 +159,7 @@ export async function recognizeBookPhoto(
     if (!parsed.success) {
       throw new HttpError(
         502,
-        "O modelo retornou dados inválidos. Tente outro modelo."
+        "O modelo retornou dados inválidos. Tente outra foto ou use a busca por título."
       );
     }
     return {
@@ -187,18 +187,18 @@ export async function recognizeBookPhoto(
       }
       throw new HttpError(
         503,
-        "Modelo indisponível ou sem provedor compatível com a política de privacidade. Tente outro modelo."
+        "Modelo indisponível ou sem provedor compatível com a política de privacidade. Tente mais tarde ou use a busca por título."
       );
     }
     if (error instanceof SyntaxError) {
       throw new HttpError(
         502,
-        "O modelo não retornou JSON válido. Tente outro modelo."
+        "O modelo não retornou JSON válido. Tente outra foto ou use a busca por título."
       );
     }
     throw new HttpError(
       504,
-      "Não foi possível concluir a leitura. Verifique a conexão ou tente outro modelo."
+      "Não foi possível concluir a leitura. Verifique a conexão e tente novamente ou use a busca por título."
     );
   }
 }
