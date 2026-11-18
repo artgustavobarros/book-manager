@@ -1,34 +1,46 @@
 "use client";
 
+import { Tabs } from "@base-ui/react/tabs";
 import { cn } from "cn";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { useApp } from "@/components/app/app-provider";
 import { PageMain } from "@/components/app/app-shell";
 import { KpiContent, kpiCardClass } from "@/components/app/kpi";
-import { toast } from "@/components/app/toast";
 import {
   CarouselDots,
   trackNarrow,
   useCarousel,
 } from "@/components/ui/carousel";
-import { Segmented, segClass } from "@/components/ui/segmented";
+import { Segmented } from "@/components/ui/segmented";
 import { useBackup } from "@/hooks/use-backup";
-import { useBookActions, useBooks } from "@/hooks/use-books";
+import { useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import {
   type BarField,
   type Bars,
   type InsightScope,
+  type Insights,
   insights,
   type StateSegment,
   scopeShelfReading,
+  type YearColumn,
 } from "@/lib/domain/insights";
-import type { Facet, FacetKind } from "@/lib/domain/shelf";
+import {
+  type Facet,
+  type FacetKind,
+  facetTest,
+  matchesReading,
+  shelfHref,
+} from "@/lib/domain/shelf";
+import { nf } from "@/lib/domain/text";
 
 const card =
   "flex min-w-0 snap-start flex-col rounded-xl border border-line bg-card px-6 py-5";
 const ease = "cubic-bezier(.2,.7,.2,1)";
+const yearPlot = "flex h-[172px] gap-1 sm:gap-3";
+const yearColumn = "flex min-w-0 flex-1 flex-col";
 
 function CardHead({ title, badge }: { title: string; badge: string }) {
   return (
@@ -36,6 +48,229 @@ function CardHead({ title, badge }: { title: string; badge: string }) {
       <h2 className="m-0 font-semibold text-base">{title}</h2>
       <span className="text-mute text-xs">{badge}</span>
     </div>
+  );
+}
+
+function YearBar({
+  count,
+  current,
+  pct,
+  year,
+  index,
+  compactLabel = false,
+}: Pick<YearColumn, "count" | "current" | "pct" | "year"> & {
+  index: number;
+  compactLabel?: boolean;
+}) {
+  return (
+    <>
+      <span className="flex flex-1 flex-col justify-end gap-2 border-line2 border-b">
+        <span className="relative text-center font-semibold text-xs tabular-nums">
+          {nf(count)}
+          <span className="sr-only">{count === 1 ? " livro" : " livros"}</span>
+        </span>
+        <span
+          aria-hidden="true"
+          className="origin-bottom rounded-t-md transition-[height] duration-500"
+          style={{
+            height: pct,
+            background: current
+              ? "var(--acc)"
+              : "color-mix(in oklch, var(--acc) 45%, var(--card))",
+            animation: `acv-grow-y 700ms ${ease} both`,
+            animationDelay: Math.min(index, 8) * 60 + "ms",
+          }}
+        />
+      </span>
+      <span className="relative pt-2 text-center text-[11px] text-mute tabular-nums sm:text-xs">
+        {compactLabel ? (
+          <>
+            <span aria-hidden="true" className="sm:hidden">
+              ’{String(year).slice(-2)}
+            </span>
+            <span className="max-sm:sr-only">{year}</span>
+          </>
+        ) : (
+          year
+        )}
+      </span>
+    </>
+  );
+}
+
+function ReadingYearChart({
+  columns,
+  onSelect,
+}: {
+  columns: Insights["yearCols"];
+  onSelect: (year: number) => void;
+}) {
+  return columns.length ? (
+    <div className={yearPlot}>
+      {columns.map((column, index) => (
+        <button
+          className={cn(yearColumn, "border-0 bg-transparent p-0 text-ink")}
+          key={column.year}
+          onClick={() => onSelect(column.year)}
+          title={column.sub}
+          type="button"
+        >
+          <YearBar {...column} index={index} />
+        </button>
+      ))}
+    </div>
+  ) : (
+    <span className="py-6 text-center text-mute text-sm">
+      Nenhum livro lido tem ano de leitura registrado.
+    </span>
+  );
+}
+
+type AcquisitionYears = Insights["acquisitionsByYear"];
+
+function acquisitionBadge(years: AcquisitionYears) {
+  const total = years.reduce((sum, { count }) => sum + count, 0);
+  return total ? `${nf(total)} ${total === 1 ? "livro" : "livros"}` : "";
+}
+
+function AcquisitionBars({
+  currentYear,
+  years,
+}: {
+  currentYear: number;
+  years: AcquisitionYears;
+}) {
+  const max = years.reduce((highest, { count }) => Math.max(highest, count), 1);
+  if (years.length === 0) {
+    return (
+      <p className="m-0 text-mute text-sm">
+        Nenhum livro neste escopo tem data de aquisição registrada.
+      </p>
+    );
+  }
+
+  return (
+    <div
+      aria-label="Contagem de livros por ano de aquisição"
+      className="min-w-0 overflow-x-auto sm:[&>ul]:gap-1"
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          event.stopPropagation();
+        }
+      }}
+      role="group"
+      tabIndex={0}
+    >
+      <ul className={cn(yearPlot, "m-0 list-disc p-0")}>
+        {years.map(({ year, count }, index) => {
+          const compactLabel =
+            years.length > 8 && index > 0 && index < years.length - 1;
+          return (
+            <li
+              className={cn(
+                "flex flex-1 flex-col sm:min-w-8",
+                compactLabel ? "min-w-5" : "min-w-7"
+              )}
+              key={year}
+            >
+              <YearBar
+                compactLabel={compactLabel}
+                count={count}
+                current={year === currentYear}
+                index={index}
+                pct={`${(count / max) * 82}%`}
+                year={year}
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+const yearTab =
+  "min-h-10 rounded-md border-0 bg-transparent px-4 font-semibold text-mute text-sm data-active:bg-card data-active:text-ink data-active:shadow-seg";
+
+const missingReading: Facet = { kind: "dados-faltantes", value: "ano-leitura" };
+const missingAcquisition: Facet = {
+  kind: "dados-faltantes",
+  value: "data-aquisicao",
+};
+const lacksAcquisitionDate = facetTest(missingAcquisition);
+const missingDataLink =
+  "w-fit text-mute text-sm underline underline-offset-4 hover:text-ink";
+
+function AnnualTabs({
+  data,
+  currentYear,
+  onSelectReadYear,
+  scope,
+}: {
+  data: Insights;
+  currentYear: number;
+  onSelectReadYear: (year: number) => void;
+  scope: InsightScope;
+}) {
+  const books = useBooks();
+  const acquired = acquisitionBadge(data.acquisitionsByYear);
+  const reading = scopeShelfReading(scope);
+  const hasMissingAcquisition = books.some(
+    (book) => lacksAcquisitionDate(book) && matchesReading(book, reading)
+  );
+
+  return (
+    <>
+      <h2 className="m-0 font-semibold text-base">Livros por ano</h2>
+      <Tabs.Root defaultValue="lidos">
+        <Tabs.List
+          activateOnFocus
+          aria-label="Tipo de contagem anual"
+          className="mb-4 flex w-fit gap-0.5 rounded-lg bg-seg p-1"
+        >
+          <Tabs.Tab className={yearTab} value="lidos">
+            Lidos
+          </Tabs.Tab>
+          <Tabs.Tab className={yearTab} value="adquiridos">
+            Adquiridos
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel className="grid gap-4" value="lidos">
+          {data.yearBadge ? (
+            <p className="m-0 text-mute text-xs">{data.yearBadge}</p>
+          ) : null}
+          <ReadingYearChart
+            columns={data.yearCols}
+            onSelect={onSelectReadYear}
+          />
+          {data.missingReadYearCount > 0 ? (
+            <Link
+              className={missingDataLink}
+              href={shelfHref({ facet: missingReading, reading: "lido" })}
+            >
+              Ver livros sem ano de leitura
+            </Link>
+          ) : null}
+        </Tabs.Panel>
+        <Tabs.Panel className="grid gap-4" value="adquiridos">
+          {acquired ? (
+            <p className="m-0 text-mute text-xs">{acquired}</p>
+          ) : null}
+          <AcquisitionBars
+            currentYear={currentYear}
+            years={data.acquisitionsByYear}
+          />
+          {hasMissingAcquisition ? (
+            <Link
+              className={missingDataLink}
+              href={shelfHref({ facet: missingAcquisition, reading })}
+            >
+              Ver livros sem data de aquisição
+            </Link>
+          ) : null}
+        </Tabs.Panel>
+      </Tabs.Root>
+    </>
   );
 }
 
@@ -206,24 +441,19 @@ export function InsightsPage() {
 function FullInsights() {
   const app = useApp();
   const books = useBooks();
-  const { update } = useBookActions();
   const { goShelf } = useShelfState();
   const [scope, setScope] = useState<InsightScope>("todos");
   const [expanded, setExpanded] = useState<Partial<Record<BarField, boolean>>>(
     {}
   );
-  const [assignAll, setAssignAll] = useState(false);
-  const [assignMore, setAssignMore] = useState(false);
   const d = useMemo(
     () =>
       insights(books, {
         scope,
         expanded,
-        assignAll,
-        assignMore,
         year: app.year,
       }),
-    [books, scope, expanded, assignAll, assignMore, app.year]
+    [books, scope, expanded, app.year]
   );
   const kpiCar = useCarousel(4);
   const chartCar = useCarousel(6);
@@ -233,6 +463,11 @@ function FullInsights() {
   const pick = (kind: FacetKind) => (value: string) => drill({ kind, value });
   const toggle = (k: BarField) => () =>
     setExpanded((e) => ({ ...e, [k]: !e[k] }));
+  const selectReadYear = (year: number) =>
+    goShelf({
+      reading: "lido",
+      facet: { kind: "lidos-em", value: String(year) },
+    });
 
   return (
     <PageMain>
@@ -396,142 +631,13 @@ function FullInsights() {
           title="Livros por nacionalidade do autor"
         />
 
-        <section className={cn(card, "gap-4")}>
-          <CardHead badge={d.yearBadge} title="Livros lidos por ano" />
-          {d.yearCols.length ? (
-            <div className="flex h-[172px] gap-3">
-              {d.yearCols.map((c, i) => (
-                <button
-                  className="flex min-w-0 flex-1 flex-col border-0 bg-transparent p-0 text-ink"
-                  key={c.year}
-                  onClick={() =>
-                    goShelf({
-                      reading: "lido",
-                      facet: { kind: "lidos-em", value: String(c.year) },
-                    })
-                  }
-                  title={c.sub}
-                  type="button"
-                >
-                  <span className="flex flex-1 flex-col justify-end gap-2 border-line2 border-b">
-                    <span className="text-center font-semibold text-xs tabular-nums">
-                      {c.count}
-                    </span>
-                    <span
-                      className="origin-bottom rounded-t-md transition-[height] duration-500"
-                      style={{
-                        height: c.pct,
-                        background: c.current
-                          ? "var(--acc)"
-                          : "color-mix(in oklch, var(--acc) 45%, var(--card))",
-                        animation: `acv-grow-y 700ms ${ease} both`,
-                        animationDelay: i * 60 + "ms",
-                      }}
-                    />
-                  </span>
-                  <span className="pt-2 text-center text-mute text-xs tabular-nums">
-                    {c.year}
-                  </span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <span className="py-6 text-center text-mute text-sm">
-              Atribua o ano de leitura abaixo para ver o gráfico.
-            </span>
-          )}
-          <div className="flex flex-col gap-1 border-soft border-t pt-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
-              <span className="font-semibold text-mute text-xs">
-                Atribuir ano lido
-              </span>
-              <div className="flex gap-0.5 rounded-lg bg-seg p-0.5">
-                {(
-                  [
-                    [false, "Sem ano (" + d.assignNoYearCount + ")"],
-                    [true, "Todos os lidos (" + d.assignReadCount + ")"],
-                  ] as const
-                ).map(([k, label]) => (
-                  <button
-                    aria-pressed={assignAll === k}
-                    className={cn(
-                      "rounded-md border-0 px-3 py-1 font-semibold text-xs",
-                      segClass(assignAll === k)
-                    )}
-                    key={label}
-                    onClick={() => {
-                      setAssignAll(k);
-                      setAssignMore(false);
-                    }}
-                    type="button"
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {d.assignRows.map((r) => (
-              <div
-                className="flex flex-wrap items-center gap-3 border-soft border-t py-2"
-                key={r.book.id}
-              >
-                <button
-                  className="flex min-w-0 flex-[1_1_152px] cursor-pointer flex-col border-0 bg-transparent p-0 text-left text-ink"
-                  onClick={() => app.openView(r.book.id)}
-                  type="button"
-                >
-                  <span className="w-full truncate font-semibold text-sm">
-                    {r.book.title}
-                  </span>
-                  <span className="w-full truncate text-mute text-xs">
-                    {r.book.author}
-                  </span>
-                </button>
-                <div className="flex flex-wrap gap-1">
-                  {r.years.map((y) => (
-                    <button
-                      aria-label={
-                        (y.on ? "Lido em " : "Marcar como lido em ") + y.year
-                      }
-                      aria-pressed={y.on}
-                      className={cn(
-                        "h-7 rounded-md border px-2 font-semibold text-xs tabular-nums active:scale-[.94]",
-                        y.on
-                          ? "border-ink bg-ink text-card"
-                          : "border-line2 bg-card text-ink"
-                      )}
-                      key={y.year}
-                      onClick={() => {
-                        void update(r.book.id, {
-                          yearRead: y.on ? null : y.year,
-                        }).then(
-                          (ok) =>
-                            ok &&
-                            !y.on &&
-                            toast(r.book.title + " · lido em " + y.year)
-                        );
-                      }}
-                      type="button"
-                    >
-                      {y.year}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {d.assignEmpty ? (
-              <span className="py-2 text-mute text-sm">
-                Todos os livros lidos já têm ano de leitura.
-              </span>
-            ) : null}
-            {d.assignMoreShow ? (
-              <MoreButton
-                className="mt-1"
-                label={d.assignMoreLabel}
-                onClick={() => setAssignMore((v) => !v)}
-              />
-            ) : null}
-          </div>
+        <section aria-label="Livros por ano" className={cn(card, "gap-4")}>
+          <AnnualTabs
+            currentYear={app.year}
+            data={d}
+            onSelectReadYear={selectReadYear}
+            scope={scope}
+          />
         </section>
 
         <BarCard

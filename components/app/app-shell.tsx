@@ -38,6 +38,7 @@ function SheetExportReturn() {
 /** Estrutura das páginas autenticadas (Acervo.dc.html, bloco `authed`). */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const showMobileFabs = pathname !== "/dados/previa";
   const { clearRouteTransition, pendingNav, user } = useApp();
   const pendingTarget =
     pendingNav && pendingNav.from === pathname && pendingNav.to !== pathname
@@ -67,12 +68,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <EmailVerificationBanner key={pathname} />
       {mainContent}
       <AppFooter />
-      {/* Espaço para os botões flutuantes não cobrirem o fim da página. */}
-      <div
-        aria-hidden="true"
-        className="hidden h-24 flex-none max-[1025px]:block"
-      />
-      <MobileFabs />
+      {showMobileFabs ? (
+        <>
+          {/* Espaço para os botões flutuantes não cobrirem o fim da página. */}
+          <div
+            aria-hidden="true"
+            className="hidden h-24 flex-none max-[1025px]:block"
+          />
+          <MobileFabs />
+        </>
+      ) : null}
       <Toaster pendingVerification={!user.emailVerified} />
       <RestoreHost />
       <AppModals />

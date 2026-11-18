@@ -1,5 +1,6 @@
 /** Filtros, facetas e ordenação da Estante (porta de `estante()` do standalone). */
 import {
+  isRead,
   isReading,
   isSituation,
   READINGS,
@@ -16,7 +17,8 @@ export type FacetKind =
   | "genero"
   | "nacionalidade"
   | "editora"
-  | "lidos-em";
+  | "lidos-em"
+  | "dados-faltantes";
 
 /** Faceta serializável (o standalone guardava uma função; aqui cabe na URL). */
 export interface Facet {
@@ -30,7 +32,25 @@ const FACET_PREFIX: Record<FacetKind, string> = {
   nacionalidade: "Nacionalidade: ",
   editora: "Editora: ",
   "lidos-em": "Lidos em ",
+  "dados-faltantes": "Dados faltantes: ",
 };
+
+const MISSING_FIELDS = new Map([
+  [
+    "ano-leitura",
+    {
+      label: "Sem ano de leitura",
+      matches: (book: Book) => isRead(book) && !book.yearRead,
+    },
+  ],
+  [
+    "data-aquisicao",
+    {
+      label: "Sem data de aquisição",
+      matches: (book: Book) => !book.acquiredOn,
+    },
+  ],
+]);
 
 const GROUP_FIELD = {
   genero: "genre",
@@ -46,6 +66,9 @@ export function groupKey(v: string | null | undefined): string {
 }
 
 export function facetLabel(f: Facet): string {
+  if (f.kind === "dados-faltantes") {
+    return MISSING_FIELDS.get(f.value)?.label ?? "Dados faltantes";
+  }
   return FACET_PREFIX[f.kind] + f.value;
 }
 
@@ -57,6 +80,8 @@ export function facetTest(f: Facet): (b: Book) => boolean {
     }
     case "lidos-em":
       return (b) => String(b.yearRead) === f.value;
+    case "dados-faltantes":
+      return MISSING_FIELDS.get(f.value)?.matches ?? (() => false);
     default: {
       const field = GROUP_FIELD[f.kind];
       const key = f.value.trim().toLowerCase();
@@ -79,7 +104,10 @@ export function parseFacet(s: string | null | undefined): Facet | null {
   }
   const kind = s.slice(0, i) as FacetKind;
   const value = s.slice(i + 1);
-  return kind in FACET_PREFIX && value ? { kind, value } : null;
+  if (kind === "dados-faltantes" && !MISSING_FIELDS.has(value)) {
+    return null;
+  }
+  return Object.hasOwn(FACET_PREFIX, kind) && value ? { kind, value } : null;
 }
 
 // --- Ordenação ------------------------------------------------------------

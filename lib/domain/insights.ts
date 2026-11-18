@@ -44,24 +44,17 @@ export interface YearColumn {
   year: number;
 }
 
-export interface AssignRow {
-  book: Book;
-  years: { year: number; on: boolean }[];
-}
+export type AnnualCount = { year: number; count: number };
 
 export interface Insights {
-  assignEmpty: boolean;
-  assignMoreLabel: string;
-  assignMoreShow: boolean;
-  assignNoYearCount: number;
-  assignReadCount: number;
-  assignRows: AssignRow[];
+  acquisitionsByYear: AnnualCount[];
   baseLabel: string;
   bigBooks: { book: Book; rank: number; pages: string }[];
   dataKpis: Kpi[];
   donutBg: string;
   donutTotal: string;
   genre: Bars;
+  missingReadYearCount: number;
   nat: Bars;
   pub: Bars;
   readingSeg: StateSegment<Reading>[];
@@ -74,8 +67,6 @@ export interface Insights {
 }
 
 export interface InsightOptions {
-  assignAll: boolean;
-  assignMore: boolean;
   expanded: Partial<Record<BarField, boolean>>;
   scope: InsightScope;
   year: number;
@@ -83,7 +74,6 @@ export interface InsightOptions {
 
 const pg = (b: Book) => b.pages || 0;
 const BAR_LIMIT = 7;
-const ASSIGN_LIMIT = 6;
 
 export function groupBy(
   books: readonly Book[],
@@ -197,11 +187,37 @@ function segments<K extends string>(
   }));
 }
 
+export function acquisitionsByYear(books: readonly Book[]): AnnualCount[] {
+  const counts = new Map<number, number>();
+  for (const { acquiredOn } of books) {
+    if (!acquiredOn) {
+      continue;
+    }
+    const year = Number(acquiredOn.slice(0, 4));
+    counts.set(year, (counts.get(year) ?? 0) + 1);
+  }
+  const years = [...counts.keys()].sort((a, b) => a - b);
+  const start = years[0];
+  const end = years.at(-1);
+  if (start === undefined || end === undefined) {
+    return [];
+  }
+  const span = end - start + 1;
+  // Don't turn a mistyped date into thousands of empty columns.
+  if (span > 50) {
+    return years.map((year) => ({ year, count: counts.get(year)! }));
+  }
+  return Array.from({ length: span }, (_, index) => {
+    const year = start + index;
+    return { year, count: counts.get(year) ?? 0 };
+  });
+}
+
 export function insights(
   books: readonly Book[],
   opts: InsightOptions
 ): Insights {
-  const { scope, expanded, assignAll, assignMore, year: Y } = opts;
+  const { scope, expanded, year: Y } = opts;
   const read = books.filter(isRead);
   const base = scope === "lidos" ? read : books;
   const withP = books.filter((b) => pg(b) > 0);
@@ -239,8 +255,10 @@ export function insights(
   });
 
   const years = new Map<number, { n: number; p: number }>();
+  let missingReadYearCount = 0;
   for (const b of read) {
     if (!b.yearRead) {
+      missingReadYearCount++;
       continue;
     }
     const e = years.get(b.yearRead) ?? { n: 0, p: 0 };
@@ -252,13 +270,9 @@ export function insights(
   const ys = [...years.keys()].sort((a, b) => a - b).slice(-8);
   const ymax = Math.max(1, ...ys.map((y) => years.get(y)!.n));
 
-  const noYear = read.filter((b) => !b.yearRead);
-  const pool = assignAll
-    ? [...read].sort((a, b) => cmp(a.title, b.title))
-    : noYear;
-  const lim = assignMore ? pool.length : ASSIGN_LIMIT;
-
   return {
+    acquisitionsByYear: acquisitionsByYear(base),
+    missingReadYearCount,
     dataKpis,
     thermoPct: thermo + "%",
     thermoPctLabel: Math.round(thermo) + "% lido",
@@ -291,19 +305,5 @@ export function insights(
     yearBadge: ys.length
       ? nf(ys.reduce((s, y) => s + years.get(y)!.p, 0)) + " páginas"
       : "",
-    assignNoYearCount: noYear.length,
-    assignReadCount: read.length,
-    assignRows: pool.slice(0, lim).map((book) => ({
-      book,
-      years: [Y - 4, Y - 3, Y - 2, Y - 1, Y].map((year) => ({
-        year,
-        on: book.yearRead === year,
-      })),
-    })),
-    assignEmpty: pool.length === 0,
-    assignMoreShow: pool.length > ASSIGN_LIMIT,
-    assignMoreLabel: assignMore
-      ? "Mostrar menos"
-      : "Mostrar todos (" + pool.length + ")",
   };
 }

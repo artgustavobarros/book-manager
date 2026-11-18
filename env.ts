@@ -11,6 +11,7 @@ import * as z from "zod";
  */
 export const env = createEnv({
   server: {
+    NODE_ENV: z.enum(["development", "production", "test"]).optional(),
     /** Conexão direta (sem pooler) do Neon, usada só pelas migrations quando existir. */
     DATABASE_URL_UNPOOLED: z.string().optional(),
     DATABASE_URL: z
