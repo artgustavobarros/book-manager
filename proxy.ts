@@ -10,10 +10,13 @@ const AUTH_PAGES = [
 
 /** Estante pública (`/estante/{slug}`): aberta a visitantes; `/estante` continua protegida. */
 const PUBLIC_SHELF = /^\/estante\/[^/]+\/?$/;
+const LEGAL_PAGES = new Set(["/privacidade", "/termos"]);
 
 /** Caminhos que não exigem sessão (além dos excluídos pelo matcher). */
 export function isPublicPath(pathname: string): boolean {
-  return PUBLIC_SHELF.test(pathname);
+  return (
+    LEGAL_PAGES.has(pathname.replace(/\/$/, "")) || PUBLIC_SHELF.test(pathname)
+  );
 }
 
 /**

@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { FieldLabel } from "@/components/ui/text-field";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
@@ -216,13 +217,12 @@ function LoginForm({ callbackURL }: { callbackURL: string }) {
               Esqueci minha senha
             </Link>
           </div>
-          <Input
+          <PasswordInput
             aria-invalid={!!formState.errors.password}
             autoComplete="current-password"
             className={inputClass}
             id="login-password"
             placeholder="••••••••"
-            type="password"
             {...register("password")}
           />
           {formState.errors.password ? (
@@ -312,26 +312,31 @@ function SignupForm() {
             {...register("email")}
           />
         </FieldLabel>
-        <FieldLabel error={formState.errors.password?.message} label="Senha">
-          <Input
+        <FieldLabel
+          error={formState.errors.password?.message}
+          htmlFor="signup-password"
+          label="Senha"
+        >
+          <PasswordInput
             aria-invalid={!!formState.errors.password}
             autoComplete="new-password"
             className={inputClass}
+            id="signup-password"
             placeholder="••••••••"
-            type="password"
             {...register("password")}
           />
         </FieldLabel>
         <FieldLabel
           error={formState.errors.confirm?.message}
+          htmlFor="signup-confirm-password"
           label="Confirmar senha"
         >
-          <Input
+          <PasswordInput
             aria-invalid={!!formState.errors.confirm}
             autoComplete="new-password"
             className={inputClass}
+            id="signup-confirm-password"
             placeholder="••••••••"
-            type="password"
             {...register("confirm")}
           />
         </FieldLabel>

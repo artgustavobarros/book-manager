@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { FieldLabel } from "@/components/ui/text-field";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
@@ -74,26 +74,28 @@ export function ResetPasswordCard({ token }: { token: string | null }) {
         <div className="flex flex-col gap-3">
           <FieldLabel
             error={form.formState.errors.password?.message}
+            htmlFor="reset-password"
             label="Nova senha"
           >
-            <Input
+            <PasswordInput
               aria-invalid={!!form.formState.errors.password}
               autoComplete="new-password"
               className="h-11"
+              id="reset-password"
               placeholder={`Mínimo ${MIN_PASSWORD} caracteres`}
-              type="password"
               {...form.register("password")}
             />
           </FieldLabel>
           <FieldLabel
             error={form.formState.errors.confirm?.message}
+            htmlFor="reset-confirm-password"
             label="Confirmar nova senha"
           >
-            <Input
+            <PasswordInput
               aria-invalid={!!form.formState.errors.confirm}
               autoComplete="new-password"
               className="h-11"
-              type="password"
+              id="reset-confirm-password"
               {...form.register("confirm")}
             />
           </FieldLabel>

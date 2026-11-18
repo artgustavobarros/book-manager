@@ -11,7 +11,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "group/input-group relative flex h-9 w-full min-w-0 items-center rounded-lg border border-line2 bg-card outline-none transition-[border-color,box-shadow] duration-150 has-[[data-slot=input-group-control]:focus-visible]:border-ink has-disabled:bg-soft has-[[data-slot=input-group-control]:focus-visible]:shadow-ring has-[>[data-align=inline-end]]:[&>input]:pr-1 has-[>[data-align=inline-start]]:[&>input]:pl-1",
+        "group/input-group relative flex h-9 w-full min-w-0 items-center rounded-lg border border-line2 bg-card outline-none transition-[border-color,box-shadow] duration-150 has-[[data-slot=input-group-control]:focus-visible]:border-ink has-[[data-slot=input-group-control][aria-invalid=true]]:border-acc has-disabled:bg-soft has-[[data-slot=input-group-control]:focus-visible]:shadow-ring has-[>[data-align=inline-end]]:[&>input]:pr-1 has-[>[data-align=inline-start]]:[&>input]:pl-1",
         className
       )}
       data-slot="input-group"
@@ -59,7 +59,7 @@ function InputGroupAddon({
 }
 
 const inputGroupButtonVariants = cva(
-  "flex items-center gap-2 text-sm shadow-none",
+  "flex items-center gap-2 text-sm shadow-none [&_svg]:pointer-events-none [&_svg]:size-4",
   {
     variants: {
       size: {

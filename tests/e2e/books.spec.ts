@@ -1,10 +1,15 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 import { AUTH_STATE, chooseFirstSituation, lendDialog } from "../support/e2e";
 
 test.use({ storageState: AUTH_STATE });
 
 test.describe.configure({ mode: "serial" });
+
+async function openDataBackup(page: Page) {
+  await page.getByRole("button", { name: "Minha conta" }).click();
+  return page.getByRole("region", { name: "Dados e backup" });
+}
 
 test.describe("acervo", () => {
   test.beforeEach(async ({ page }) => {
@@ -207,9 +212,10 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/");
+    const dataBackup = await openDataBackup(page);
     const [chooser] = await Promise.all([
       page.waitForEvent("filechooser"),
-      page.getByRole("button", { name: "Restaurar backup" }).click(),
+      dataBackup.getByRole("button", { name: "Restaurar backup" }).click(),
     ]);
     await chooser.setFiles({
       name: "backup.json",
@@ -232,9 +238,10 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/");
+    const dataBackup = await openDataBackup(page);
     const [chooser] = await Promise.all([
       page.waitForEvent("filechooser"),
-      page.getByRole("button", { name: "Restaurar backup" }).click(),
+      dataBackup.getByRole("button", { name: "Restaurar backup" }).click(),
     ]);
     await chooser.setFiles({
       name: "backup.json",
@@ -255,9 +262,10 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/");
+    const dataBackup = await openDataBackup(page);
     const [chooser] = await Promise.all([
       page.waitForEvent("filechooser"),
-      page.getByRole("button", { name: "Restaurar backup" }).click(),
+      dataBackup.getByRole("button", { name: "Restaurar backup" }).click(),
     ]);
     await chooser.setFiles({
       name: "backup.json",
@@ -357,14 +365,16 @@ test.describe("acervo", () => {
 
   test("exportar CSV e backup", async ({ page }) => {
     await page.goto("/");
+    await expect(page.locator("footer").getByRole("button")).toHaveCount(0);
+    const dataBackup = await openDataBackup(page);
     const [csv] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("button", { name: "Exportar Excel (CSV)" }).click(),
+      dataBackup.getByRole("button", { name: "Exportar Excel (CSV)" }).click(),
     ]);
     expect(csv.suggestedFilename()).toMatch(/^acervo-\d{4}-\d{2}-\d{2}\.csv$/);
     const [json] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("button", { name: "Salvar backup" }).click(),
+      dataBackup.getByRole("button", { name: "Salvar backup" }).click(),
     ]);
     expect(json.suggestedFilename()).toMatch(/\.json$/);
   });

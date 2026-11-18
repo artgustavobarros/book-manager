@@ -11,12 +11,20 @@ const run = (path: string, cookie?: string) =>
   );
 
 describe("proxy", () => {
-  it("libera só a estante pública com slug", () => {
+  it("libera documentos legais e só a estante pública com slug", () => {
+    expect(isPublicPath("/privacidade")).toBe(true);
+    expect(isPublicPath("/privacidade/")).toBe(true);
+    expect(isPublicPath("/termos")).toBe(true);
     expect(isPublicPath("/estante/ana-lima")).toBe(true);
     expect(isPublicPath("/estante/ana-lima/")).toBe(true);
     expect(isPublicPath("/estante")).toBe(false);
     expect(isPublicPath("/estante/")).toBe(false);
     expect(isPublicPath("/estante/ana/outra")).toBe(false);
+  });
+
+  it("deixa visitantes abrirem os documentos legais", () => {
+    expect(run("/privacidade").headers.get("location")).toBeNull();
+    expect(run("/termos").headers.get("location")).toBeNull();
   });
 
   it("deixa visitantes abrirem /estante/{slug} e manda /estante para a entrada", () => {

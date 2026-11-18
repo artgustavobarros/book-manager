@@ -64,7 +64,13 @@ export const CASES: Case[] = [
   {
     name: "planilha",
     route: "/",
-    act: (p) => p.getByRole("button", { name: "Sincronizar planilha" }).click(),
+    act: async (p) => {
+      await p.getByRole("button", { name: "Minha conta" }).click();
+      await p
+        .getByRole("dialog", { name: "Minha conta" })
+        .getByRole("button", { name: "Sincronizar planilha" })
+        .click();
+    },
   },
 ];
 

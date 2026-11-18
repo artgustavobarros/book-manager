@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 import { appUrl } from "@/lib/app-url";
 
 /**
- * A tela de entrada e as estantes publicadas são indexáveis. As outras páginas exigem
- * conta ou carregam um token de e-mail.
+ * A tela de entrada, os documentos legais e as estantes publicadas são indexáveis.
+ * As outras páginas exigem conta ou carregam um token de e-mail.
  * Assets e imagens de metadados ficam liberados para o robô renderizar a página.
  * Estantes públicas (`/estante/…`, nunca `/estante`) e suas imagens OG (`/og/`) ficam
  * liberadas para buscadores e robôs de preview quando a estante está publicada.
@@ -16,6 +16,8 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: [
         "/entrar",
+        "/privacidade",
+        "/termos",
         "/_next/",
         "/fonts/",
         "/icon.svg",
