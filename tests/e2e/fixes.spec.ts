@@ -261,13 +261,55 @@ test.describe("SEO (sem sessão)", () => {
     }
     const sitemap = await (await request.get("/sitemap.xml")).text();
     expect(sitemap).toContain(`<loc>${baseURL}/entrar</loc>`);
-    expect(sitemap.match(/<loc>/g)).toHaveLength(1);
+    expect(sitemap).toContain("<loc>" + baseURL + "/privacidade</loc>");
+    expect(sitemap).toContain("<loc>" + baseURL + "/termos</loc>");
+    expect(sitemap.match(/<loc>/g)).toHaveLength(3);
     const robots = await (await request.get("/robots.txt")).text();
     expect(robots).toMatch(/Disallow: \/\n/);
     // Estantes públicas e suas imagens OG ficam abertas aos robôs de preview; /estante não.
     expect(robots).toContain("Allow: /estante/\n");
     expect(robots).toContain("Allow: /og/\n");
+    expect(robots).toContain("Allow: /privacidade\n");
+    expect(robots).toContain("Allow: /termos\n");
     expect(robots).not.toMatch(/Allow: \/estante\n/);
+  });
+
+  test("documentos legais são públicos, indexáveis e ligados à entrada", async ({
+    page,
+    baseURL,
+  }) => {
+    await page.goto("/entrar");
+    await expect(
+      page.getByRole("link", { name: "Privacidade" })
+    ).toHaveAttribute("href", "/privacidade");
+    await expect(page.getByRole("link", { name: "Termos" })).toHaveAttribute(
+      "href",
+      "/termos"
+    );
+
+    await page.goto("/privacidade");
+    await expect(page).toHaveTitle(
+      "Política de Privacidade · Bodega Literária"
+    );
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Política de Privacidade" })
+    ).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      baseURL + "/privacidade"
+    );
+
+    await page.goto("/termos");
+    await expect(page).toHaveTitle("Termos de Serviço · Bodega Literária");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Termos de Serviço" })
+    ).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      baseURL + "/termos"
+    );
   });
 
   test("a entrada é indexável e tem metadados de compartilhamento", async ({

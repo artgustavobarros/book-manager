@@ -377,8 +377,12 @@ export function PublicShelf({
       </main>
 
       <footer className="border-line border-t">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-7 py-5 text-[13px] text-mute max-[640px]:px-4">
-          <span>Estante publicada com Bodega Literária</span>
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-7 py-5 text-[13px] text-mute max-[640px]:px-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span>Estante publicada com Bodega Literária</span>
+            <Link href="/privacidade">Privacidade</Link>
+            <Link href="/termos">Termos</Link>
+          </div>
           {viewer === "anon" ? (
             <Link
               className="font-semibold text-acc no-underline hover:text-acc2 hover:underline"

@@ -10,26 +10,37 @@ export function FieldLabel({
   error,
   className,
   children,
+  htmlFor,
 }: {
   label: React.ReactNode;
   error?: string;
   className?: string;
   children: React.ReactNode;
+  htmlFor?: string;
 }) {
-  return (
-    <label
-      className={cn(
-        "flex flex-col gap-2 font-medium text-mute text-xs",
-        className
+  const rootClassName = cn(
+    "flex flex-col gap-2 font-medium text-mute text-xs",
+    className
+  );
+  const content = (
+    <>
+      {htmlFor ? (
+        <label htmlFor={htmlFor}>{label}</label>
+      ) : (
+        <span>{label}</span>
       )}
-    >
-      {label}
       {children}
       {error ? (
         <span className="font-normal text-acc text-xs" role="alert">
           {error}
         </span>
       ) : null}
-    </label>
+    </>
+  );
+
+  return htmlFor ? (
+    <div className={rootClassName}>{content}</div>
+  ) : (
+    <label className={rootClassName}>{content}</label>
   );
 }

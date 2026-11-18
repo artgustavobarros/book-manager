@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 
 import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
@@ -15,6 +16,13 @@ export async function AuthShell({ children }: { children: React.ReactNode }) {
         <BrandWordmark size="lg" />
       </div>
       {children}
+      <nav
+        aria-label="Documentos legais"
+        className="flex gap-5 text-mute text-xs"
+      >
+        <Link href="/privacidade">Privacidade</Link>
+        <Link href="/termos">Termos</Link>
+      </nav>
     </div>
   );
 }

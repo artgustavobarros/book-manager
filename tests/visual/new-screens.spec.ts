@@ -75,10 +75,13 @@ for (const vp of VIEWPORTS) {
       test("toast de sucesso", async ({ page }) => {
         await prepare(page);
         await page.goto("/");
+        await page.getByRole("button", { name: "Minha conta" }).click();
+        const dialog = page.getByRole("dialog", { name: "Minha conta" });
         await Promise.all([
           page.waitForEvent("download"),
-          page.getByRole("button", { name: "Exportar Excel (CSV)" }).click(),
+          dialog.getByRole("button", { name: "Exportar Excel (CSV)" }).click(),
         ]);
+        await dialog.getByRole("button", { name: "Fechar" }).click();
         await expect(page.getByText("Planilha CSV exportada")).toBeVisible();
         await snap(page, `toast-sucesso-${vp.name}`);
       });
@@ -86,9 +89,11 @@ for (const vp of VIEWPORTS) {
       test("toast de erro", async ({ page }) => {
         await prepare(page);
         await page.goto("/");
+        await page.getByRole("button", { name: "Minha conta" }).click();
+        const dialog = page.getByRole("dialog", { name: "Minha conta" });
         const [chooser] = await Promise.all([
           page.waitForEvent("filechooser"),
-          page.getByRole("button", { name: "Restaurar backup" }).click(),
+          dialog.getByRole("button", { name: "Restaurar backup" }).click(),
         ]);
         await chooser.setFiles({
           name: "backup.json",

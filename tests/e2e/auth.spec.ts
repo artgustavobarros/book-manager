@@ -9,6 +9,20 @@ import {
 } from "../support/e2e";
 
 test.describe("autenticação", () => {
+  test("senha pode ser exibida e ocultada", async ({ page }) => {
+    await page.goto("/entrar");
+    const password = page.getByLabel("Senha", { exact: true });
+    await password.fill("senha-visível-123");
+    await expect(password).toHaveAttribute("type", "password");
+
+    await page.getByRole("button", { name: "Mostrar senha" }).click();
+    await expect(password).toHaveAttribute("type", "text");
+    await expect(password).toHaveValue("senha-visível-123");
+
+    await page.getByRole("button", { name: "Ocultar senha" }).click();
+    await expect(password).toHaveAttribute("type", "password");
+  });
+
   test("cadastro abre o Painel e confirmação em outra aba remove o aviso", async ({
     page,
   }) => {

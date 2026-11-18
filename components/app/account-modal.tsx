@@ -7,7 +7,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { Button } from "@/components/ui/button";
 import { Modal, ModalClose, useModalDraft } from "@/components/ui/dialog";
+import { PasswordInput } from "@/components/ui/password-input";
+import { useBackup } from "@/hooks/use-backup";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/auth-errors";
@@ -189,38 +192,38 @@ function PasswordSection() {
       )}
     >
       <span className={sectionTitle}>Alterar senha</span>
-      <label className={label}>
-        Senha atual
-        <input
+      <div className={label}>
+        <label htmlFor="account-current-password">Senha atual</label>
+        <PasswordInput
           {...form.register("current")}
           aria-invalid={!!e.current}
           autoComplete="current-password"
-          className={input}
-          type="password"
+          className="h-10"
+          id="account-current-password"
         />
-      </label>
+      </div>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
-        <label className={label}>
-          Nova senha
-          <input
+        <div className={label}>
+          <label htmlFor="account-new-password">Nova senha</label>
+          <PasswordInput
             {...form.register("password")}
             aria-invalid={!!e.password}
             autoComplete="new-password"
-            className={input}
+            className="h-10"
+            id="account-new-password"
             placeholder={`Mínimo ${MIN_PASSWORD} caracteres`}
-            type="password"
           />
-        </label>
-        <label className={label}>
-          Confirmar nova senha
-          <input
+        </div>
+        <div className={label}>
+          <label htmlFor="account-confirm-password">Confirmar nova senha</label>
+          <PasswordInput
             {...form.register("confirm")}
             aria-invalid={!!e.confirm}
             autoComplete="new-password"
-            className={input}
-            type="password"
+            className="h-10"
+            id="account-confirm-password"
           />
-        </label>
+        </div>
       </div>
       {firstError ? <Msg>{firstError}</Msg> : null}
       <div className="flex justify-end">
@@ -330,6 +333,47 @@ function GoogleSection() {
   );
 }
 
+function DataBackupSection() {
+  const app = useApp();
+  const backup = useBackup();
+
+  return (
+    <section aria-label="Dados e backup" className="flex flex-col gap-3">
+      <span className={sectionTitle}>Dados e backup</span>
+      <p className="m-0 text-mute text-sm leading-[1.5]">
+        Exporte seu acervo, restaure um backup ou atualize os livros a partir de
+        uma planilha.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          onClick={() => {
+            app.setAccountOpen(false);
+            app.setSyncOpen(true);
+          }}
+          variant="neutral"
+        >
+          Sincronizar planilha
+        </Button>
+        <Button onClick={backup.exportCsv} variant="neutral">
+          Exportar Excel (CSV)
+        </Button>
+        <Button onClick={backup.exportJson} variant="neutral">
+          Salvar backup
+        </Button>
+        <Button
+          onClick={() => {
+            app.setAccountOpen(false);
+            backup.pickRestore();
+          }}
+          variant="neutral"
+        >
+          Restaurar backup
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 function DeleteSection() {
   const app = useApp();
   const router = useRouter();
@@ -345,19 +389,22 @@ function DeleteSection() {
         desfazer; salve um backup antes, se quiser.
       </span>
       {app.hasPassword ? (
-        <label className={label}>
-          Confirme com sua senha
-          <input
+        <div className={label}>
+          <label htmlFor="delete-account-password">
+            Confirme com sua senha
+          </label>
+          <PasswordInput
             autoComplete="current-password"
-            className={input}
+            className="h-10"
+            id="delete-account-password"
+            name="delete-account-password"
             onChange={(e) => {
               setPassword(e.target.value);
               setMsg("");
             }}
-            type="password"
             value={password}
           />
-        </label>
+        </div>
       ) : null}
       {msg ? <Msg>{msg}</Msg> : null}
       <div className="flex justify-end">
@@ -444,6 +491,8 @@ function AccountBody() {
       <PasswordSection />
       <Divider />
       <GoogleSection />
+      <Divider />
+      <DataBackupSection />
       <Divider />
       <SheetExportSection />
       <Divider />
