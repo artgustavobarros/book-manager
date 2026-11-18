@@ -108,6 +108,36 @@ describe("filterBooks", () => {
     });
     expect(titles(read2023)).toEqual(["1984", "Quarto de despejo"]);
   });
+
+  it("filtra os dados faltantes sem confundir leitura com aquisição", () => {
+    const withoutReadYear = makeBook({
+      reading: "lido",
+      acquiredOn: "2024-02-10",
+    });
+    const withoutAcquisition = makeBook({ reading: "lido", yearRead: 2024 });
+    const unread = makeBook({ reading: "nao-lido" });
+    const list = [withoutReadYear, withoutAcquisition, unread];
+
+    expect(
+      filterBooks(list, {
+        ...DEFAULT_SHELF,
+        facet: parseFacet("dados-faltantes:ano-leitura"),
+      })
+    ).toEqual([withoutReadYear]);
+    expect(
+      filterBooks(list, {
+        ...DEFAULT_SHELF,
+        facet: parseFacet("dados-faltantes:data-aquisicao"),
+      })
+    ).toEqual([withoutAcquisition, unread]);
+    expect(
+      filterBooks(list, {
+        ...DEFAULT_SHELF,
+        reading: "lido",
+        facet: parseFacet("dados-faltantes:data-aquisicao"),
+      })
+    ).toEqual([withoutAcquisition]);
+  });
 });
 
 describe("sortBooks", () => {
@@ -255,6 +285,20 @@ describe("facetas e URL", () => {
     expect(
       facetTest({ kind: "autor", value: "machado de assis" })(books[2])
     ).toBe(true);
+  });
+
+  it("abre a Estante com a faceta de data faltante e o chip legível", () => {
+    const href = shelfHref({
+      reading: "lido",
+      facet: { kind: "dados-faltantes", value: "ano-leitura" },
+    });
+    const { facet, reading } = parseShelfParams(
+      new URL(href, "http://app").searchParams
+    );
+    expect(reading).toBe("lido");
+    expect(facet).toEqual({ kind: "dados-faltantes", value: "ano-leitura" });
+    expect(facet && facetLabel(facet)).toBe("Sem ano de leitura");
+    expect(parseFacet("dados-faltantes:outra-coisa")).toBeNull();
   });
 
   it("faz ida e volta do estado, omitindo padrões", () => {

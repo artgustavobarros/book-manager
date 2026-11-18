@@ -2,7 +2,12 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { makeBook, referenceBooks } from "@/tests/support/reference";
 
-import { groupBy, insights, scopeShelfReading } from "./insights";
+import {
+  acquisitionsByYear,
+  groupBy,
+  insights,
+  scopeShelfReading,
+} from "./insights";
 import { filterBooks } from "./shelf";
 import type { Book } from "./types";
 
@@ -28,13 +33,12 @@ describe("insights", () => {
     const d = insights([], {
       scope: "todos",
       expanded: {},
-      assignAll: false,
-      assignMore: false,
       year: 2026,
     });
     expect(d.donutBg).toBe("var(--soft)");
+    expect(d.acquisitionsByYear).toEqual([]);
     expect(d.yearCols).toEqual([]);
-    expect(d.assignEmpty).toBe(true);
+    expect(d.missingReadYearCount).toBe(0);
   });
 
   it("lido emprestado conta como lido nos gráficos", () => {
@@ -58,14 +62,64 @@ describe("insights", () => {
       {
         scope: "lidos",
         expanded: {},
-        assignAll: false,
-        assignMore: false,
         year: 2026,
       }
     );
     expect(d.yearCols).toMatchObject([{ year: 2026, count: 2, pages: 300 }]);
-    expect(d.assignReadCount).toBe(2);
+    expect(d.missingReadYearCount).toBe(0);
     expect(d.thermoLabel).toBe("300 de ~350 páginas do acervo");
+  });
+});
+
+describe("livros adquiridos por ano", () => {
+  const opts = {
+    expanded: {},
+    year: 2026,
+  } as const;
+
+  const list = [
+    makeBook({ acquiredOn: "2026-01-01", reading: "lido", yearRead: 2025 }),
+    makeBook({ acquiredOn: "2024-12-31", reading: "lido" }),
+    makeBook({ acquiredOn: "2026-08-18", reading: "nao-lido" }),
+    makeBook({ acquiredOn: null, reading: "lido", yearRead: 2024 }),
+  ];
+
+  it("agrupa pela data de aquisição e ordena os anos", () => {
+    expect(
+      insights(list, { ...opts, scope: "todos" }).acquisitionsByYear
+    ).toEqual([
+      { year: 2024, count: 1 },
+      { year: 2025, count: 0 },
+      { year: 2026, count: 2 },
+    ]);
+  });
+
+  it("recalcula as quantidades no escopo dos lidos", () => {
+    expect(
+      insights(list, { ...opts, scope: "lidos" }).acquisitionsByYear
+    ).toEqual([
+      { year: 2024, count: 1 },
+      { year: 2025, count: 0 },
+      { year: 2026, count: 1 },
+    ]);
+  });
+
+  it("fica vazio quando não há datas de aquisição no escopo", () => {
+    expect(
+      insights([list[3]], { ...opts, scope: "todos" }).acquisitionsByYear
+    ).toEqual([]);
+  });
+
+  it("mostra apenas anos registrados quando o intervalo é muito longo", () => {
+    expect(
+      acquisitionsByYear([
+        makeBook({ acquiredOn: "9999-01-01" }),
+        makeBook({ acquiredOn: "0001-01-01" }),
+      ])
+    ).toEqual([
+      { year: 1, count: 1 },
+      { year: 9999, count: 1 },
+    ]);
   });
 });
 
@@ -74,8 +128,6 @@ describe("dataKpis", () => {
     insights(list, {
       scope,
       expanded: {},
-      assignAll: false,
-      assignMore: false,
       year: 2026,
     }).dataKpis;
   const kpi = (list: Book[], label: string) => {
@@ -222,8 +274,6 @@ describe("atalho dos gráficos para a Estante", () => {
       const [bar] = insights(list, {
         scope,
         expanded: {},
-        assignAll: false,
-        assignMore: false,
         year: 2026,
       }).genre.list;
       const shown = filterBooks(list, {
@@ -248,8 +298,6 @@ describe("Leitura e Situação", () => {
   ];
   const opts = {
     expanded: {},
-    assignAll: false,
-    assignMore: false,
     year: 2026,
   } as const;
 
@@ -309,14 +357,11 @@ describe("Dados: acervo de referência", () => {
   // Os campos que eram conferidos contra o standalone (que saiu do repositório).
   // Regravar só de propósito: pnpm test -u
   const variants = [
-    { scope: "todos", expanded: {}, assignAll: false, assignMore: false },
+    { scope: "todos", expanded: {} },
     {
       scope: "lidos",
       expanded: { genre: true, nationality: true, publisher: true },
-      assignAll: true,
-      assignMore: false,
     },
-    { scope: "todos", expanded: {}, assignAll: true, assignMore: true },
   ] as const;
 
   for (const v of variants) {
@@ -337,11 +382,7 @@ describe("Dados: acervo de referência", () => {
         pub: bars(d.pub),
         yearCols: d.yearCols.map((c) => [c.year, c.count, c.sub, c.pct]),
         yearBadge: d.yearBadge,
-        assignRows: d.assignRows.map((r) => [
-          r.book.title,
-          r.years.map((y) => y.on),
-        ]),
-        assign: [d.assignEmpty, d.assignMoreShow, d.assignMoreLabel],
+        missingReadYearCount: d.missingReadYearCount,
       }).toMatchSnapshot();
     });
   }
