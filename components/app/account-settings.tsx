@@ -1,14 +1,23 @@
 "use client";
 
+import { Tabs } from "@base-ui/react/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useIsMutating } from "@tanstack/react-query";
 import { cn } from "cn";
+import {
+  ArrowLeft,
+  Database,
+  KeyRound,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Modal, ModalClose, useModalDraft } from "@/components/ui/dialog";
+import { Modal, ModalClose } from "@/components/ui/dialog";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useBackup } from "@/hooks/use-backup";
 import { useSingleFlight } from "@/hooks/use-single-flight";
@@ -25,6 +34,7 @@ import {
 } from "@/lib/validation/auth";
 
 import { useApp } from "./app-provider";
+import { PageMain } from "./app-shell";
 import { Avatar } from "./avatar";
 import { SheetExportSection } from "./sheet-export-section";
 import { toast } from "./toast";
@@ -32,10 +42,17 @@ import { toast } from "./toast";
 const input =
   "h-10 rounded-lg border border-line2 bg-card px-3 text-sm text-ink outline-none placeholder:text-[light-dark(#757575,#a9a9a9)] focus:border-ink aria-invalid:border-acc";
 const label = "flex flex-col gap-2 text-xs font-medium text-mute";
-const sectionTitle = "text-xs font-bold tracking-[.1em] text-mute uppercase";
+const sectionTitle = "font-semibold text-base";
 
-function Divider() {
-  return <div className="h-px bg-line" />;
+function useUnsavedChanges(dirty: boolean) {
+  useEffect(() => {
+    if (!dirty) {
+      return;
+    }
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 }
 
 function Msg({
@@ -65,7 +82,7 @@ function ProfileSection() {
   const firstError =
     form.formState.errors.name?.message ?? form.formState.errors.email?.message;
   const submitOnce = useSingleFlight();
-  useModalDraft(form.formState.isDirty);
+  useUnsavedChanges(form.formState.isDirty);
 
   return (
     <form
@@ -103,32 +120,33 @@ function ProfileSection() {
         })
       )}
     >
-      <span className={sectionTitle}>Perfil</span>
-      <label className={label}>
-        Nome
-        <input
-          {...form.register("name")}
-          aria-invalid={!!form.formState.errors.name}
-          autoComplete="name"
-          className={input}
-        />
-      </label>
-      <label className={label}>
-        E-mail
-        <input
-          {...form.register("email")}
-          aria-invalid={!!form.formState.errors.email}
-          autoComplete="email"
-          className={input}
-          type="email"
-        />
-      </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className={label}>
+          Nome
+          <input
+            {...form.register("name")}
+            aria-invalid={!!form.formState.errors.name}
+            autoComplete="name"
+            className={input}
+          />
+        </label>
+        <label className={label}>
+          E-mail
+          <input
+            {...form.register("email")}
+            aria-invalid={!!form.formState.errors.email}
+            autoComplete="email"
+            className={input}
+            type="email"
+          />
+        </label>
+      </div>
       {firstError ? (
         <Msg>{firstError}</Msg>
       ) : msg ? (
         <Msg tone={msg.tone}>{msg.text}</Msg>
       ) : null}
-      <div className="flex justify-end">
+      <div className="flex">
         <button
           className="h-10 rounded-lg border-0 bg-acc px-5 font-semibold text-onacc text-sm hover:bg-acc2"
           disabled={form.formState.isSubmitting}
@@ -154,12 +172,12 @@ function PasswordSection() {
     e.confirm?.message ??
     e.root?.message;
   const submitOnce = useSingleFlight();
-  useModalDraft(form.formState.isDirty);
+  useUnsavedChanges(form.formState.isDirty);
 
   if (!app.hasPassword) {
     return (
       <div className="flex flex-col gap-3">
-        <span className={sectionTitle}>Alterar senha</span>
+        <h3 className={sectionTitle}>Alterar senha</h3>
         <span className="text-mute text-sm leading-[1.5]">
           Você entra com o Google; esta conta não tem senha própria.
         </span>
@@ -191,7 +209,7 @@ function PasswordSection() {
         })
       )}
     >
-      <span className={sectionTitle}>Alterar senha</span>
+      <h3 className={sectionTitle}>Alterar senha</h3>
       <div className={label}>
         <label htmlFor="account-current-password">Senha atual</label>
         <PasswordInput
@@ -246,7 +264,7 @@ function GoogleSection() {
   const [busy, setBusy] = useState(false);
   return (
     <div className="flex flex-col gap-3">
-      <span className={sectionTitle}>Conta Google</span>
+      <h3 className={sectionTitle}>Conta Google</h3>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-ink text-sm">
           {linked
@@ -311,7 +329,7 @@ function GoogleSection() {
               try {
                 const { error } = await authClient.linkSocial({
                   provider: "google",
-                  callbackURL: "/",
+                  callbackURL: "/configuracoes?secao=acesso",
                 });
                 if (error) {
                   setBusy(false);
@@ -339,19 +357,12 @@ function DataBackupSection() {
 
   return (
     <section aria-label="Dados e backup" className="flex flex-col gap-3">
-      <span className={sectionTitle}>Dados e backup</span>
       <p className="m-0 text-mute text-sm leading-[1.5]">
         Exporte seu acervo, restaure um backup ou atualize os livros a partir de
         uma planilha.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button
-          onClick={() => {
-            app.setAccountOpen(false);
-            app.setSyncOpen(true);
-          }}
-          variant="neutral"
-        >
+        <Button onClick={() => app.setSyncOpen(true)} variant="neutral">
           Sincronizar planilha
         </Button>
         <Button onClick={backup.exportCsv} variant="neutral">
@@ -360,13 +371,7 @@ function DataBackupSection() {
         <Button onClick={backup.exportJson} variant="neutral">
           Salvar backup
         </Button>
-        <Button
-          onClick={() => {
-            app.setAccountOpen(false);
-            backup.pickRestore();
-          }}
-          variant="neutral"
-        >
+        <Button onClick={backup.pickRestore} variant="neutral">
           Restaurar backup
         </Button>
       </div>
@@ -377,89 +382,125 @@ function DataBackupSection() {
 function DeleteSection() {
   const app = useApp();
   const router = useRouter();
+  const trigger = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const submitOnce = useSingleFlight();
+  const warning =
+    "Apaga sua conta, seus livros, suas metas e configurações. Esta ação não pode ser desfeita.";
+
+  function close() {
+    if (!busy) {
+      setOpen(false);
+      setPassword("");
+      setMsg("");
+    }
+  }
+
+  async function deleteAccount() {
+    setMsg("");
+    setBusy(true);
+    let result: Awaited<ReturnType<typeof authClient.deleteUser>>;
+    try {
+      result = await authClient.deleteUser(app.hasPassword ? { password } : {});
+    } catch {
+      setBusy(false);
+      return setMsg(NETWORK_ERROR_MESSAGE);
+    }
+
+    const { error } = result;
+    if (error) {
+      setBusy(false);
+      return setMsg(
+        error.code === "INVALID_PASSWORD"
+          ? "Senha incorreta."
+          : error.code === "SESSION_EXPIRED"
+            ? "Por segurança, saia e entre de novo antes de excluir a conta."
+            : authErrorMessage(error)
+      );
+    }
+    // A conta deixou de existir: o acervo em cache não pode ficar.
+    await clearOfflineData(app.user.id);
+    router.replace("/entrar?aviso=conta-excluida");
+    router.refresh();
+  }
+
   return (
-    <div className="flex flex-col gap-3">
-      <span className={sectionTitle}>Excluir conta</span>
-      <span className="text-mute text-sm leading-[1.5]">
-        Apaga a conta e todos os seus livros, metas e configurações. Não dá para
-        desfazer; salve um backup antes, se quiser.
-      </span>
-      {app.hasPassword ? (
-        <div className={label}>
-          <label htmlFor="delete-account-password">
-            Confirme com sua senha
-          </label>
-          <PasswordInput
-            autoComplete="current-password"
-            className="h-10"
-            id="delete-account-password"
-            name="delete-account-password"
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setMsg("");
-            }}
-            value={password}
-          />
-        </div>
-      ) : null}
-      {msg ? <Msg>{msg}</Msg> : null}
-      <div className="flex justify-end">
-        <button
-          className="h-10 rounded-lg border-0 bg-transparent px-3 font-semibold text-acc text-sm hover:bg-hov"
-          disabled={busy}
-          onClick={async () => {
-            if (app.hasPassword && !password) {
-              return setMsg("Informe sua senha.");
-            }
-            if (!confirm) {
-              return setConfirm(true);
-            }
-            setBusy(true);
-            let result: Awaited<ReturnType<typeof authClient.deleteUser>>;
-            try {
-              result = await authClient.deleteUser(
-                app.hasPassword ? { password } : {}
-              );
-            } catch {
-              setConfirm(false);
-              return setMsg(NETWORK_ERROR_MESSAGE);
-            } finally {
-              setBusy(false);
-            }
-            const { error } = result;
-            if (error) {
-              setConfirm(false);
-              return setMsg(
-                error.code === "INVALID_PASSWORD"
-                  ? "Senha incorreta."
-                  : error.code === "SESSION_EXPIRED"
-                    ? "Por segurança, saia e entre de novo antes de excluir a conta."
-                    : authErrorMessage(error)
-              );
-            }
-            // A conta deixou de existir: o acervo em cache não pode ficar.
-            await clearOfflineData(app.user.id);
-            router.replace("/entrar?aviso=conta-excluida");
-            router.refresh();
-          }}
-          type="button"
-        >
-          {busy
-            ? "Excluindo…"
-            : confirm
-              ? "Confirmar exclusão"
-              : "Excluir conta"}
-        </button>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-1">
+        <h3 className={sectionTitle}>Excluir conta</h3>
+        <p className="text-mute text-sm leading-normal">{warning}</p>
       </div>
+      <Button onClick={() => setOpen(true)} ref={trigger} variant="danger">
+        Excluir conta
+      </Button>
+      <Modal
+        className="max-w-[460px]"
+        description={warning}
+        initialFocus={app.hasPassword ? "#delete-account-password" : undefined}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          trigger.current?.focus();
+        }}
+        onOpenChange={(next) => {
+          if (!next) {
+            close();
+          }
+        }}
+        open={open}
+        title="Excluir conta"
+      >
+        <form
+          action={() => submitOnce(deleteAccount)}
+          className="flex flex-col gap-4 p-6"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-bold font-title text-xl">Excluir conta</h2>
+            {busy ? null : <ModalClose />}
+          </div>
+          <p className="text-mute text-sm leading-normal">{warning}</p>
+          {app.hasPassword ? (
+            <div className={label}>
+              <label htmlFor="delete-account-password">
+                Confirme com sua senha
+              </label>
+              <PasswordInput
+                aria-invalid={msg === "Senha incorreta."}
+                autoComplete="current-password"
+                className="h-10"
+                disabled={busy}
+                id="delete-account-password"
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setMsg("");
+                }}
+                required
+                value={password}
+              />
+            </div>
+          ) : null}
+          {msg ? (
+            <p className="text-acc text-sm" role="alert">
+              {msg}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button disabled={busy} onClick={close} variant="neutral">
+              Cancelar
+            </Button>
+            <Button disabled={busy} type="submit">
+              {busy ? "Excluindo…" : "Confirmar exclusão"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
 
-function AccountBody() {
+function SessionSection() {
   const app = useApp();
   const router = useRouter();
   const [leaving, setLeaving] = useState(false);
@@ -469,87 +510,206 @@ function AccountBody() {
   const [avisado, setAvisado] = useState(false);
   const vaiDescartar = pendentes > 0 && avisado;
   return (
-    <div className="flex flex-col gap-6 px-7 py-6">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar
-            className="size-11 font-bold text-base"
-            image={app.user.image}
-            initials={app.initials}
-          />
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <h2 className="m-0 font-bold font-title text-xl">Minha conta</h2>
-            <span className="truncate text-mute text-sm">
-              {app.user.email || "Sem e-mail cadastrado"}
-            </span>
-          </div>
-        </div>
-        <ModalClose />
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-1">
+        <h3 className={sectionTitle}>Sessão</h3>
+        <p className="text-mute text-sm leading-normal">
+          {vaiDescartar
+            ? "Você tem alterações que ainda não foram enviadas. Se sair agora, elas serão perdidas."
+            : "Encerre a sessão neste dispositivo."}
+        </p>
       </div>
-      <ProfileSection />
-      <Divider />
-      <PasswordSection />
-      <Divider />
-      <GoogleSection />
-      <Divider />
-      <DataBackupSection />
-      <Divider />
-      <SheetExportSection />
-      <Divider />
-      <DeleteSection />
-      <Divider />
-      <div className="flex flex-col gap-2">
-        {vaiDescartar ? (
-          <span className="text-mute text-sm leading-[1.5]">
-            Você tem alterações que ainda não foram enviadas. Se sair agora,
-            elas serão perdidas.
-          </span>
-        ) : null}
-        <button
-          className="self-start border-0 bg-transparent p-0 font-semibold text-mute text-sm hover:text-acc disabled:cursor-wait disabled:opacity-60"
-          disabled={leaving}
-          onClick={async () => {
-            // Primeiro clique com fila pendente só avisa; o segundo sai.
-            if (pendentes > 0 && !avisado) {
-              return setAvisado(true);
-            }
-            setLeaving(true);
+      <Button
+        disabled={leaving}
+        onClick={async () => {
+          // Primeiro clique com fila pendente só avisa; o segundo sai.
+          if (pendentes > 0 && !avisado) {
+            return setAvisado(true);
+          }
+          setLeaving(true);
+          try {
             const { error } = await authClient.signOut();
             if (error) {
               setLeaving(false);
               return toast(authErrorMessage(error), { type: "error" });
             }
-            // Sair tem de levar embora o que ficou no navegador: a fila
-            // offline e o acervo em cache seguiam no IndexedDB após o logout.
-            await clearOfflineData(app.user.id);
-            router.replace("/entrar");
-            router.refresh();
-          }}
-          type="button"
-        >
-          {leaving
-            ? "Saindo…"
-            : vaiDescartar
-              ? "Sair e descartar"
-              : "Sair da conta"}
-        </button>
-      </div>
+          } catch {
+            setLeaving(false);
+            return toast(NETWORK_ERROR_MESSAGE, { type: "error" });
+          }
+          // Sair tem de levar embora o que ficou no navegador: a fila
+          // offline e o acervo em cache seguiam no IndexedDB após o logout.
+          await clearOfflineData(app.user.id);
+          router.replace("/entrar");
+          router.refresh();
+        }}
+        variant="neutral"
+      >
+        {leaving
+          ? "Saindo…"
+          : vaiDescartar
+            ? "Sair e descartar"
+            : "Sair da conta"}
+      </Button>
     </div>
   );
 }
 
-export function AccountModal() {
+const sections = [
+  {
+    id: "perfil",
+    title: "Perfil",
+    description: "Nome e e-mail da sua conta.",
+    icon: UserRound,
+  },
+  {
+    id: "acesso",
+    title: "Acesso",
+    description: "Senha e vínculo com o Google.",
+    icon: KeyRound,
+  },
+  {
+    id: "dados",
+    title: "Dados e backup",
+    description: "Sincronização, arquivos e cópia semanal.",
+    icon: Database,
+  },
+  {
+    id: "conta",
+    title: "Gerenciar conta",
+    description: "Encerre a sessão ou exclua sua conta.",
+    icon: ShieldCheck,
+  },
+] as const;
+
+function showSheetExportResult() {
+  const url = new URL(window.location.href);
+  const outcome = url.searchParams.get("sheetExport");
+  if (!outcome) {
+    return;
+  }
+  url.searchParams.delete("sheetExport");
+  window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  toast(
+    outcome === "ok"
+      ? "Cópia semanal conectada"
+      : outcome === "denied"
+        ? "Conexão com Google cancelada"
+        : "Confira a cópia semanal na sua conta"
+  );
+}
+
+export function AccountSettings({
+  initialSection,
+}: {
+  initialSection?: string;
+}) {
   const app = useApp();
+  const section =
+    sections.find((item) => item.id === initialSection)?.id ?? "perfil";
+  useEffect(showSheetExportResult, []);
+
+  const panels = {
+    perfil: <ProfileSection />,
+    acesso: (
+      <>
+        <PasswordSection />
+        <div className="border-line border-t pt-5">
+          <GoogleSection />
+        </div>
+      </>
+    ),
+    dados: (
+      <>
+        <DataBackupSection />
+        <div className="border-line border-t pt-5">
+          <SheetExportSection />
+        </div>
+      </>
+    ),
+    conta: (
+      <>
+        <SessionSection />
+        <div className="border-line border-t pt-5">
+          <DeleteSection />
+        </div>
+      </>
+    ),
+  };
+
   return (
-    <Modal
-      className="max-w-[520px]"
-      guardChanges
-      onOpenChange={app.setAccountOpen}
-      open={app.accountOpen}
-      title="Minha conta"
-      veilClassName="z-[35] py-20"
-    >
-      {app.accountOpen ? <AccountBody /> : null}
-    </Modal>
+    <PageMain>
+      <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5">
+        <div className="border-line border-b pb-2">
+          <Button asChild size="none" variant="link">
+            <Link className="min-h-11 text-sm" href="/">
+              <ArrowLeft aria-hidden="true" className="size-4" />
+              Voltar ao painel
+            </Link>
+          </Button>
+        </div>
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <h1 className="font-bold font-title text-3xl">Configurações</h1>
+            <p className="text-mute text-sm leading-normal">
+              Gerencie seu perfil, seu acesso e os dados do acervo.
+            </p>
+          </div>
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar
+              className="size-10 font-semibold text-sm"
+              image={app.user.image}
+              initials={app.initials}
+            />
+            <div className="min-w-0">
+              <p className="break-words font-semibold text-sm">
+                {app.user.name}
+              </p>
+              <p className="break-all text-mute text-xs">{app.user.email}</p>
+            </div>
+          </div>
+        </header>
+        <Tabs.Root
+          className="grid items-start gap-4 md:grid-cols-[224px_minmax(0,1fr)]"
+          defaultValue={section}
+          key={section}
+          orientation="vertical"
+        >
+          <Tabs.List
+            aria-label="Categorias de configurações"
+            className="grid grid-cols-2 gap-1 rounded-xl bg-soft p-2 md:grid-cols-1"
+          >
+            {sections.map(({ id, title, icon: Icon }) => (
+              <Tabs.Tab
+                className="flex min-h-11 items-center gap-2 rounded-lg px-3 text-left font-semibold text-mute text-sm hover:bg-hov hover:text-ink data-active:bg-card data-active:text-acc"
+                key={id}
+                value={id}
+              >
+                <Icon aria-hidden="true" className="size-4 shrink-0" />
+                {title}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          <div className="min-w-0">
+            {sections.map(({ id, title, description }) => (
+              <Tabs.Panel
+                className="flex flex-col gap-5 rounded-xl border border-line bg-card p-4 md:p-6"
+                keepMounted={id === "perfil" || id === "acesso"}
+                key={id}
+                value={id}
+              >
+                <div className="flex flex-col gap-1">
+                  <h2 className="font-semibold font-title text-xl">{title}</h2>
+                  <p className="text-mute text-sm leading-normal">
+                    {description}
+                  </p>
+                </div>
+                {panels[id]}
+              </Tabs.Panel>
+            ))}
+          </div>
+        </Tabs.Root>
+      </div>
+    </PageMain>
   );
 }

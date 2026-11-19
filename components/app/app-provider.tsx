@@ -82,7 +82,6 @@ type ModalState =
   | null;
 
 interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
-  accountOpen: boolean;
   changeGoal: (delta: number) => void;
   clearRouteTransition: () => void;
   closeLend: () => void;
@@ -104,7 +103,6 @@ interface AppContextValue extends Omit<AppInitial, "books" | "goal"> {
   /** Transição de rota em andamento (exibe o skeleton de destino imediatamente em 3G). */
   pendingNav: { from: string; to: string } | null;
   returnBook: (book: Book) => void;
-  setAccountOpen: (v: boolean) => void;
   setPublicShelf: (state: PublicShelfState) => void;
 
   setReading: (book: Book, reading: Reading) => void;
@@ -180,7 +178,6 @@ function AppState({
   }, []);
   const [modal, setModal] = useState<ModalState>(null);
   const [surpriseOpen, setSurpriseOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [lendFor, setLendFor] = useState<Book | null>(null);
   const [publicShelf, setPublicShelf] = useState(initial.publicShelf);
@@ -342,8 +339,6 @@ function AppState({
       closeModal: () => setModal(null),
       surpriseOpen,
       setSurpriseOpen,
-      accountOpen,
-      setAccountOpen,
       syncOpen,
       setSyncOpen,
       lendFor,
@@ -407,7 +402,6 @@ function AppState({
       shareScope,
       modal,
       surpriseOpen,
-      accountOpen,
       syncOpen,
       lendFor,
       setReading,

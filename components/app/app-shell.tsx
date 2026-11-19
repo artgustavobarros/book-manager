@@ -11,34 +11,13 @@ import { useApp } from "./app-provider";
 import { EmailVerificationBanner } from "./email-verification-banner";
 import { MobileFabs } from "./mobile-fabs";
 import { RestoreHost } from "./restore-host";
-import { Toaster, toast } from "./toast";
-
-function SheetExportReturn() {
-  const app = useApp();
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const outcome = url.searchParams.get("sheetExport");
-    if (!outcome) {
-      return;
-    }
-    url.searchParams.delete("sheetExport");
-    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
-    app.setAccountOpen(true);
-    toast(
-      outcome === "ok"
-        ? "Cópia semanal conectada"
-        : outcome === "denied"
-          ? "Conexão com Google cancelada"
-          : "Confira a cópia semanal na sua conta"
-    );
-  }, [app.setAccountOpen]);
-  return null;
-}
+import { Toaster } from "./toast";
 
 /** Estrutura das páginas autenticadas (Acervo.dc.html, bloco `authed`). */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showMobileFabs = pathname !== "/dados/previa";
+  const showMobileFabs =
+    pathname !== "/dados/previa" && pathname !== "/configuracoes";
   const { clearRouteTransition, pendingNav, user } = useApp();
   const pendingTarget =
     pendingNav && pendingNav.from === pathname && pendingNav.to !== pathname
@@ -81,7 +60,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Toaster pendingVerification={!user.emailVerified} />
       <RestoreHost />
       <AppModals />
-      <SheetExportReturn />
     </div>
   );
 }

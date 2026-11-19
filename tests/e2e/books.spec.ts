@@ -7,7 +7,8 @@ test.use({ storageState: AUTH_STATE });
 test.describe.configure({ mode: "serial" });
 
 async function openDataBackup(page: Page) {
-  await page.getByRole("button", { name: "Minha conta" }).click();
+  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.getByRole("tab", { name: "Dados e backup" }).click();
   return page.getByRole("region", { name: "Dados e backup" });
 }
 
@@ -255,6 +256,7 @@ test.describe("acervo", () => {
       )
     ).toBeVisible();
     await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await page.getByRole("link", { name: "Voltar ao painel" }).click();
     await expect(page.getByText("Livros no acervo")).toBeVisible();
   });
 

@@ -19,8 +19,8 @@ test("avatar mostra a foto salva e usa iniciais quando ela falha", async ({
   await signIn(page, "zero.novato@exemplo.com", "senha-forte-123");
   await expect(page).toHaveURL("/");
 
-  const button = page.getByRole("button", { name: "Minha conta" });
-  await expect(button).toContainText("ZN");
+  const settings = page.getByRole("link", { name: "Configurações" });
+  await expect(settings).toContainText("ZN");
 
   async function setImage(image: string) {
     const status = await page.evaluate(async (url) => {
@@ -36,19 +36,18 @@ test("avatar mostra a foto salva e usa iniciais quando ela falha", async ({
   }
 
   await setImage("https://avatar.example.test/foto.png");
-  await expect(button.locator("img")).toBeVisible();
+  await expect(settings.locator("img")).toBeVisible();
   await expect
     .poll(() =>
-      button
+      settings
         .locator("img")
         .evaluate((image) => (image as HTMLImageElement).naturalWidth)
     )
     .toBeGreaterThan(0);
-  await button.click();
-  await expect(page.getByRole("dialog").locator("img")).toBeVisible();
+  await settings.click();
+  await expect(page.getByRole("main").locator("img")).toBeVisible();
 
   await setImage("https://avatar.example.test/falha.png");
-  await expect(button).toContainText("ZN");
-  await button.click();
-  await expect(page.getByRole("dialog")).toContainText("ZN");
+  await expect(settings).toContainText("ZN");
+  await expect(page.getByRole("main")).toContainText("ZN");
 });

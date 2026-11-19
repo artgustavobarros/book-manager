@@ -26,7 +26,7 @@ test("celular e tablet compartilham cabeçalho, ícones e ações", async ({
       header.getByRole("button", { name: /Modo (escuro|claro)/ })
     ).toBeVisible();
     await expect(
-      header.getByRole("button", { name: "Minha conta" })
+      header.getByRole("link", { name: "Configurações" })
     ).toBeVisible();
     const actions = page.locator('[data-slot="mobile-fabs"]');
     await expect(

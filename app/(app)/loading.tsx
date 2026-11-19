@@ -105,6 +105,21 @@ export function RouteSkeleton({ pathname }: { pathname: string }) {
   if (pathname.startsWith("/dados")) {
     return <DadosLoading />;
   }
+  if (pathname === "/configuracoes") {
+    return (
+      <PageMain>
+        <div
+          aria-busy="true"
+          className="mx-auto flex w-full max-w-[1100px] flex-col gap-4"
+          role="status"
+        >
+          <span className="sr-only">Carregando configurações…</span>
+          <Skeleton className="h-9 w-56" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+        </div>
+      </PageMain>
+    );
+  }
   return <PainelSkeleton />;
 }
 

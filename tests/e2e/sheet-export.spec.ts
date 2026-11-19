@@ -8,7 +8,8 @@ test("a conta mostra o controle da cópia semanal e protege as rotas", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Minha conta" }).click();
+  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.getByRole("tab", { name: "Dados e backup" }).click();
   const section = page.getByRole("region", {
     name: "Cópia semanal no Google Sheets",
   });
@@ -23,4 +24,9 @@ test("a conta mostra o controle da cópia semanal e protege as rotas", async ({
   expect((await state.json()).status).toBe("off");
   const unauthorized = await page.request.get("/api/cron/sheets-export");
   expect(unauthorized.status()).toBe(401);
+
+  await page.goto("/api/sheets-export/callback?error=denied");
+  await expect(page).toHaveURL("/configuracoes?secao=dados");
+  await expect(section).toBeVisible();
+  await expect(page.getByText("Conexão com Google cancelada")).toBeVisible();
 });
