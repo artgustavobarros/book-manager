@@ -20,7 +20,9 @@ test.beforeEach(async ({ page }) => {
 
 async function openScanner(page: Page) {
   await page
-    .getByRole("button", { name: "Escanear livro", exact: true })
+    .getByRole("button", {
+      name: /Escanear capa ou lombada|Escanear livro/,
+    })
     .click();
   return page.getByRole("dialog", {
     name: "Escanear livro",
@@ -109,7 +111,48 @@ async function installFakeCamera(page: Page) {
   });
 }
 
-test("ao reconhecer abre modal de confirmação e preencher retorna com os dados escolhidos", async ({
+test("registrar livro abre só busca e scanner; formulário só aparece após achar ou pedir preenchimento manual", async ({
+  page,
+}) => {
+  const modal = page.getByRole("dialog", {
+    name: "Registrar livro",
+    exact: true,
+  });
+  await expect(modal).toBeVisible();
+  await expect(
+    modal.getByRole("button", { name: "Escanear capa ou lombada", exact: true })
+  ).toBeVisible();
+  await expect(modal.getByLabel("Buscar online")).toBeVisible();
+  await expect(modal.getByLabel("Título *")).toHaveCount(0);
+  await expect(modal.getByRole("button", { name: "Salvar" })).toHaveCount(0);
+
+  await modal.getByLabel("Buscar online").fill("Livro que não existe");
+  await modal.getByRole("button", { name: "Buscar", exact: true }).click();
+  const confirm = page.getByRole("dialog", {
+    name: "Nenhum livro encontrado",
+    exact: true,
+  });
+  await expect(confirm).toBeVisible();
+  await expect(
+    confirm.getByText(/Não foi possível consultar os catálogos online/)
+  ).toBeVisible();
+
+  await confirm
+    .getByRole("button", { name: "Preencher manualmente", exact: true })
+    .click();
+  await expect(confirm).toHaveCount(0);
+  await expect(modal.getByLabel("Título *")).toBeVisible();
+  await expect(modal.getByLabel("Título *")).toBeFocused();
+  await expect(modal.getByRole("button", { name: "Salvar" })).toBeVisible();
+
+  await modal.getByRole("button", { name: "Buscar ou escanear outro" }).click();
+  await expect(modal.getByLabel("Título *")).toHaveCount(0);
+  await expect(
+    modal.getByRole("button", { name: "Escanear capa ou lombada", exact: true })
+  ).toBeVisible();
+});
+
+test("ao reconhecer abre modal de confirmação e selecionar abre ficha já preenchida", async ({
   page,
 }) => {
   const models: string[] = [];
@@ -253,10 +296,9 @@ test("código de barras ISBN detectado pula IA e busca livro diretamente", async
   expect(queries).toEqual(["isbn:9788582850350"]);
 });
 
-test("no modal de confirmação é possível tentar novamente ou preencher manualmente preservando rascunho", async ({
+test("no modal de confirmação é possível tentar novamente ou abrir preenchimento manual", async ({
   page,
 }) => {
-  await page.getByLabel("Título *").fill("Meu rascunho manual");
   await page.route("**/api/books/recognize", (route) =>
     route.fulfill({
       json: { reading: READING, model: MODEL, elapsedMs: 300 },
@@ -272,6 +314,7 @@ test("no modal de confirmação é possível tentar novamente ou preencher manua
     exact: true,
   });
   await expect(confirm).toBeVisible();
+  await expect(page.getByLabel("Título *")).toHaveCount(0);
 
   await confirm
     .getByRole("button", { name: "Tentar novamente", exact: true })
@@ -279,6 +322,7 @@ test("no modal de confirmação é possível tentar novamente ou preencher manua
   await expect(
     page.getByRole("dialog", { name: "Escanear livro", exact: true })
   ).toBeVisible();
+  await expect(page.getByLabel("Título *")).toHaveCount(0);
 
   await choosePhoto(page);
   await expect(confirm).toBeVisible();
@@ -287,8 +331,34 @@ test("no modal de confirmação é possível tentar novamente ou preencher manua
     .getByRole("button", { name: "Preencher manualmente", exact: true })
     .click();
   await expect(confirm).toHaveCount(0);
-  await expect(page.getByLabel("Título *")).toHaveValue("Meu rascunho manual");
+  await expect(page.getByLabel("Título *")).toHaveValue("");
   await expect(page.getByLabel("Título *")).toBeFocused();
+});
+
+test("fechar modal de confirmação do scan com Escape volta sem reabrir câmera", async ({
+  page,
+}) => {
+  await page.route("**/api/books/recognize", (route) =>
+    route.fulfill({
+      json: { reading: READING, model: MODEL, elapsedMs: 300 },
+    })
+  );
+  await mockCatalogSuccess(page);
+
+  await openScanner(page);
+  await choosePhoto(page);
+
+  const confirm = page.getByRole("dialog", {
+    name: "É algum destes livros?",
+    exact: true,
+  });
+  await expect(confirm).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(confirm).toHaveCount(0);
+  await expect(
+    page.getByRole("dialog", { name: "Escanear livro", exact: true })
+  ).toHaveCount(0);
+  await expect(page.getByLabel("Título *")).toHaveCount(0);
 });
 
 test("sem resultados nos catálogos permite usar leitura manualmente ou tentar novamente", async ({
@@ -317,10 +387,14 @@ test("sem resultados nos catálogos permite usar leitura manualmente ou tentar n
   );
 });
 
-test("falha e imagem ilegível permitem repetir sem perder cadastro manual", async ({
+test("falha e imagem ilegível permitem repetir e preserva rascunho na edição de ficha", async ({
   page,
 }) => {
+  await page.keyboard.press("Escape");
+  await page.getByText("Americanah", { exact: true }).nth(1).click();
+  await page.getByRole("button", { name: "Editar ficha" }).click();
   await page.getByLabel("Título *").fill("Título digitado");
+
   const scanner = await openScanner(page);
   await page.route("**/api/books/recognize", (route) =>
     route.fulfill({ status: 429, json: { error: "Limite de fotos atingido." } })
@@ -349,7 +423,6 @@ test("falha e imagem ilegível permitem repetir sem perder cadastro manual", asy
 test("cancelar impede preenchimento tardio e reabrir permite nova tentativa", async ({
   page,
 }) => {
-  await page.getByLabel("Título *").fill("Título digitado");
   let release = () => {};
   const responseReady = new Promise<void>((resolve) => {
     release = resolve;
@@ -369,7 +442,7 @@ test("cancelar impede preenchimento tardio e reabrir permite nova tentativa", as
   await scanner.getByRole("button", { name: "Fechar scanner" }).click();
   release();
 
-  await expect(page.getByLabel("Título *")).toHaveValue("Título digitado");
+  await expect(page.getByLabel("Título *")).toHaveCount(0);
   await expect(page.getByLabel("Buscar online")).toBeEnabled();
   await openScanner(page);
   await expect(scanner.getByRole("progressbar")).toHaveCount(0);
@@ -398,27 +471,28 @@ test.describe("layout mobile sem poluição visual e câmera fallback", () => {
     viewport: { width: 390, height: 844 },
   });
 
-  test("botão de escanear fica limpo no formulário mobile e abre scanner ao tocar", async ({
+  test("etapa inicial mobile mostra busca e scanner limpos e abre scanner ao tocar", async ({
     page,
   }) => {
-    const form = page.getByRole("dialog", {
+    const dialog = page.getByRole("dialog", {
       name: "Registrar livro",
       exact: true,
     });
-    const scanBtn = form.getByRole("button", {
-      name: "Escanear livro",
+    const scanBtn = dialog.getByRole("button", {
+      name: "Escanear capa ou lombada",
       exact: true,
     });
     await expect(scanBtn).toBeVisible();
-    await expect(scanBtn).toContainText("Escanear capa, lombada ou código");
-    await expect(form.getByText(/Ao escolher ou tirar uma foto/)).toHaveCount(
+    await expect(scanBtn).toContainText("Escanear capa ou lombada");
+    await expect(dialog.getByLabel("Título *")).toHaveCount(0);
+    await expect(dialog.getByText(/Ao escolher ou tirar uma foto/)).toHaveCount(
       0
     );
     await expect
       .poll(async () => (await scanBtn.boundingBox())?.height ?? 0)
       .toBeGreaterThanOrEqual(44);
 
-    const dimensions = await form.evaluate((element) => ({
+    const dimensions = await dialog.evaluate((element) => ({
       width: element.clientWidth,
       scrollWidth: element.scrollWidth,
     }));
@@ -440,17 +514,16 @@ test.describe("layout mobile sem poluição visual e câmera fallback", () => {
   });
 });
 
-test("Escape fecha apenas scanner, mantém rascunho e devolve foco ao botão", async ({
+test("Escape fecha apenas scanner e devolve foco ao botão de escanear", async ({
   page,
 }) => {
-  await page.getByLabel("Título *").fill("Rascunho");
   const scanner = await openScanner(page);
   await page.keyboard.press("Escape");
   await expect(scanner).toHaveCount(0);
-  await expect(page.getByLabel("Título *")).toHaveValue("Rascunho");
+  await expect(page.getByLabel("Título *")).toHaveCount(0);
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Escanear livro", exact: true })
+    page.getByRole("button", { name: "Escanear capa ou lombada", exact: true })
   ).toBeFocused();
 });
 

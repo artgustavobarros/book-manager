@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "cn";
-import { Share2Icon } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { ArrowLeftIcon, Share2Icon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Controller,
   type UseFormReturn,
@@ -13,6 +13,10 @@ import {
 
 import { useApp } from "@/components/app/app-provider";
 import { toast } from "@/components/app/toast";
+import {
+  type BookConfirmData,
+  BookConfirmModal,
+} from "@/components/books/book-confirm-modal";
 import { BookLookupOption } from "@/components/books/book-lookup-option";
 import { BookPhotoSearch } from "@/components/books/book-photo-search";
 import {
@@ -23,6 +27,7 @@ import {
   AutocompleteItem,
   AutocompleteList,
 } from "@/components/ui/autocomplete";
+import { Button } from "@/components/ui/button";
 import {
   Modal,
   ModalClose,
@@ -445,16 +450,64 @@ function Field({
   );
 }
 
+function setFormField(
+  form: UseFormReturn<BookFormValues, unknown, BookFormOutput>,
+  k: keyof BookFormValues,
+  v: string | null | undefined
+) {
+  if (v) {
+    form.setValue(k, v, { shouldDirty: true, shouldValidate: true });
+  }
+}
+
+function applyLookupToForm(
+  form: UseFormReturn<BookFormValues, unknown, BookFormOutput>,
+  r: LookupResult,
+  reading?: PhotoReading | null
+) {
+  if (r.coverOnly) {
+    setFormField(form, "title", reading?.title);
+    setFormField(form, "author", reading?.author);
+    setFormField(form, "coverUrl", r.cover);
+  } else {
+    setFormField(form, "title", r.title || reading?.title);
+    setFormField(form, "author", r.author || reading?.author);
+    setFormField(form, "genre", r.genre);
+    setFormField(form, "publisher", r.publisher);
+    setFormField(form, "yearPublished", r.year);
+    setFormField(form, "pages", r.pages);
+    setFormField(form, "coverUrl", r.cover);
+  }
+}
+
+function applyReadingToForm(
+  form: UseFormReturn<BookFormValues, unknown, BookFormOutput>,
+  reading: PhotoReading
+) {
+  setFormField(form, "title", reading.title);
+  setFormField(form, "author", reading.author);
+}
+
 function OnlineSearch({
   form,
+  mode = "inline",
+  onPicked,
+  onManual,
 }: {
   form: UseFormReturn<BookFormValues, unknown, BookFormOutput>;
+  mode?: "inline" | "discover";
+  onPicked?: (sourceMessage: string) => void;
+  onManual?: () => void;
 }) {
+  const isDiscover = mode === "discover";
   const [sq, setSq] = useState("");
   const [loading, setLoading] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [results, setResults] = useState<LookupResult[] | null>(null);
+  const [confirmData, setConfirmData] = useState<BookConfirmData | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const focusSearchRef = useRef(false);
   // Só a busca mais recente pode preencher os resultados.
   const searchId = useRef(0);
 
@@ -462,9 +515,15 @@ function OnlineSearch({
     if (loading) {
       return;
     }
-    const q = query ?? (sq.trim() || form.getValues("title").trim());
+    const q =
+      query ??
+      (sq.trim() || (isDiscover ? "" : form.getValues("title").trim()));
     if (!q) {
+      setResults(null);
       return setMsg("Digite um título ou ISBN.");
+    }
+    if (query) {
+      setSq(query);
     }
     const id = ++searchId.current;
     setLoading(true);
@@ -475,6 +534,14 @@ function OnlineSearch({
       return;
     }
     setLoading(false);
+    if (isDiscover) {
+      setConfirmData({
+        candidates: results,
+        catalogFailed: failed,
+        searchQuery: q,
+      });
+      return;
+    }
     setResults(results);
     setMsg(
       failed
@@ -486,34 +553,65 @@ function OnlineSearch({
   }
 
   function pick(r: LookupResult, reading?: PhotoReading | null) {
-    const set = (k: keyof BookFormValues, v: string | null | undefined) =>
-      v && form.setValue(k, v, { shouldDirty: true, shouldValidate: true });
-    if (r.coverOnly) {
-      set("title", reading?.title);
-      set("author", reading?.author);
-      set("coverUrl", r.cover);
-    } else {
-      set("title", r.title || reading?.title);
-      set("author", r.author || reading?.author);
-      set("genre", r.genre);
-      set("publisher", r.publisher);
-      set("yearPublished", r.year);
-      set("pages", r.pages);
-      set("coverUrl", r.cover);
-    }
+    applyLookupToForm(form, r, reading);
     setResults(null);
-    setMsg(
-      "Dados preenchidos a partir de " + r.source + ". Revise antes de salvar."
-    );
+    setConfirmData(null);
+    const filledMsg =
+      "Dados preenchidos a partir de " + r.source + ". Revise antes de salvar.";
+    setMsg(filledMsg);
+    onPicked?.(filledMsg);
   }
 
-  return (
+  const photoSearchProps = {
+    disabled: loading,
+    onBusyChange: (busy: boolean) => {
+      setPhotoBusy(busy);
+      if (busy) {
+        setResults(null);
+        setMsg("");
+      }
+    },
+    onFocusForm: () => form.setFocus("title"),
+    onManual,
+    onSelectBook: (result: LookupResult, reading: PhotoReading | null) => {
+      pick(result, reading);
+    },
+    onUseReading: (reading: PhotoReading) => {
+      applyReadingToForm(form, reading);
+      setResults(null);
+      const readMsg =
+        "Dados preenchidos com a leitura da imagem. Revise antes de salvar.";
+      setMsg(readMsg);
+      onPicked?.(readMsg);
+    },
+  };
+
+  const searchCard = (
     <div className="flex flex-col gap-3 rounded-xl border border-line bg-hov p-4">
-      <span className="font-semibold text-mute text-xs">
-        Buscar online por título ou ISBN · Google Livros, Apple Books, Open
-        Library e Amazon (ISBN)
-      </span>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 max-[640px]:grid-cols-[minmax(0,1fr)_auto]">
+      {isDiscover ? (
+        <div className="flex flex-col gap-0.5">
+          <span className="font-semibold text-ink text-sm">
+            Pesquise a obra
+          </span>
+          <span className="text-mute text-xs leading-relaxed">
+            Buscar online por título ou ISBN · Google Livros, Apple Books, Open
+            Library e Amazon (ISBN)
+          </span>
+        </div>
+      ) : (
+        <span className="font-semibold text-mute text-xs">
+          Buscar online por título ou ISBN · Google Livros, Apple Books, Open
+          Library e Amazon (ISBN)
+        </span>
+      )}
+      <div
+        className={cn(
+          "grid items-center gap-2",
+          isDiscover
+            ? "grid-cols-[minmax(0,1fr)_auto]"
+            : "grid-cols-[minmax(0,1fr)_auto_auto] max-[640px]:grid-cols-[minmax(0,1fr)_auto]"
+        )}
+      >
         <input
           aria-label="Buscar online"
           className={cn(fieldInput, "min-w-0 flex-1")}
@@ -526,6 +624,7 @@ function OnlineSearch({
             }
           }}
           placeholder="ex.: Torto arado ou 9788554512348"
+          ref={searchInputRef}
           value={sq}
         />
         <button
@@ -536,41 +635,10 @@ function OnlineSearch({
         >
           {loading ? "Buscando…" : "Buscar"}
         </button>
-        <BookPhotoSearch
-          disabled={loading}
-          onBusyChange={(busy) => {
-            setPhotoBusy(busy);
-            if (busy) {
-              setResults(null);
-              setMsg("");
-            }
-          }}
-          onFocusForm={() => form.setFocus("title")}
-          onSelectBook={(result, reading) => {
-            pick(result, reading);
-          }}
-          onUseReading={(reading) => {
-            if (reading.title) {
-              form.setValue("title", reading.title, {
-                shouldDirty: true,
-                shouldValidate: true,
-              });
-            }
-            if (reading.author) {
-              form.setValue("author", reading.author, {
-                shouldDirty: true,
-                shouldValidate: true,
-              });
-            }
-            setResults(null);
-            setMsg(
-              "Dados preenchidos com a leitura da imagem. Revise antes de salvar."
-            );
-          }}
-        />
+        {isDiscover ? null : <BookPhotoSearch {...photoSearchProps} />}
       </div>
       {msg ? <span className="text-mute text-xs">{msg}</span> : null}
-      {loading ? (
+      {!isDiscover && loading ? (
         <div
           aria-busy="true"
           aria-label="Buscando nos catálogos"
@@ -589,7 +657,7 @@ function OnlineSearch({
           ))}
         </div>
       ) : null}
-      {results?.length ? (
+      {!isDiscover && results?.length ? (
         <div className="-mx-2 flex max-h-[280px] flex-col gap-0.5 overflow-y-auto">
           {results.map((r, i) => (
             <BookLookupOption
@@ -602,9 +670,88 @@ function OnlineSearch({
       ) : null}
     </div>
   );
+
+  if (!isDiscover) {
+    return searchCard;
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2.5 rounded-xl border border-line bg-hov p-4">
+        <div className="flex flex-col gap-0.5">
+          <span className="font-semibold text-ink text-sm">Escanear</span>
+          <span className="text-mute text-xs leading-relaxed">
+            Aponte para a capa, lombada ou código de barras — ou envie uma foto.
+          </span>
+        </div>
+        <BookPhotoSearch
+          {...photoSearchProps}
+          triggerVariant="primary"
+          wideTrigger
+        />
+      </div>
+
+      <div className="flex items-center gap-3 text-mute text-xs">
+        <span className="h-px flex-1 bg-line" />
+        <span>ou</span>
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
+      {searchCard}
+
+      <BookConfirmModal
+        data={confirmData}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (focusSearchRef.current) {
+            focusSearchRef.current = false;
+            searchInputRef.current?.focus({ preventScroll: true });
+          }
+        }}
+        onDismiss={() => {
+          searchId.current += 1;
+          setLoading(false);
+          focusSearchRef.current = true;
+          setConfirmData(null);
+        }}
+        onManual={() => {
+          searchId.current += 1;
+          setLoading(false);
+          focusSearchRef.current = false;
+          setConfirmData(null);
+          onManual?.();
+        }}
+        onRetry={() => {
+          searchId.current += 1;
+          setLoading(false);
+          focusSearchRef.current = true;
+          setConfirmData(null);
+        }}
+        onSearchAgain={(nextQuery) => {
+          void run(nextQuery);
+        }}
+        onSelect={(selected) => {
+          searchId.current += 1;
+          setLoading(false);
+          focusSearchRef.current = false;
+          pick(selected);
+        }}
+        retryLabel="Voltar"
+        searching={loading}
+      />
+    </div>
+  );
 }
 
-function EditModal({ book }: { book: Book | null }) {
+function EditModal({
+  book,
+  step,
+  onStepChange,
+}: {
+  book: Book | null;
+  step: "discover" | "form";
+  onStepChange: (step: "discover" | "form") => void;
+}) {
   const app = useApp();
   const books = useBooks();
   const { create, update } = useBookActions();
@@ -621,6 +768,17 @@ function EditModal({ book }: { book: Book | null }) {
   const requestClose = useModalClose();
   const submitOnce = useSingleFlight();
   useModalDraft(formState.isDirty);
+  const [prefillMsg, setPrefillMsg] = useState("");
+  const prevStepRef = useRef(step);
+  useEffect(() => {
+    const prev = prevStepRef.current;
+    prevStepRef.current = step;
+    if (!book && prev === "discover" && step === "form") {
+      const id = requestAnimationFrame(() => form.setFocus("title"));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [book, form, step]);
+
   const [title, author, coverUrl, reading, situation] = useWatch({
     control: form.control,
     name: ["title", "author", "coverUrl", "reading", "situation"],
@@ -659,6 +817,38 @@ function EditModal({ book }: { book: Book | null }) {
       app.closeModal();
     })
   );
+
+  if (!book && step === "discover") {
+    return (
+      <div className="flex flex-col gap-5 p-6 max-[640px]:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <h2 className="m-0 font-bold font-title text-2xl leading-tight">
+              {modalTitle}
+            </h2>
+            <p className="m-0 text-mute text-sm leading-relaxed">
+              Escaneie o livro ou busque pelo título para preencher os dados
+              automaticamente.
+            </p>
+          </div>
+          <ModalClose />
+        </div>
+
+        <OnlineSearch
+          form={form}
+          mode="discover"
+          onManual={() => {
+            setPrefillMsg("");
+            onStepChange("form");
+          }}
+          onPicked={(msg) => {
+            setPrefillMsg(msg);
+            onStepChange("form");
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <form
@@ -703,7 +893,23 @@ function EditModal({ book }: { book: Book | null }) {
           <ModalClose />
         </div>
 
-        <OnlineSearch form={form} />
+        {book ? (
+          <OnlineSearch form={form} />
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-hov px-4 py-3">
+            <span className="text-mute text-xs">
+              {prefillMsg || "Preenchimento manual da ficha."}
+            </span>
+            <Button
+              onClick={() => onStepChange("discover")}
+              size="xs"
+              variant="neutral"
+            >
+              <ArrowLeftIcon aria-hidden="true" className="size-3.5 shrink-0" />
+              Buscar ou escanear outro
+            </Button>
+          </div>
+        )}
 
         <div
           className={cn("grid grid-cols-3 gap-4", "max-[640px]:grid-cols-2")}
@@ -1040,13 +1246,26 @@ export function BookModals() {
   const m = app.modal;
   const book = m && m.id ? (books.find((b) => b.id === m.id) ?? null) : null;
   const open = !!m && (m.kind === "edit" ? !m.id || !!book : !!book);
+  const modalKey = m ? m.kind + (m.id ?? "new") : "none";
+  const [stepState, setStepState] = useState<{
+    key: string;
+    step: "discover" | "form";
+  }>({ key: modalKey, step: "discover" });
+  const registerStep = stepState.key === modalKey ? stepState.step : "discover";
+  const modalWidth =
+    m?.kind === "edit"
+      ? book || registerStep === "form"
+        ? "max-w-[920px]"
+        : "max-w-lg"
+      : "max-w-[860px]";
+
   return (
     <>
       <Modal
-        className={m?.kind === "edit" ? "max-w-[920px]" : "max-w-[860px]"}
-        guardChanges={m?.kind === "edit"}
+        className={modalWidth}
+        guardChanges={m?.kind === "edit" && (!!book || registerStep === "form")}
         // Ficha → edição troca de véu, como no standalone (a rolagem volta ao topo).
-        key={"book-modal-" + (m ? m.kind + (m.id ?? "new") : "none")}
+        key={"book-modal-" + modalKey}
         onOpenChange={(o) => !o && app.closeModal()}
         open={open}
         title={
@@ -1061,7 +1280,12 @@ export function BookModals() {
           <ViewModal book={book} key={"v" + book.id} />
         ) : null}
         {m?.kind === "edit" ? (
-          <EditModal book={book} key={"e" + (m.id ?? "new")} />
+          <EditModal
+            book={book}
+            key={"e" + (m.id ?? "new")}
+            onStepChange={(step) => setStepState({ key: modalKey, step })}
+            step={book ? "form" : registerStep}
+          />
         ) : null}
       </Modal>
       <LendDialog key={"lend-" + (app.lendFor?.id ?? "none")} />

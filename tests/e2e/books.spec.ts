@@ -12,6 +12,26 @@ async function openDataBackup(page: Page) {
   return page.getByRole("region", { name: "Dados e backup" });
 }
 
+async function openManualBookForm(page: Page) {
+  await page.getByRole("button", { name: "+ Registrar livro" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByRole("heading", { name: "Registrar livro" })
+  ).toBeVisible();
+  await dialog.getByLabel("Buscar online").fill("Livro inexistente");
+  await dialog.getByRole("button", { name: "Buscar", exact: true }).click();
+  const confirm = page.getByRole("dialog", {
+    name: "Nenhum livro encontrado",
+    exact: true,
+  });
+  await expect(confirm).toBeVisible();
+  await confirm
+    .getByRole("button", { name: "Preencher manualmente", exact: true })
+    .click();
+  await expect(confirm).toHaveCount(0);
+  return dialog;
+}
+
 test.describe("acervo", () => {
   test.beforeEach(async ({ page }) => {
     // Sem rede externa: nada de capas automáticas nem busca online real.
@@ -31,11 +51,7 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/estante?ordem=recentes");
-    await page.getByRole("button", { name: "+ Registrar livro" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(
-      dialog.getByRole("heading", { name: "Registrar livro" })
-    ).toBeVisible();
+    const dialog = await openManualBookForm(page);
     await dialog.getByLabel("Título *").fill("Livro de Teste E2E");
     await dialog.getByLabel("Autor(a) (opcional)").fill("Autora Teste");
     await dialog.getByLabel("Páginas").fill("123");
@@ -103,12 +119,22 @@ test.describe("acervo", () => {
     await dialog.getByLabel("Buscar online").fill("Torto");
     await dialog.getByLabel("Buscar online").fill("Torto arado");
     await dialog.getByRole("button", { name: "Buscar", exact: true }).click();
-    const matches = dialog
+    const confirm = page.getByRole("dialog", {
+      name: "É algum destes livros?",
+      exact: true,
+    });
+    await expect(confirm).toBeVisible();
+    const inlineSearch = confirm.getByLabel("Busca por título ou ISBN");
+    await expect(inlineSearch).toHaveValue("Torto arado");
+    await inlineSearch.fill("Torto arado Todavia");
+    await confirm.getByRole("button", { name: "Buscar", exact: true }).click();
+    const matches = confirm
       .getByRole("button")
       .filter({ hasText: "Torto arado" });
     await expect(matches.first()).toContainText("Itamar Vieira Junior");
-    expect(onlineQueries).toEqual(["Torto arado"]);
+    expect(onlineQueries).toEqual(["Torto arado", "Torto arado Todavia"]);
     await matches.first().click();
+    await expect(confirm).toHaveCount(0);
 
     await expect(dialog.getByLabel("Título *")).toHaveValue("Torto arado");
     await expect(dialog.getByLabel("Autor(a) (opcional)")).toHaveValue(
@@ -124,8 +150,7 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/estante?ordem=recentes");
-    await page.getByRole("button", { name: "+ Registrar livro" }).click();
-    const dialog = page.getByRole("dialog");
+    const dialog = await openManualBookForm(page);
     const genre = dialog.getByLabel("Gênero da obra");
 
     await genre.click();
@@ -169,8 +194,7 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/estante?ordem=recentes");
-    await page.getByRole("button", { name: "+ Registrar livro" }).click();
-    const dialog = page.getByRole("dialog");
+    const dialog = await openManualBookForm(page);
 
     const gender = dialog.getByRole("combobox", { name: /Gênero do autor/ });
     await gender.click();
@@ -287,8 +311,7 @@ test.describe("acervo", () => {
     page,
   }) => {
     await page.goto("/estante");
-    await page.getByRole("button", { name: "+ Registrar livro" }).click();
-    const dialog = page.getByRole("dialog");
+    const dialog = await openManualBookForm(page);
     await expect(
       dialog.getByRole("button", { name: "Salvar" })
     ).toHaveAttribute("aria-disabled", "true");
