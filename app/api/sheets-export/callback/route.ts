@@ -33,7 +33,8 @@ export const GET = withSession(async ({ request, userId }) => {
       await cancelPendingSheetExport(db, userId);
     }
   }
-  const redirect = new URL("/", request.url);
+  const redirect = new URL("/configuracoes", request.url);
+  redirect.searchParams.set("secao", "dados");
   redirect.searchParams.set("sheetExport", result);
   return NextResponse.redirect(redirect);
 });

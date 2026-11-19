@@ -58,11 +58,21 @@ for (const vp of VIEWPORTS) {
     test.describe("autenticado", () => {
       test.use({ storageState: AUTH_STATE });
 
-      test("minha conta", async ({ page }) => {
+      test("configurações", async ({ page }) => {
         await prepare(page);
-        await page.goto("/");
-        await page.getByRole("button", { name: "Minha conta" }).click();
+        await page.goto("/configuracoes");
+        await expect(page.getByRole("tab", { name: "Perfil" })).toBeVisible();
         await snap(page, `minha-conta-${vp.name}`);
+      });
+
+      test("confirmação de exclusão de conta", async ({ page }) => {
+        await prepare(page);
+        await page.goto("/configuracoes?secao=conta");
+        await page.getByRole("button", { name: "Excluir conta" }).click();
+        await expect(
+          page.getByRole("dialog", { name: "Excluir conta" })
+        ).toBeVisible();
+        await snap(page, `excluir-conta-${vp.name}`);
       });
 
       test("emprestado para quem?", async ({ page }) => {
@@ -74,26 +84,23 @@ for (const vp of VIEWPORTS) {
 
       test("toast de sucesso", async ({ page }) => {
         await prepare(page);
-        await page.goto("/");
-        await page.getByRole("button", { name: "Minha conta" }).click();
-        const dialog = page.getByRole("dialog", { name: "Minha conta" });
+        await page.goto("/configuracoes?secao=dados");
+        const data = page.getByRole("region", { name: "Dados e backup" });
         await Promise.all([
           page.waitForEvent("download"),
-          dialog.getByRole("button", { name: "Exportar Excel (CSV)" }).click(),
+          data.getByRole("button", { name: "Exportar Excel (CSV)" }).click(),
         ]);
-        await dialog.getByRole("button", { name: "Fechar" }).click();
         await expect(page.getByText("Planilha CSV exportada")).toBeVisible();
         await snap(page, `toast-sucesso-${vp.name}`);
       });
 
       test("toast de erro", async ({ page }) => {
         await prepare(page);
-        await page.goto("/");
-        await page.getByRole("button", { name: "Minha conta" }).click();
-        const dialog = page.getByRole("dialog", { name: "Minha conta" });
+        await page.goto("/configuracoes?secao=dados");
+        const data = page.getByRole("region", { name: "Dados e backup" });
         const [chooser] = await Promise.all([
           page.waitForEvent("filechooser"),
-          dialog.getByRole("button", { name: "Restaurar backup" }).click(),
+          data.getByRole("button", { name: "Restaurar backup" }).click(),
         ]);
         await chooser.setFiles({
           name: "backup.json",

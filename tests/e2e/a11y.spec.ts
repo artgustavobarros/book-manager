@@ -76,6 +76,20 @@ for (const theme of ["light", "dark"] as const) {
         await audit(page);
       });
 
+      test("configurações e confirmação de exclusão", async ({ page }) => {
+        await page.goto("/configuracoes");
+        await expect(
+          page.getByRole("heading", { name: "Configurações" })
+        ).toBeVisible();
+        await audit(page);
+        await page.getByRole("tab", { name: "Gerenciar conta" }).click();
+        await page.getByRole("button", { name: "Excluir conta" }).click();
+        await expect(
+          page.getByRole("dialog", { name: "Excluir conta" })
+        ).toBeVisible();
+        await audit(page);
+      });
+
       test("compartilhar e estante pública", async ({ page }) => {
         await page.goto("/");
         await page

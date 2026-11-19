@@ -679,22 +679,54 @@ test.describe("KPI de empréstimos pelo teclado (BP-09)", () => {
 });
 
 test.describe("auth sem rede", () => {
-  test("excluir conta com a rede caída libera o botão e avisa", async ({
+  test("confirmação de exclusão cancela e aceita nova tentativa após erro", async ({
     page,
   }) => {
     await signIn(page, "zero.novato@exemplo.com", "senha-forte-123");
     await expect(page).toHaveURL("/");
-    await page.getByRole("button", { name: "Minha conta" }).first().click();
-    const dialog = page.getByRole("dialog", { name: "Minha conta" });
-    await dialog.getByLabel("Confirme com sua senha").fill("senha-forte-123");
-    await dialog.getByRole("button", { name: "Excluir conta" }).click();
+    await page.getByRole("link", { name: "Configurações" }).click();
+    await expect(page).toHaveURL("/configuracoes");
+    await page.getByRole("tab", { name: "Gerenciar conta" }).click();
+    const remove = page.getByRole("button", { name: "Excluir conta" });
+    const dialog = page.getByRole("dialog", { name: "Excluir conta" });
+    const password = dialog.getByLabel("Confirme com sua senha");
+    const confirm = dialog.getByRole("button", { name: "Confirmar exclusão" });
+    await expect(page.getByLabel("Confirme com sua senha")).toHaveCount(0);
+    await remove.click();
+    await expect(password).toBeFocused();
+    await password.fill("um-rascunho");
+    await dialog.getByRole("button", { name: "Cancelar" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(remove).toBeFocused();
+    await remove.click();
+    await expect(password).toHaveValue("");
+    await password.fill("senha-errada");
+    await confirm.click();
+    await expect(dialog.getByRole("alert")).toHaveText("Senha incorreta.");
+
+    await password.fill("senha-forte-123");
     // Toda chamada de auth falha como sem internet: a conta não chega a ser excluída.
     await page.route(/\/api\/auth\//, (r) => r.abort("internetdisconnected"));
-    await dialog.getByRole("button", { name: "Confirmar exclusão" }).click();
+    await confirm.click();
 
     await expect(dialog.getByText("Sem conexão com o servidor.")).toBeVisible();
-    await expect(
-      dialog.getByRole("button", { name: "Excluir conta" })
-    ).toBeEnabled();
+    await expect(confirm).toBeEnabled();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test("senha correta confirma a exclusão e encerra a sessão", async ({
+    page,
+  }) => {
+    await signIn(page, "lucas.metas@exemplo.com", "senha-forte-123");
+    await expect(page).toHaveURL("/");
+    await page.goto("/configuracoes?secao=conta");
+    await page.getByRole("button", { name: "Excluir conta" }).click();
+    const dialog = page.getByRole("dialog", { name: "Excluir conta" });
+    await dialog.getByLabel("Confirme com sua senha").fill("senha-forte-123");
+    await dialog.getByRole("button", { name: "Confirmar exclusão" }).click();
+    await expect(page).toHaveURL("/entrar?aviso=conta-excluida");
+    await page.goto("/configuracoes");
+    await expect(page).toHaveURL("/entrar?voltar=%2Fconfiguracoes");
   });
 });

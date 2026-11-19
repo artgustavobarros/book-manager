@@ -149,7 +149,7 @@ export default function TermsPage() {
               Suspensão e encerramento
             </h2>
             <p className="m-0">
-              Você pode excluir sua conta em <strong>Minha conta</strong>.
+              Você pode excluir sua conta em <strong>Configurações</strong>.
               Podemos limitar ou encerrar o acesso em caso de abuso, risco de
               segurança, violação destes termos, exigência legal ou
               descontinuação do serviço. Quando razoável e permitido, buscaremos

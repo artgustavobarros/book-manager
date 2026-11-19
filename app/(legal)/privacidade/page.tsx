@@ -86,8 +86,8 @@ export default function PrivacyPage() {
               Os tokens de autorização são armazenados de forma criptografada. A
               planilha recebe um retrato semanal dos livros do acervo; metas e
               demais configurações não são exportadas. Você pode desconectar a
-              integração em <strong>Minha conta</strong> e revogar o acesso nas
-              configurações da sua Conta Google.
+              integração em <strong>Configurações</strong> e revogar o acesso
+              nas configurações da sua Conta Google.
             </p>
             <p className="m-0">
               O uso e a transferência de informações recebidas das APIs do

@@ -96,24 +96,25 @@ function Brand({ className }: { className?: string }) {
 
 function AccountButton({ className }: { className?: string }) {
   const app = useApp();
+  const pathname = usePathname();
   return (
-    <button
+    <Link
+      aria-current={pathname === "/configuracoes" ? "page" : undefined}
       className={cn(
         "flex size-10 flex-none items-center justify-center rounded-full border-0 p-0 font-bold text-sm tracking-[.025em] transition-transform duration-100 active:scale-95",
         className
       )}
-      onClick={() => app.setAccountOpen(true)}
-      title="Minha conta"
-      type="button"
+      href="/configuracoes"
+      title="Configurações"
     >
       {/* Nome em texto oculto, não aria-label: as iniciais visíveis não fazem parte do nome. */}
-      <span className="sr-only">Minha conta</span>
+      <span className="sr-only">Configurações</span>
       <Avatar
         className="size-full"
         image={app.user.image}
         initials={app.initials}
       />
-    </button>
+    </Link>
   );
 }
 
