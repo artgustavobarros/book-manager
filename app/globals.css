@@ -117,6 +117,7 @@
   --animate-acv-dot: acv-dot 1s infinite ease-in-out;
   --animate-acv-grow-x: acv-grow-x 0.7s var(--ease-emphasized) both;
   --animate-acv-grow-y: acv-grow-y 0.7s var(--ease-emphasized) both;
+  --animate-acv-scan: acv-scan 2.2s ease-in-out infinite;
 }
 
 @layer base {
@@ -189,5 +190,17 @@
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@keyframes acv-scan {
+  0%,
+  100% {
+    top: 10%;
+    opacity: 0.75;
+  }
+  50% {
+    top: 88%;
+    opacity: 1;
   }
 }

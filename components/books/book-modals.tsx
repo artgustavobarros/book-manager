@@ -13,6 +13,7 @@ import {
 
 import { useApp } from "@/components/app/app-provider";
 import { toast } from "@/components/app/toast";
+import { BookLookupOption } from "@/components/books/book-lookup-option";
 import { BookPhotoSearch } from "@/components/books/book-photo-search";
 import {
   Autocomplete,
@@ -39,7 +40,7 @@ import { useBookActions, useBooks } from "@/hooks/use-books";
 import { useShelfState } from "@/hooks/use-shelf-state";
 import { useSingleFlight } from "@/hooks/use-single-flight";
 import { searchCatalogs } from "@/lib/client/lookup";
-import { photoSearchQuery } from "@/lib/domain/book-photo";
+import type { PhotoReading } from "@/lib/domain/book-photo";
 import {
   READINGS,
   readingYearFor,
@@ -484,14 +485,16 @@ function OnlineSearch({
     );
   }
 
-  function pick(r: LookupResult) {
-    const set = (k: keyof BookFormValues, v: string) =>
+  function pick(r: LookupResult, reading?: PhotoReading | null) {
+    const set = (k: keyof BookFormValues, v: string | null | undefined) =>
       v && form.setValue(k, v, { shouldDirty: true, shouldValidate: true });
     if (r.coverOnly) {
+      set("title", reading?.title);
+      set("author", reading?.author);
       set("coverUrl", r.cover);
     } else {
-      set("title", r.title);
-      set("author", r.author);
+      set("title", r.title || reading?.title);
+      set("author", r.author || reading?.author);
       set("genre", r.genre);
       set("publisher", r.publisher);
       set("yearPublished", r.year);
@@ -510,7 +513,7 @@ function OnlineSearch({
         Buscar online por título ou ISBN · Google Livros, Apple Books, Open
         Library e Amazon (ISBN)
       </span>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 max-[640px]:grid-cols-[minmax(0,1fr)_auto]">
         <input
           aria-label="Buscar online"
           className={cn(fieldInput, "min-w-0 flex-1")}
@@ -543,7 +546,10 @@ function OnlineSearch({
             }
           }}
           onFocusForm={() => form.setFocus("title")}
-          onRecognized={(reading) => {
+          onSelectBook={(result, reading) => {
+            pick(result, reading);
+          }}
+          onUseReading={(reading) => {
             if (reading.title) {
               form.setValue("title", reading.title, {
                 shouldDirty: true,
@@ -556,9 +562,10 @@ function OnlineSearch({
                 shouldValidate: true,
               });
             }
-            const query = photoSearchQuery(reading);
-            setSq(query);
-            void run(query);
+            setResults(null);
+            setMsg(
+              "Dados preenchidos com a leitura da imagem. Revise antes de salvar."
+            );
           }}
         />
       </div>
@@ -585,38 +592,11 @@ function OnlineSearch({
       {results?.length ? (
         <div className="-mx-2 flex max-h-[280px] flex-col gap-0.5 overflow-y-auto">
           {results.map((r, i) => (
-            <button
-              className="flex items-center gap-3 rounded-lg border-0 bg-transparent p-2 text-left text-ink hover:bg-card"
-              key={i}
-              onClick={() => pick(r)}
-              type="button"
-            >
-              <span className="relative h-12 w-8 flex-none overflow-hidden rounded bg-soft">
-                <span
-                  className="absolute inset-0 bg-center bg-cover"
-                  style={{ backgroundImage: coverImage(r.cover) }}
-                />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-px">
-                <span className="truncate font-semibold text-sm">
-                  {r.title}
-                </span>
-                <span className="truncate text-mute text-xs">
-                  {r.author || "—"}
-                </span>
-                <span className="text-mute text-xs">
-                  {[
-                    r.publisher,
-                    r.genre,
-                    r.year,
-                    r.pages ? r.pages + " p." : "",
-                    r.source,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
-              </span>
-            </button>
+            <BookLookupOption
+              item={r}
+              key={`${r.source}-${r.title}-${i}`}
+              onSelect={(selected) => pick(selected)}
+            />
           ))}
         </div>
       ) : null}

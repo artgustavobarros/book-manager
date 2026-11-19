@@ -11,8 +11,8 @@ import {
   titleMatch,
 } from "@/lib/domain/lookup";
 
-async function getJson(url: string) {
-  const r = await fetch(url);
+async function getJson(url: string, signal?: AbortSignal) {
+  const r = await fetch(url, signal ? { signal } : undefined);
   if (!r.ok) {
     throw new Error(String(r.status));
   }
@@ -20,35 +20,58 @@ async function getJson(url: string) {
 }
 
 /** Verifica se uma imagem carrega (a Amazon devolve 1×1 quando não há capa). */
-function imgOk(url: string): Promise<boolean> {
+function imgOk(url: string, signal?: AbortSignal): Promise<boolean> {
   return new Promise((res) => {
+    if (signal?.aborted) {
+      res(false);
+      return;
+    }
     const i = new Image();
-    i.onload = () => res(i.naturalWidth > 2);
-    i.onerror = () => res(false);
+    const finish = (ok: boolean) => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+      res(ok);
+    };
+    const onAbort = () => finish(false);
+    const timer = setTimeout(() => finish(false), 6000);
+    signal?.addEventListener("abort", onAbort, { once: true });
+    i.onload = () => finish(i.naturalWidth > 2);
+    i.onerror = () => finish(false);
     i.src = url;
-    setTimeout(() => res(false), 6000);
   });
 }
 
-const srcGoogle = async (q: string, isbn: string | null) =>
-  fromGoogle(await getJson(lookupUrls.google(q, isbn)));
-const srcApple = async (q: string) =>
-  fromApple(await getJson(lookupUrls.apple(q)));
-const srcOL = async (q: string, isbn: string | null) =>
-  fromOpenLibrary(await getJson(lookupUrls.openLibrary(q, isbn)));
-async function srcAmazon(isbn: string): Promise<LookupResult[]> {
+const srcGoogle = async (
+  q: string,
+  isbn: string | null,
+  signal?: AbortSignal
+) => fromGoogle(await getJson(lookupUrls.google(q, isbn), signal));
+const srcApple = async (q: string, signal?: AbortSignal) =>
+  fromApple(await getJson(lookupUrls.apple(q), signal));
+const srcOL = async (q: string, isbn: string | null, signal?: AbortSignal) =>
+  fromOpenLibrary(await getJson(lookupUrls.openLibrary(q, isbn), signal));
+async function srcAmazon(
+  isbn: string,
+  signal?: AbortSignal
+): Promise<LookupResult[]> {
   const url = lookupUrls.amazonCover(isbn);
-  return url && (await imgOk(url)) ? [amazonResult(isbn, url)] : [];
+  return url && (await imgOk(url, signal)) ? [amazonResult(isbn, url)] : [];
 }
 
 /** Busca por título ou ISBN em todas as fontes, em paralelo. */
 export async function searchCatalogs(
-  q: string
+  q: string,
+  options?: { signal?: AbortSignal }
 ): Promise<{ results: LookupResult[]; failed: boolean }> {
+  const signal = options?.signal;
   const isbn = isbnOf(q);
-  const jobs = [srcGoogle(q, isbn), srcOL(q, isbn), srcApple(isbn ?? q)];
+  const jobs = [
+    srcGoogle(q, isbn, signal),
+    srcOL(q, isbn, signal),
+    srcApple(isbn ?? q, signal),
+  ];
   if (isbn) {
-    jobs.push(srcAmazon(isbn));
+    jobs.push(srcAmazon(isbn, signal));
   }
   const settled = await Promise.allSettled(jobs);
   return {

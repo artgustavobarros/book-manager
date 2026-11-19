@@ -71,7 +71,7 @@ for (const theme of ["light", "dark"] as const) {
         await page.getByRole("button", { name: "Editar ficha" }).click();
         await audit(page);
         await page
-          .getByRole("button", { name: "Identificar por foto", exact: true })
+          .getByRole("button", { name: "Escanear livro", exact: true })
           .click();
         await audit(page);
       });
