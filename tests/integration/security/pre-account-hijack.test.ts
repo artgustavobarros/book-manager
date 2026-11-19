@@ -414,12 +414,12 @@ describe("achado 2 — botão Desvincular", () => {
 
   /**
    * O teste acima prova qual campo o endpoint aceita, mas não qual campo a
-   * tela manda — e o bug era exatamente esse. Sem renderizar o modal inteiro,
+   * tela manda — e o bug era exatamente esse. Sem renderizar a tela inteira,
    * a guarda barata é ler a fonte do handler.
    */
-  it("o modal da conta envia google.id", async () => {
+  it("a página da conta envia google.id", async () => {
     const source = await readFile(
-      path.join(process.cwd(), "components/app/account-modal.tsx"),
+      path.join(process.cwd(), "components/app/account-settings.tsx"),
       "utf8"
     );
     expect(source).toContain("accountId: google.id");
