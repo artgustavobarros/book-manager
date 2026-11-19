@@ -9,7 +9,7 @@ import {
   ScanLineIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useApp } from "@/components/app/app-provider";
 import {
@@ -71,13 +71,19 @@ export function BookPhotoSearch({
   onBusyChange,
   onSelectBook,
   onUseReading,
+  onManual,
   onFocusForm,
+  triggerVariant = "neutral",
+  wideTrigger = false,
 }: {
   disabled: boolean;
   onBusyChange: (busy: boolean) => void;
   onSelectBook: (result: LookupResult, reading: PhotoReading | null) => void;
   onUseReading: (reading: PhotoReading) => void;
+  onManual?: () => void;
   onFocusForm: () => void;
+  triggerVariant?: "primary" | "neutral";
+  wideTrigger?: boolean;
 }) {
   const { photoDataCollection } = useApp();
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -94,7 +100,6 @@ export function BookPhotoSearch({
   const confirmDataRef = useRef<BookConfirmData | null>(null);
   const reopeningScannerRef = useRef(false);
   const returnFocusToFormRef = useRef(false);
-  const helpId = useId();
   confirmDataRef.current = confirmData;
 
   const changeBusy = useCallback(
@@ -335,23 +340,31 @@ export function BookPhotoSearch({
   return (
     <>
       <Button
-        aria-label="Escanear livro"
+        aria-label={wideTrigger ? undefined : "Escanear livro"}
         className={cn(
-          "h-10 shrink-0 rounded-lg px-3.5 text-sm",
-          "max-[640px]:col-span-full max-[640px]:h-11 max-[640px]:w-full"
+          "shrink-0 rounded-lg px-3.5 text-sm",
+          wideTrigger
+            ? "h-11 w-full"
+            : "h-10 max-[640px]:col-span-full max-[640px]:h-11 max-[640px]:w-full"
         )}
         disabled={disabled || busy}
         onClick={openScanner}
         ref={triggerRef}
         size="none"
         title="Escanear capa, lombada ou código de barras"
-        variant="neutral"
+        variant={triggerVariant}
       >
         <ScanLineIcon aria-hidden="true" className="size-4 shrink-0" />
-        <span className="max-[640px]:hidden">Escanear</span>
-        <span className="hidden max-[640px]:inline">
-          Escanear capa, lombada ou código
-        </span>
+        {wideTrigger ? (
+          <span>Escanear capa ou lombada</span>
+        ) : (
+          <>
+            <span className="max-[640px]:hidden">Escanear</span>
+            <span className="hidden max-[640px]:inline">
+              Escanear capa ou lombada
+            </span>
+          </>
+        )}
       </Button>
 
       <input
@@ -407,9 +420,7 @@ export function BookPhotoSearch({
               <h2 className="m-0 font-bold font-title text-xl leading-tight">
                 Escanear livro
               </h2>
-              <p className="m-0 text-mute text-xs" id={helpId}>
-                {PHOTO_HELP}
-              </p>
+              <p className="m-0 text-mute text-xs">{PHOTO_HELP}</p>
             </div>
             <ModalClose label="Fechar scanner" />
           </div>
@@ -588,7 +599,10 @@ export function BookPhotoSearch({
             </Button>
             <Button
               className="w-full justify-center text-mute"
-              onClick={() => closeAll(true)}
+              onClick={() => {
+                onManual?.();
+                closeAll(true);
+              }}
               size="sm"
               variant="ghost"
             >
@@ -618,7 +632,11 @@ export function BookPhotoSearch({
             triggerRef.current?.focus({ preventScroll: true });
           }
         }}
-        onManual={() => closeAll(true)}
+        onDismiss={() => closeAll(false)}
+        onManual={() => {
+          onManual?.();
+          closeAll(true);
+        }}
         onRetry={retryScan}
         onSelect={(selected, foundReading) => {
           onSelectBook(selected, foundReading);

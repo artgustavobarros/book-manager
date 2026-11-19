@@ -120,10 +120,19 @@ for (const vp of VIEWPORTS) {
           .getByRole("button", { name: "Registrar livro" })
           .last()
           .click();
-        await page
-          .getByRole("dialog")
-          .getByLabel("Nacionalidade do autor")
+        const dialog = page.getByRole("dialog");
+        await dialog.getByLabel("Buscar online").fill("Livro inexistente");
+        await dialog
+          .getByRole("button", { name: "Buscar", exact: true })
           .click();
+        const confirm = page.getByRole("dialog", {
+          name: "Nenhum livro encontrado",
+          exact: true,
+        });
+        await confirm
+          .getByRole("button", { name: "Preencher manualmente", exact: true })
+          .click();
+        await dialog.getByLabel("Nacionalidade do autor").click();
         await expect(
           page.getByRole("option", { name: "brasileira", exact: true })
         ).toBeVisible();
