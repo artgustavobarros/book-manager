@@ -22,7 +22,7 @@ Medidas que endurecem a superfície exposta da aplicação sem introduzir infrae
 
 ## Cabeçalhos e busca de capas
 
-- **Cabeçalhos de segurança e CSP focada**: todas as rotas respondem com `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()` e `Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; form-action 'self'`.
+- **Cabeçalhos de segurança e CSP focada**: todas as rotas respondem com `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(self), microphone=(), geolocation=()` e `Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; form-action 'self'`.
 - **A CSP não restringe `img-src`** porque `coverUrl` aceita capas `https://` de qualquer domínio público. A defesa contra endereço interno fica no servidor, em `lib/services/og-covers.ts`, e vale no **ponto de busca** (a renderização da imagem OG), não no de escrita: `lib/validation/book.ts` confere apenas a forma da URL ao salvar o livro.
 
   A validação cobre: protocolo `https`, ausência de credenciais na URL, nomes `localhost`/`.internal`, as faixas internas de IPv4 e IPv6 — inclusive as que faltavam (`198.18/15`, `224/3`, `0/8`, `192.0.0/24`, TEST-NET, 6to4 `2002::/16`, NAT64 `64:ff9b::/96` e IPv4 embutido em IPv6) — e a **resolução do nome**: um nome só passa se todos os endereços resolvidos forem públicos. Cada salto de redirecionamento é revalidado, e o corpo é lido com teto por bytes durante o download.
